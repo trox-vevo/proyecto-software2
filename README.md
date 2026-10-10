@@ -8,7 +8,6 @@ Repositorio del proyecto
 
 - `frontend/`: React + TypeScript (Vite)
 - `backend/`: Express + TypeScript
-- `docs/`: diagramas UML (StarUML) y documentación
 
 ## Cómo ejecutar
 
