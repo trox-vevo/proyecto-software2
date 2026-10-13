@@ -1,0 +1,8 @@
+[
+  { "id": "AH-001", "titular": "Ana Torres",    "saldo": 1000.00,  "tasaAnual": 0.05,  "fechaApertura": "2023-01-10" },
+  { "id": "AH-002", "titular": "Beto Quispe",   "saldo": 5000.00,  "tasaAnual": 0.02,  "fechaApertura": "2022-06-01" },
+  { "id": "AH-003", "titular": "Carla Rojas",   "saldo": 300.00,   "tasaAnual": 0.10,  "fechaApertura": "2024-03-15" },
+  { "id": "AH-004", "titular": "Diego Salas",   "saldo": 12500.50, "tasaAnual": 0.035, "fechaApertura": "2021-11-20" },
+  { "id": "AH-005", "titular": "Elena Vargas",  "saldo": 850.75,   "tasaAnual": 0.045, "fechaApertura": "2024-08-05" },
+  { "id": "AH-006", "titular": "Fabio Medina",  "saldo": 2200.00,  "tasaAnual": 0.03,  "fechaApertura": "2023-09-30" }
+]
