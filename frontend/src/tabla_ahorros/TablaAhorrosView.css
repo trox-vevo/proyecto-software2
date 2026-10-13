@@ -1,0 +1,53 @@
+.tabla-contenedor {
+  overflow-x: auto;
+}
+
+.tabla-ahorros {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabla-ahorros th,
+.tabla-ahorros td {
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border, rgba(128, 128, 128, 0.3));
+}
+
+.tabla-ahorros .num {
+  text-align: right;
+}
+
+.tabla-ahorros thead th {
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-h, inherit);
+}
+
+.tabla-ahorros th button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.tabla-ahorros th button:hover {
+  text-decoration: underline;
+}
+
+.tabla-ahorros th button:focus-visible {
+  outline: 2px solid var(--accent, currentColor);
+  outline-offset: 3px;
+}
+
+.tabla-ahorros tbody tr:hover {
+  background: var(--accent-bg, rgba(128, 128, 128, 0.1));
+}
+
+.tabla-mensaje {
+  padding: 2rem 1rem;
+  text-align: center;
+}
