@@ -10,10 +10,19 @@ const DAYS_PER_MONTH = 30;
 // Sin capitalizar: TEM = (1 + TEA)^(30/360) − 1 · monthlyInterest = amount × TEM
 // totalInterest = monthlyInterest × (days/30). Se redondea solo al final, ambos desde el valor sin redondear.
 export class MonthlyPaymentCalculator implements InterestCalculator {
-  calculate(amount: Decimal, product: FinancialProduct, termDays: number): SimulationResult {
-    const tem = product.tea.plus(1).pow(new Decimal(DAYS_PER_MONTH).div(DAYS_PER_YEAR)).minus(1);
+  calculate(
+    amount: Decimal,
+    product: FinancialProduct,
+    termDays: number,
+  ): SimulationResult {
+    const tem = product.tea
+      .plus(1)
+      .pow(new Decimal(DAYS_PER_MONTH).div(DAYS_PER_YEAR))
+      .minus(1);
     const monthlyInterest = amount.times(tem);
-    const totalInterest = monthlyInterest.times(new Decimal(termDays).div(DAYS_PER_MONTH));
+    const totalInterest = monthlyInterest.times(
+      new Decimal(termDays).div(DAYS_PER_MONTH),
+    );
 
     return new SimulationResult(
       product.id,
