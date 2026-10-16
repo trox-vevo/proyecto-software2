@@ -1,16 +1,7 @@
-import express from "express";
-import cors from "cors";
+// Punto de entrada: carga .env y levanta el servidor. La app (rutas, dependencias)
+// se arma en app.ts, separada para que las pruebas la usen sin abrir el puerto 3000.
 import "dotenv/config";
-import { ahorrosRouter } from "./routes/ahorros";
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-app.use("/api/ahorros", ahorrosRouter);
-
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok" });
-});
+import { app } from "./app";
 
 const PORT = process.env.PORT ?? 3000;
 app.listen(PORT, () => {
