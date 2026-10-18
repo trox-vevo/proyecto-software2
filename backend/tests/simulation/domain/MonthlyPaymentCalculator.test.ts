@@ -39,5 +39,6 @@ describe("MonthlyPaymentCalculator", () => {
     expect(result.productId).toBe(7);
     expect(result.entityName).toBe("Caja Arequipa");
     expect(result.tea.equals("0.05")).toBe(true);
+    expect(result.minimumAmount.equals("500")).toBe(true);
   });
 });

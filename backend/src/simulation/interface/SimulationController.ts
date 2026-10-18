@@ -18,6 +18,7 @@ const toResponse = (result: SimulationResult) => ({
   tea: result.tea.toString(),
   totalInterest: result.totalInterest.toFixed(2),
   monthlyInterest: result.monthlyInterest?.toFixed(2) ?? null,
+  minimumAmount: result.minimumAmount.toFixed(2),
 });
 
 // Traduce HTTP ↔ servicio para POST /api/simulations/fixed-deposits, sin lógica de negocio.

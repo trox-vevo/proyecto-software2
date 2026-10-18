@@ -10,5 +10,6 @@ export class SimulationResult {
     readonly totalInterest: Decimal,
     // null en AT_MATURITY: el interés mensual no aplica
     readonly monthlyInterest: Decimal | null,
+    readonly minimumAmount: Decimal,
   ) {}
 }

@@ -45,6 +45,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
         tea: "0.0575",
         totalInterest: "57.50",
         monthlyInterest: null,
+        minimumAmount: "1000.00",
       },
       {
         productId: 1,
@@ -52,6 +53,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
         tea: "0.055",
         totalInterest: "55.00",
         monthlyInterest: null,
+        minimumAmount: "500.00",
       },
       {
         productId: 3,
@@ -59,18 +61,20 @@ describe("POST /api/simulations/fixed-deposits", () => {
         tea: "0.042",
         totalInterest: "42.00",
         monthlyInterest: null,
+        minimumAmount: "500.00",
       },
     ]);
   });
 
   it("200: en MONTHLY devuelve monthlyInterest con 2 decimales", async () => {
     const response = await post({ ...validRequest, paymentMode: "MONTHLY" });
-    const results: { monthlyInterest: string }[] = await response.json();
+    const results: { monthlyInterest: string; minimumAmount: string }[] = await response.json();
 
     expect(response.status).toBe(200);
     expect(results).toHaveLength(3);
     for (const result of results) {
       expect(result.monthlyInterest).toMatch(/^\d+\.\d{2}$/);
+      expect(result.minimumAmount).toMatch(/^\d+\.\d{2}$/);
     }
   });
 

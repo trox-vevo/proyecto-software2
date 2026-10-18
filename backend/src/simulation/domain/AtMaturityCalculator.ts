@@ -26,6 +26,7 @@ export class AtMaturityCalculator implements InterestCalculator {
       product.tea,
       totalInterest,
       null,
+      product.minimumAmount,
     );
   }
 }
