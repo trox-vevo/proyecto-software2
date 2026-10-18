@@ -9,6 +9,16 @@ export interface ParametrosPlazoFijo {
   termDays: PlazoDias;
 }
 
+/** Contrato de SimulationController. Los importes conservan su precisión decimal. */
+export interface ResultadoPlazoFijo {
+  productId: number;
+  entityName: string;
+  tea: string;
+  totalInterest: string;
+  monthlyInterest: string | null;
+  minimumAmount: string;
+}
+
 export function esPlazoPermitido(value: number): value is PlazoDias {
   return PLAZOS_PERMITIDOS.some((plazo) => plazo === value);
 }
