@@ -40,6 +40,8 @@
 .instrumentos { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
 .instrumentos button[aria-pressed="true"] { border-color: var(--accent); font-weight: 600; }
 .plazo-seccion > p { margin: 0.75rem 0; }
+.plazo-seccion .tabla-ahorros thead th { white-space: normal; }
+.plazo-seccion .tabla-ahorros td.num { white-space: nowrap; }
 
 @media (max-width: 600px) {
   .plazo-formulario { grid-template-columns: 1fr; }
