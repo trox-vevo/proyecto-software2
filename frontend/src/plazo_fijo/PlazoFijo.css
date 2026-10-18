@@ -1,0 +1,46 @@
+.plazo-formulario {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.plazo-formulario label,
+.plazo-formulario small {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.plazo-formulario input,
+.plazo-formulario select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.65rem;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.plazo-formulario button,
+.instrumentos button {
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font: inherit;
+  cursor: pointer;
+}
+
+.plazo-formulario button:disabled { opacity: 0.65; cursor: wait; }
+.plazo-formulario :focus-visible,
+.instrumentos button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.instrumentos { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem; }
+.instrumentos button[aria-pressed="true"] { border-color: var(--accent); font-weight: 600; }
+.plazo-seccion > p { margin: 0.75rem 0; }
+
+@media (max-width: 600px) {
+  .plazo-formulario { grid-template-columns: 1fr; }
+}
