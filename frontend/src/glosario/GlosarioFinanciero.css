@@ -1,0 +1,113 @@
+
+.glosario-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 20px;
+}
+
+.glosario-panel {
+  width: 100%;
+  max-width: 650px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px;
+  border: 1px solid #3b4559;
+  border-radius: 16px;
+  background: #1b1f2a;
+  color: #f5f5f5;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.glosario-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.glosario-encabezado h2 {
+  margin: 0;
+}
+
+.glosario-cerrar {
+  padding: 4px 12px;
+  border: 1px solid #566176;
+  border-radius: 8px;
+  background: transparent;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.glosario-introduccion {
+  color: #bdc5d5;
+  margin: 16px 0 22px;
+}
+
+.glosario-busqueda {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0 20px;
+  border: 1px solid #566176;
+  border-radius: 8px;
+  background: #12151d;
+  color: white;
+  font: inherit;
+}
+
+.glosario-destacado {
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid #63c7bb;
+  border-radius: 10px;
+  background: #173b39;
+}
+
+.glosario-termino {
+  padding: 14px 0;
+  border-bottom: 1px solid #374151;
+}
+
+.glosario-termino h3,
+.glosario-destacado h3 {
+  margin: 0 0 8px;
+  color: #86e0d4;
+}
+
+.glosario-termino p,
+.glosario-destacado p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.glosario-enlaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0 24px;
+}
+
+.glosario-enlace {
+  padding: 6px 10px;
+  border: 1px solid #466f79;
+  border-radius: 8px;
+  background: transparent;
+  color: #86e0d4;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.glosario-enlace:hover,
+.glosario-enlace:focus-visible,
+.glosario-cerrar:focus-visible {
+  outline: 2px solid #86e0d4;
+  outline-offset: 2px;
+}
