@@ -10,4 +10,5 @@ export const COLUMNAS: ColumnaTabla[] = [
   { clave: "interesGenerado", titulo: "Interés generado", ordenable: true, criterio: "RENTABILIDAD", numerica: true },
   { clave: "saldoFinal", titulo: "Saldo final", ordenable: true, criterio: "SALDO", numerica: true },
   { clave: "fechaApertura", titulo: "Fecha de apertura", ordenable: true, criterio: "FECHA" },
+  { clave: "coberturaFSD", titulo: "Cobertura FSD", ordenable: false },
 ];

@@ -5,6 +5,7 @@ export interface FilaAhorro {
   interesGenerado: string;
   saldoFinal: string;
   fechaApertura: string;
+  coberturaFSD?: string;
 }
 
 /** Criterios de ordenamiento que entiende el backend (enum CriterioOrden). */
