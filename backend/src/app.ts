@@ -8,6 +8,9 @@ import { RegistrationService } from "./registration/application/RegistrationServ
 import { SqliteUserRepository } from "./registration/infrastructure/SqliteUserRepository";
 import { UserController } from "./registration/interface/UserController";
 import { createUserRouter } from "./registration/interface/userRoutes";
+import { AuthService } from "./auth/application/AuthService";
+import { AuthController } from "./auth/interface/AuthController";
+import { createAuthRouter } from "./auth/interface/authRoutes";
 
 export const app = express();
 
@@ -37,6 +40,10 @@ const userController = new UserController(
 );
 
 app.use("/api/users", createUserRouter(userController));
+
+const authService = new AuthService(userRepository);
+const authController = new AuthController(authService);
+app.use("/api/auth", createAuthRouter(authController));
 
 app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   if (error instanceof SyntaxError) {
