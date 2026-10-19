@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { CuentaAhorros } from "../rentabilidad/CuentaAhorros";
+import { ServiceChannels } from "../simulation/domain/ServiceChannels";
 
 interface CuentaJson {
   id: string;
@@ -8,6 +9,8 @@ interface CuentaJson {
   saldo: number | string;
   tasaAnual: number | string;
   fechaApertura: string;
+  monthlyMaintenanceFee: string;
+  channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
 }
 
 /**
@@ -32,7 +35,15 @@ export class RepositorioCuentas {
       if (Number.isNaN(fecha.getTime())) {
         throw new Error(`La cuenta ${c.id} tiene una fechaApertura inválida: ${c.fechaApertura}`);
       }
-      return new CuentaAhorros(c.id, c.titular, c.saldo, c.tasaAnual, fecha);
+      return new CuentaAhorros(
+        c.id,
+        c.titular,
+        c.saldo,
+        c.tasaAnual,
+        fecha,
+        c.monthlyMaintenanceFee,
+        new ServiceChannels(c.channels.hasPhysicalBranches, c.channels.hasAtms),
+      );
     });
   }
 }

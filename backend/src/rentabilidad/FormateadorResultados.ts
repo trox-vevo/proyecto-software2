@@ -44,6 +44,12 @@ export class FormateadorResultados {
         interesGenerado: monto(d.interesGenerado),
         saldoFinal: monto(d.saldoFinal),
         fechaApertura: fecha(d.fechaApertura),
+        // Sin separador de miles: el frontend lo compara con Number(x) === 0 (US17)
+        monthlyMaintenanceFee: d.monthlyMaintenanceFee.toFixed(2),
+        channels: {
+          hasPhysicalBranches: d.channels.hasPhysicalBranches,
+          hasAtms: d.channels.hasAtms,
+        },
       };
     });
   }

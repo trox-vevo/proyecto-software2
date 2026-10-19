@@ -4,10 +4,11 @@ import { FixedDepositSimulationService } from "../../../src/simulation/applicati
 import { InvalidSimulationParametersError } from "../../../src/simulation/application/InvalidSimulationParametersError";
 import { FinancialProduct } from "../../../src/simulation/domain/FinancialProduct";
 import { FinancialProductRepository } from "../../../src/simulation/domain/FinancialProductRepository";
+import { ServiceChannels } from "../../../src/simulation/domain/ServiceChannels";
 import { PaymentMode } from "../../../src/simulation/domain/PaymentMode";
 
 const product = (id: number, tea: string, minimumAmount = "500") =>
-  new FinancialProduct(id, `Entidad ${id}`, new Decimal(tea), new Decimal(minimumAmount));
+  new FinancialProduct(id, `Entidad ${id}`, new Decimal(tea), new Decimal(minimumAmount), new ServiceChannels(true, true));
 
 // Repositorio falso: devuelve los productos solo para el departamento indicado
 const repositoryWith = (department: string, products: FinancialProduct[]): FinancialProductRepository => ({

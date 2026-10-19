@@ -3,6 +3,7 @@ import type { CriterioOrden } from "./CriterioOrden";
 import type { CuentaAhorros } from "./CuentaAhorros";
 import type { FiltroAhorros } from "./FiltroAhorros";
 import type { FormateadorResultados } from "./FormateadorResultados";
+import type { ResultadoFormateado } from "./ResultadoFormateado";
 import { ResultadoRentabilidad } from "./ResultadoRentabilidad";
 
 /** Coordina todo: filtra, calcula, ordena y formatea (diagrama de secuencia 1). */
@@ -25,7 +26,7 @@ export class MotorCalculo {
     this.algoritmo = algoritmo;
   }
 
-  calcular(cuentas: CuentaAhorros[], dias: number, criterio: CriterioOrden): string[] {
+  calcular(cuentas: CuentaAhorros[], dias: number, criterio: CriterioOrden): ResultadoFormateado[] {
     if (!Number.isInteger(dias) || dias <= 0) {
       throw new RangeError("dias debe ser un entero positivo");
     }
@@ -42,6 +43,8 @@ export class MotorCalculo {
           interesGenerado,
           cuenta.saldo.plus(interesGenerado),
           cuenta.fechaApertura,
+          cuenta.monthlyMaintenanceFee,
+          cuenta.channels,
         ),
       );
     }

@@ -76,7 +76,7 @@ export function TablaAhorrosView({
             <tr key={fila.cuentaId}>
               {columnas.map((columna) => (
                 <td key={columna.clave} className={columna.numerica ? "num" : undefined}>
-                  {fila[columna.clave]}
+                  {columna.mostrar ? columna.mostrar(fila[columna.clave]) : fila[columna.clave]}
                 </td>
               ))}
             </tr>

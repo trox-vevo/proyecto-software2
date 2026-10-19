@@ -1,9 +1,10 @@
-// Punto de entrada: carga .env y levanta el servidor. La app (rutas, dependencias)
-// se arma en app.ts, separada para que las pruebas la usen sin abrir el puerto 3000.
+// Punto de entrada y raíz de composición: elige las implementaciones (hoy, el repositorio en
+// memoria; luego, el de base de datos) y levanta el servidor. La app se arma en app.ts.
 import "dotenv/config";
-import { app } from "./app";
+import { createApp } from "./app";
+import { InMemoryProductRepository } from "./simulation/infrastructure/InMemoryProductRepository";
 
 const PORT = process.env.PORT ?? 3000;
-app.listen(PORT, () => {
+createApp(new InMemoryProductRepository()).listen(PORT, () => {
   console.log(`Backend escuchando en http://localhost:${PORT}`);
 });
