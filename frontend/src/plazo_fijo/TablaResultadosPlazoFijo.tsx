@@ -1,5 +1,6 @@
 import { obtenerColumnas } from "./columnas";
 import type { ModalidadPago, ResultadoPlazoFijo } from "./tipos";
+import { EmptyStateComponent } from "../tabla_ahorros/EmptyStateComponent";
 import "../tabla_ahorros/TablaAhorrosView.css";
 
 interface Props {
@@ -9,7 +10,16 @@ interface Props {
 
 export function TablaResultadosPlazoFijo({ resultados, modalidad }: Props) {
   const columnas = obtenerColumnas(modalidad);
-  if (resultados.length === 0) return <p role="status">No hay depósitos que mostrar con estos parámetros.</p>;
+  // US13: si no hay bancos para esta búsqueda, mostramos la pantalla de "Sin resultados".
+  if (resultados.length === 0) {
+    return (
+      <EmptyStateComponent
+        titulo="Sin resultados"
+        mensaje="No encontramos opciones para esta configuración. Intenta cambiar a otros parámetros"
+        icono="busqueda"
+      />
+    );
+  }
 
   return (
     <div className="tabla-contenedor" role="region" aria-label="Resultados de plazo fijo" tabIndex={0}>

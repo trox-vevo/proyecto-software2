@@ -37,9 +37,11 @@ describe("TablaResultadosPlazoFijo · US12", () => {
     expect(screen.getByRole("cell", { name: "—" })).toBeInTheDocument();
   });
 
-  it("informa de un arreglo vacío sin construir una nueva pantalla US13", () => {
+  it("con un arreglo vacío muestra el zero-state de US13 (TS-37)", () => {
     render(<TablaResultadosPlazoFijo resultados={[]} modalidad="MONTHLY" />);
-    expect(screen.getByRole("status")).toHaveTextContent("No hay depósitos");
+    expect(screen.getByRole("status")).toHaveTextContent("Sin resultados");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "No encontramos opciones para esta configuración. Intenta cambiar a otros parámetros");
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 

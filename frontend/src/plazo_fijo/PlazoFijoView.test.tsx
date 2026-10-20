@@ -91,7 +91,9 @@ describe("Flujo US06 + US12", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json([])));
     render(<PlazoFijoView />);
     completar();
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("No hay depósitos"));
+    // US13: si el servidor no devuelve bancos, se ve la pantalla de "Sin resultados".
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("No encontramos opciones para esta configuración"));
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
   it("mantiene el módulo de ahorros y conserva los parámetros al alternar las secciones", async () => {
