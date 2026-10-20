@@ -1,4 +1,5 @@
 import type { ColumnaTabla, CriterioOrden, EstadoTabla, FilaAhorro } from "./tipos";
+import { EmptyStateComponent } from "./EmptyStateComponent";
 import "./TablaAhorrosView.css";
 
 interface Props {
@@ -41,7 +42,13 @@ export function TablaAhorrosView({
   }
 
   if (estado === "VACIO") {
-    return <p className="tabla-mensaje">No hay cuentas que mostrar.</p>;
+    return (
+      <EmptyStateComponent
+        titulo="Sin resultados"
+        mensaje="No encontramos opciones para esta configuración. Intenta cambiar a otros parámetros"
+        icono="busqueda"
+      />
+    );
   }
 
   return (
