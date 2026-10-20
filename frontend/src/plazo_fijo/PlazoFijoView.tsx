@@ -10,7 +10,7 @@ export function PlazoFijoView() {
       <p>Configura tu inversión y compara los resultados de la simulación.</p>
       <p>Demostración: las entidades y tasas del catálogo actual son datos de ejemplo, no ofertas vigentes.</p>
       <FormularioPlazoFijo parametros={flujo.parametros} onCambiar={flujo.cambiarParametros}
-        onSimular={flujo.simular} cargando={flujo.cargando} />
+        onSimular={flujo.simular} cargando={flujo.cargando} errores={flujo.errores} />
       {flujo.cargando && <p role="status">Calculando resultados…</p>}
       {flujo.error && <p role="alert">{flujo.error}</p>}
       {flujo.simulacion && (

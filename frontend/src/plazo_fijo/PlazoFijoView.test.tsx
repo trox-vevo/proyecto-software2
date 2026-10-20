@@ -68,10 +68,11 @@ describe("Flujo US06 + US12", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(json({ message: "El monto mínimo de apertura es S/ 500.00." }, 400))
       .mockResolvedValueOnce(json([fila])));
     render(<PlazoFijoView />);
-    fireEvent.change(screen.getByLabelText(/Monto de inversión/), { target: { value: "499.99" } });
+    // US07: con 499.99 ya no se llama al backend, así que usamos 500.00 para probar el error del servidor.
+    fireEvent.change(screen.getByLabelText(/Monto de inversión/), { target: { value: "500.00" } });
     fireEvent.submit(screen.getByRole("form"));
     expect(await screen.findByRole("alert")).toHaveTextContent("El monto mínimo de apertura es S/ 500.00.");
-    expect(screen.getByLabelText(/Monto de inversión/)).toHaveValue("499.99");
+    expect(screen.getByLabelText(/Monto de inversión/)).toHaveValue("500.00");
     completar();
     await screen.findByText("Entidad de prueba");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
