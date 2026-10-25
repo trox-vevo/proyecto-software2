@@ -1,9 +1,14 @@
-import type { ColumnaTabla, CriterioOrden, EstadoTabla, FilaAhorro } from "./tipos";
+  import { Fragment } from "react";
+  import type { ColumnaTabla, CriterioOrden, EstadoTabla } from "./tipos";
+  import type { FilaConRiesgo } from "../semaforo/tipos";
+  import { SemaforoRiesgo } from "../semaforo/SemaforoRiesgo";
+  import { PanelDescripcionRiesgo } from "../semaforo/PanelDescripcionRiesgo";
+  import { useSemaforoPanel } from "../semaforo/useSemaforoPanel";
 import "./TablaAhorrosView.css";
 
 interface Props {
   columnas: ColumnaTabla[];
-  filas: FilaAhorro[];
+  filas: FilaConRiesgo[];
   estado: EstadoTabla;
   mensajeError?: string;
   criterioActivo: CriterioOrden;
@@ -21,6 +26,7 @@ export function TablaAhorrosView({
   onOrdenar,
   onReintentar,
 }: Props) {
+    const { filaAbiertaId, alternar } = useSemaforoPanel();
   if (estado === "CARGANDO") {
     return (
       <p className="tabla-mensaje" role="status">
@@ -72,15 +78,37 @@ export function TablaAhorrosView({
           </tr>
         </thead>
         <tbody>
-          {filas.map((fila) => (
-            <tr key={fila.cuentaId}>
-              {columnas.map((columna) => (
-                <td key={columna.clave} className={columna.numerica ? "num" : undefined}>
-                  {fila[columna.clave]}
-                </td>
-              ))}
-            </tr>
-          ))}
+          {filas.map((fila) => {
+            const abierta = filaAbiertaId === fila.cuentaId;
+            const panelId = `panel-riesgo-${fila.cuentaId}`;
+            return (
+              <Fragment key={fila.cuentaId}>
+                <tr>
+                  {columnas.map((columna) => (
+                    <td key={columna.clave} className={columna.numerica ? "num" : undefined}>
+                      {columna.clave === "riesgo" ? (
+                        <SemaforoRiesgo
+                          riesgo={fila.riesgo}
+                          expandido={abierta}
+                          panelId={panelId}
+                          onToggle={() => alternar(fila.cuentaId)}
+                        />
+                      ) : (
+                        fila[columna.clave]
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                {abierta && (
+                  <tr className="fila-panel-riesgo">
+                    <td colSpan={columnas.length}>
+                      <PanelDescripcionRiesgo id={panelId} riesgo={fila.riesgo} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>

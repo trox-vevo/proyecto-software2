@@ -13,7 +13,7 @@ export type CriterioOrden = "RENTABILIDAD" | "SALDO" | "FECHA";
 /** Describe una columna de la tabla. */
 export interface ColumnaTabla {
   /** Nombre del campo de FilaAhorro que muestra esta columna. */
-  clave: keyof FilaAhorro;
+  clave: keyof FilaAhorro | "riesgo";
   titulo: string;
   ordenable: boolean;
   /** Criterio que se envía al backend al ordenar por esta columna (solo si es ordenable). */
