@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { VistaObservable } from "../monitor/tipos";
+import { aplicarRiesgoMock } from "../semaforo/riesgoMock";
+import type { FilaConRiesgo } from "../semaforo/tipos";
 import type { ColumnaTabla, CriterioOrden, EstadoTabla, FilaAhorro } from "./tipos";
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -11,7 +13,7 @@ interface Consulta {
 
 interface Carga {
   consulta: Consulta;
-  filas: FilaAhorro[];
+  filas: FilaConRiesgo[];
   error?: string;
 }
 
@@ -46,7 +48,7 @@ export function useTablaAhorrosController() {
       .then((datos) => {
         if (controlador.signal.aborted) return;
         marcas.current.finCargaMs = performance.now();
-        setCarga({ consulta, filas: datos.resultados });
+          setCarga({ consulta, filas: aplicarRiesgoMock(datos.resultados) });
       })
       .catch((error: unknown) => {
         if (controlador.signal.aborted) return;

@@ -17,8 +17,7 @@ export type CriterioOrden = "RENTABILIDAD" | "SALDO" | "FECHA";
 /** Describe una columna de la tabla. */
 export interface ColumnaTabla {
   /** Nombre del campo de FilaAhorro que muestra esta columna (solo campos de texto). */
-  clave: Exclude<keyof FilaAhorro, "channels">;
-  /** Cómo mostrar el valor; si no se indica, se muestra tal cual. */
+  clave: Exclude<keyof FilaAhorro, "channels"> | "riesgo";
   mostrar?: (valor: string) => string;
   titulo: string;
   ordenable: boolean;

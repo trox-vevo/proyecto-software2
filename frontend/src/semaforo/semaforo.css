@@ -1,0 +1,7 @@
+/* Colores del semáforo. Para cambiarlos (o adaptarlos a daltonismo) basta con editar este bloque. */
+:root {
+  --semaforo-verde: #2e9e5b;
+  --semaforo-amarillo: #e0a800;
+  --semaforo-rojo: #d64545;
+  --semaforo-sin-clasificar: #8a8a8a;
+}
