@@ -1,9 +1,9 @@
-  import { Fragment } from "react";
-  import type { ColumnaTabla, CriterioOrden, EstadoTabla } from "./tipos";
-  import type { FilaConRiesgo } from "../semaforo/tipos";
-  import { SemaforoRiesgo } from "../semaforo/SemaforoRiesgo";
-  import { PanelDescripcionRiesgo } from "../semaforo/PanelDescripcionRiesgo";
-  import { useSemaforoPanel } from "../semaforo/useSemaforoPanel";
+import { Fragment } from "react";
+import type { ColumnaTabla, CriterioOrden, EstadoTabla } from "./tipos";
+import type { FilaConRiesgo } from "../semaforo/tipos";
+import { SemaforoRiesgo } from "../semaforo/SemaforoRiesgo";
+import { PanelDescripcionRiesgo } from "../semaforo/PanelDescripcionRiesgo";
+import { useSemaforoPanel } from "../semaforo/useSemaforoPanel";
 import "./TablaAhorrosView.css";
 
 interface Props {
@@ -26,7 +26,7 @@ export function TablaAhorrosView({
   onOrdenar,
   onReintentar,
 }: Props) {
-    const { filaAbiertaId, alternar } = useSemaforoPanel();
+  const { filaAbiertaId, alternar } = useSemaforoPanel();
   if (estado === "CARGANDO") {
     return (
       <p className="tabla-mensaje" role="status">
@@ -56,7 +56,8 @@ export function TablaAhorrosView({
         <thead>
           <tr>
             {columnas.map((columna) => {
-              const activa = columna.ordenable && columna.criterio === criterioActivo;
+              const activa =
+                columna.ordenable && columna.criterio === criterioActivo;
               return (
                 <th
                   key={columna.clave}
@@ -85,7 +86,10 @@ export function TablaAhorrosView({
               <Fragment key={fila.cuentaId}>
                 <tr>
                   {columnas.map((columna) => (
-                    <td key={columna.clave} className={columna.numerica ? "num" : undefined}>
+                    <td
+                      key={columna.clave}
+                      className={columna.numerica ? "num" : undefined}
+                    >
                       {columna.clave === "riesgo" ? (
                         <SemaforoRiesgo
                           riesgo={fila.riesgo}
@@ -93,6 +97,8 @@ export function TablaAhorrosView({
                           panelId={panelId}
                           onToggle={() => alternar(fila.cuentaId)}
                         />
+                      ) : columna.mostrar ? (
+                        columna.mostrar(fila[columna.clave])
                       ) : (
                         fila[columna.clave]
                       )}
@@ -102,7 +108,10 @@ export function TablaAhorrosView({
                 {abierta && (
                   <tr className="fila-panel-riesgo">
                     <td colSpan={columnas.length}>
-                      <PanelDescripcionRiesgo id={panelId} riesgo={fila.riesgo} />
+                      <PanelDescripcionRiesgo
+                        id={panelId}
+                        riesgo={fila.riesgo}
+                      />
                     </td>
                   </tr>
                 )}

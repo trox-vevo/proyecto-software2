@@ -18,6 +18,11 @@ const toResponse = (result: SimulationResult) => ({
   tea: result.tea.toString(),
   totalInterest: result.totalInterest.toFixed(2),
   monthlyInterest: result.monthlyInterest?.toFixed(2) ?? null,
+  // US18. Sin monthlyMaintenanceFee: US17 no aplica a plazo fijo
+  channels: {
+    hasPhysicalBranches: result.channels.hasPhysicalBranches,
+    hasAtms: result.channels.hasAtms,
+  },
 });
 
 // Traduce HTTP ↔ servicio para POST /api/simulations/fixed-deposits, sin lógica de negocio.

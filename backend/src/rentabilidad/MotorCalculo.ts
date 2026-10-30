@@ -3,8 +3,8 @@ import type { CriterioOrden } from "./CriterioOrden";
 import type { CuentaAhorros } from "./CuentaAhorros";
 import type { FiltroAhorros } from "./FiltroAhorros";
 import type { FormateadorResultados } from "./FormateadorResultados";
-import { ResultadoRentabilidad } from "./ResultadoRentabilidad";
 import type { ResultadoFormateado } from "./ResultadoFormateado";
+import { ResultadoRentabilidad } from "./ResultadoRentabilidad";
 
 /** Coordina todo: filtra, calcula, ordena y formatea (diagrama de secuencia 1). */
 export class MotorCalculo {
@@ -43,6 +43,8 @@ export class MotorCalculo {
           interesGenerado,
           cuenta.saldo.plus(interesGenerado),
           cuenta.fechaApertura,
+          cuenta.monthlyMaintenanceFee,
+          cuenta.channels,
         ),
       );
     }

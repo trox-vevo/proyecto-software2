@@ -30,6 +30,7 @@ export class MonthlyPaymentCalculator implements InterestCalculator {
       product.tea,
       totalInterest.toDecimalPlaces(2, Decimal.ROUND_HALF_UP),
       monthlyInterest.toDecimalPlaces(2, Decimal.ROUND_HALF_UP),
+      product.channels,
     );
   }
 }
