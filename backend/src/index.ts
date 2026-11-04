@@ -3,8 +3,14 @@
 import "dotenv/config";
 import { createApp } from "./app";
 import { InMemoryProductRepository } from "./simulation/infrastructure/InMemoryProductRepository";
+import { SqliteUserRepository } from "./registration/infrastructure/SqliteUserRepository";
 
 const PORT = process.env.PORT ?? 3000;
-createApp(new InMemoryProductRepository()).listen(PORT, () => {
+const users = new SqliteUserRepository(process.env.USER_DB_PATH ?? "data/usuarios.sqlite");
+const server = createApp(new InMemoryProductRepository(), users).listen(PORT, () => {
   console.log(`Backend escuchando en http://localhost:${PORT}`);
 });
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => server.close(() => users.close()));
+}

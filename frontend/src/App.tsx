@@ -10,8 +10,13 @@ import { COLUMNAS } from "./tabla_ahorros/columnas";
 import { TablaAhorrosView } from "./tabla_ahorros/TablaAhorrosView";
 import { useTablaAhorrosController } from "./tabla_ahorros/useTablaAhorrosController";
 import "./App.css";
+import { RegistrationRoute } from "./registration/RegistrationRoute";
 
 export default function App() {
+  return <RegistrationRoute><FinanceApp /></RegistrationRoute>;
+}
+
+function FinanceApp() {
   const [tipoInstrumento, setTipoInstrumento] =
     useState<TipoInstrumento>("AHORROS");
   const tabla = useTablaAhorrosController();

@@ -4,15 +4,22 @@ import { ahorrosRouter } from "./routes/ahorros";
 import { FixedDepositSimulationService } from "./simulation/application/FixedDepositSimulationService";
 import { FinancialProductRepository } from "./simulation/domain/FinancialProductRepository";
 import { SimulationController } from "./simulation/interface/SimulationController";
+import { RegistrationService } from "./registration/application/RegistrationService";
+import type { UserRepository } from "./registration/domain/UserRepository";
+import { UserController } from "./registration/interface/UserController";
+import { createUserRouter } from "./registration/interface/userRoutes";
 
 // Arma la aplicación Express: middlewares, rutas de cada HU, conexión de dependencias
 // y el manejador global de errores. No escucha ningún puerto (eso lo hace index.ts).
 // Recibe el repositorio para que las pruebas usen sus propios datos y no los de demostración.
-export function createApp(productRepository: FinancialProductRepository) {
+export function createApp(productRepository: FinancialProductRepository, userRepository?: UserRepository) {
   const app = express();
   app.use(cors());
   app.use(express.json());
   app.use("/api/ahorros", ahorrosRouter);
+  if (userRepository) {
+    app.use("/api/users", createUserRouter(new UserController(new RegistrationService(userRepository))));
+  }
 
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
