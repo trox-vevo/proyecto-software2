@@ -5,6 +5,8 @@ import { SemaforoRiesgo } from "../semaforo/SemaforoRiesgo";
 import { PanelDescripcionRiesgo } from "../semaforo/PanelDescripcionRiesgo";
 import { useSemaforoPanel } from "../semaforo/useSemaforoPanel";
 import "./TablaAhorrosView.css";
+import { IndicadorFSD } from "../fsd/IndicadorFSD";
+import { TERMINO_POR_COLUMNA } from "../glosario/terminos";
 
 interface Props {
   columnas: ColumnaTabla[];
@@ -14,6 +16,7 @@ interface Props {
   criterioActivo: CriterioOrden;
   onOrdenar: (columna: ColumnaTabla) => void;
   onReintentar: () => void;
+  onConsultarTermino?: (termino: string) => void;
 }
 
 /** Solo dibuja: según el estado muestra un mensaje o la tabla. No sabe de dónde vienen los datos. */
@@ -25,6 +28,7 @@ export function TablaAhorrosView({
   criterioActivo,
   onOrdenar,
   onReintentar,
+  onConsultarTermino,
 }: Props) {
   const { filaAbiertaId, alternar } = useSemaforoPanel();
   if (estado === "CARGANDO") {
@@ -62,6 +66,7 @@ export function TablaAhorrosView({
                 <th
                   key={columna.clave}
                   scope="col"
+                  aria-label={columna.titulo}
                   className={columna.numerica ? "num" : undefined}
                   aria-sort={activa ? "descending" : undefined}
                 >
@@ -73,6 +78,7 @@ export function TablaAhorrosView({
                   ) : (
                     columna.titulo
                   )}
+                  {onConsultarTermino && TERMINO_POR_COLUMNA[columna.clave] && <button className="glosario-contexto" type="button" aria-label={`Consultar ${TERMINO_POR_COLUMNA[columna.clave]}`} onClick={() => onConsultarTermino(TERMINO_POR_COLUMNA[columna.clave])}>ⓘ</button>}
                 </th>
               );
             })}
@@ -90,7 +96,7 @@ export function TablaAhorrosView({
                       key={columna.clave}
                       className={columna.numerica ? "num" : undefined}
                     >
-                      {columna.clave === "riesgo" ? (
+                      {columna.clave === "coberturaFSD" ? <IndicadorFSD cobertura={fila.coberturaFSD} /> : columna.clave === "riesgo" ? (
                         <SemaforoRiesgo
                           riesgo={fila.riesgo}
                           expandido={abierta}

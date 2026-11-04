@@ -11,6 +11,7 @@ interface CuentaJson {
   fechaApertura: string;
   monthlyMaintenanceFee: string;
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
+  coberturaFSD?: unknown;
 }
 
 /**
@@ -43,6 +44,7 @@ export class RepositorioCuentas {
         fecha,
         c.monthlyMaintenanceFee,
         new ServiceChannels(c.channels.hasPhysicalBranches, c.channels.hasAtms),
+        c.coberturaFSD,
       );
     });
   }

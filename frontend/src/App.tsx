@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { applyFilters } from "./filters/resultFilters";
 import { ResultFiltersPanel } from "./filters/ResultFiltersPanel";
 import { useResultFilters } from "./filters/useResultFilters";
@@ -10,8 +10,11 @@ import { COLUMNAS } from "./tabla_ahorros/columnas";
 import { TablaAhorrosView } from "./tabla_ahorros/TablaAhorrosView";
 import { useTablaAhorrosController } from "./tabla_ahorros/useTablaAhorrosController";
 import "./App.css";
+import { GlosarioFinanciero } from "./glosario/GlosarioFinanciero";
 
 export default function App() {
+  const [glosario, setGlosario] = useState<{ termino: string | null } | null>(null);
+  const cerrarGlosario = useCallback(() => setGlosario(null), []);
   const [tipoInstrumento, setTipoInstrumento] =
     useState<TipoInstrumento>("AHORROS");
   const tabla = useTablaAhorrosController();
@@ -26,6 +29,11 @@ export default function App() {
   return (
     <main className="pagina">
       <h1>Yupay Finance</h1>
+      <div className="glosario-enlaces">
+        <button className="glosario-enlace" type="button" onClick={() => setGlosario({ termino: null })}>Glosario financiero</button>
+        <span>Consulta:</span>
+        {["TEA", "TREA", "Rentabilidad", "Depósito a plazo fijo"].map((termino) => <button className="glosario-enlace" key={termino} type="button" onClick={() => setGlosario({ termino })}>{termino}</button>)}
+      </div>
       <FormularioInversion
         tipoInstrumento={tipoInstrumento}
         onTipoInstrumentoChange={setTipoInstrumento}
@@ -50,10 +58,12 @@ export default function App() {
             criterioActivo={tabla.criterioActivo}
             onOrdenar={tabla.onOrdenar}
             onReintentar={tabla.reintentar}
+            onConsultarTermino={(termino) => setGlosario({ termino })}
           />
         </section>
       )}
       <PanelBloqueos eventos={monitor.eventos} umbralMs={monitor.umbralMs} />
+      <GlosarioFinanciero abierto={glosario !== null} terminoSeleccionado={glosario?.termino ?? null} onCerrar={cerrarGlosario} />
     </main>
   );
 }

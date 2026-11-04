@@ -37,6 +37,7 @@ export const COLUMNAS: ColumnaTabla[] = [
     criterio: "FECHA",
   },
   { clave: "riesgo", titulo: "Riesgo", ordenable: false },
+  { clave: "coberturaFSD", titulo: "Cobertura FSD", ordenable: false },
   {
     clave: "monthlyMaintenanceFee",
     titulo: "Costo de mantenimiento",

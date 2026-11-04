@@ -1,6 +1,8 @@
+import type { CoberturaFSD } from "../fsd/IndicadorFSD";
 /** Una fila de la tabla: coincide con lo que devuelve el backend, todo en texto ya formateado. */
 export interface FilaAhorro {
   cuentaId: string;
+  coberturaFSD?: CoberturaFSD;
   capitalInicial: string;
   interesGenerado: string;
   saldoFinal: string;
@@ -17,7 +19,7 @@ export type CriterioOrden = "RENTABILIDAD" | "SALDO" | "FECHA";
 /** Describe una columna de la tabla. */
 export interface ColumnaTabla {
   /** Nombre del campo de FilaAhorro que muestra esta columna (solo campos de texto). */
-  clave: Exclude<keyof FilaAhorro, "channels"> | "riesgo";
+  clave: Exclude<keyof FilaAhorro, "channels" | "coberturaFSD"> | "riesgo" | "coberturaFSD";
   mostrar?: (valor: string) => string;
   titulo: string;
   ordenable: boolean;
