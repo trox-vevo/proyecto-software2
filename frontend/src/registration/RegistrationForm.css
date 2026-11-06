@@ -1,0 +1,9 @@
+.registro { max-width: 30rem; margin: 1.5rem auto; padding: 1.5rem; border: 1px solid var(--border); border-radius: 12px; }
+.registro form { display: grid; gap: 1rem; margin-top: 1rem; }
+.registro label { display: block; color: var(--text-h); margin-bottom: .35rem; }
+.registro input { box-sizing: border-box; width: 100%; padding: .7rem; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text-h); font: inherit; }
+.registro input[aria-invalid="true"] { border-color: #c33737; }
+.registro [role="alert"] { color: var(--text-h); margin-top: .35rem; }
+.registro button { padding: .7rem 1rem; font: inherit; cursor: pointer; }
+.registro button:disabled { cursor: wait; opacity: .7; }
+.registro input:focus-visible, .registro button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
