@@ -68,10 +68,11 @@ describe("Flujo US06 + US12", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(json({ message: "El monto mínimo de apertura es S/ 500.00." }, 400))
       .mockResolvedValueOnce(json([fila])));
     render(<PlazoFijoView />);
-    fireEvent.change(screen.getByLabelText(/Monto de inversión/), { target: { value: "499.99" } });
+    // US07: con 499.99 ya no se llama al backend, así que usamos 500.00 para probar el error del servidor.
+    fireEvent.change(screen.getByLabelText(/Monto de inversión/), { target: { value: "500.00" } });
     fireEvent.submit(screen.getByRole("form"));
     expect(await screen.findByRole("alert")).toHaveTextContent("El monto mínimo de apertura es S/ 500.00.");
-    expect(screen.getByLabelText(/Monto de inversión/)).toHaveValue("499.99");
+    expect(screen.getByLabelText(/Monto de inversión/)).toHaveValue("500.00");
     completar();
     await screen.findByText("Entidad de prueba");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -90,7 +91,9 @@ describe("Flujo US06 + US12", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json([])));
     render(<PlazoFijoView />);
     completar();
-    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("No hay depósitos"));
+    // US13: si el servidor no devuelve bancos, se ve la pantalla de "Sin resultados".
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("No encontramos opciones para esta configuración"));
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
   it("mantiene el módulo de ahorros y conserva los parámetros al alternar las secciones", async () => {

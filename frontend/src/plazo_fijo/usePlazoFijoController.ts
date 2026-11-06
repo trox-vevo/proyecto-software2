@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { simularPlazoFijo } from "./api";
 import type { ParametrosPlazoFijo, ResultadoPlazoFijo } from "./tipos";
+import { validarParametros } from "./validacion";
 
 interface Simulacion {
   parametros: ParametrosPlazoFijo;
@@ -15,6 +16,7 @@ export function usePlazoFijoController() {
   const [simulacion, setSimulacion] = useState<Simulacion | null>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errores, setErrores] = useState<string[]>([]);
   const solicitud = useRef<AbortController | null>(null);
 
   useEffect(() => () => solicitud.current?.abort(), []);
@@ -25,10 +27,16 @@ export function usePlazoFijoController() {
     setParametros(nuevos);
     setSimulacion(null);
     setError(null);
+    setErrores([]);
     setCargando(false);
   }
 
   async function simular() {
+    // US07: si el monto es menor a 500, mostramos el aviso y no llamamos al backend.
+    const encontrados = validarParametros(parametros);
+    setErrores(encontrados);
+    if (encontrados.length > 0) return;
+
     solicitud.current?.abort();
     const controlador = new AbortController();
     solicitud.current = controlador;
@@ -51,5 +59,5 @@ export function usePlazoFijoController() {
     }
   }
 
-  return { parametros, cambiarParametros, simular, simulacion, cargando, error };
+  return { parametros, cambiarParametros, simular, simulacion, cargando, error, errores };
 }

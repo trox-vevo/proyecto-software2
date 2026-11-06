@@ -20,11 +20,14 @@ interface Props {
   onCambiar: (parametros: ParametrosPlazoFijo) => void;
   onSimular: () => void;
   cargando?: boolean;
+  /** US07: mensajes de error que se muestran en rojo debajo del monto. */
+  errores?: string[];
 }
 
 /** Vista controlada de US06. El estado pertenece al flujo, no al almacenamiento. */
-export function FormularioPlazoFijo({ parametros, onCambiar, onSimular, cargando = false }: Props) {
+export function FormularioPlazoFijo({ parametros, onCambiar, onSimular, cargando = false, errores = [] }: Props) {
   const id = useId();
+  const hayErrores = errores.length > 0;
 
   function enviar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,10 +41,13 @@ export function FormularioPlazoFijo({ parametros, onCambiar, onSimular, cargando
       <div>
         <label htmlFor={`${id}-monto`}>Monto de inversión (S/)</label>
         <input id={`${id}-monto`} name="amount" type="text" inputMode="decimal"
-          required pattern="[0-9]+([.][0-9]{1,2})?" aria-describedby={`${id}-ayuda`}
+          required pattern="[0-9]+([.][0-9]{1,2})?"
+          aria-describedby={hayErrores ? `${id}-ayuda ${id}-error` : `${id}-ayuda`}
+          aria-invalid={hayErrores}
           value={parametros.amount}
           onChange={(event) => onCambiar({ ...parametros, amount: event.target.value })} />
         <small id={`${id}-ayuda`}>Usa un punto para los decimales, por ejemplo 1000.00.</small>
+        {hayErrores && <p id={`${id}-error`} className="plazo-error" role="alert">{errores.join(" ")}</p>}
       </div>
       <div>
         <label htmlFor={`${id}-departamento`}>Departamento</label>
