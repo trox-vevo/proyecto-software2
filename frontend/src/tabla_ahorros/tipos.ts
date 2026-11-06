@@ -9,6 +9,8 @@ export interface FilaAhorro {
   monthlyMaintenanceFee: string;
   /** US18: canales de atención física; lo usan los filtros, no se muestra como columna. */
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
+  /** US19: banca digital y app móvil; se muestran como íconos en su propia columna. */
+  digitalChannels: { hasDigitalBanking: boolean; hasMobileApp: boolean };
 }
 
 /** Criterios de ordenamiento que entiende el backend (enum CriterioOrden). */
@@ -17,7 +19,7 @@ export type CriterioOrden = "RENTABILIDAD" | "SALDO" | "FECHA";
 /** Describe una columna de la tabla. */
 export interface ColumnaTabla {
   /** Nombre del campo de FilaAhorro que muestra esta columna (solo campos de texto). */
-  clave: Exclude<keyof FilaAhorro, "channels">;
+  clave: Exclude<keyof FilaAhorro, "channels" | "digitalChannels">;
   /** Cómo mostrar el valor; si no se indica, se muestra tal cual. */
   mostrar?: (valor: string) => string;
   titulo: string;

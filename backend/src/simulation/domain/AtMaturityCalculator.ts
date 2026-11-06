@@ -27,6 +27,7 @@ export class AtMaturityCalculator implements InterestCalculator {
       totalInterest,
       null,
       product.channels,
+      product.digitalChannels,
     );
   }
 }

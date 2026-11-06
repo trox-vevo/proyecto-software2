@@ -1,0 +1,29 @@
+/* US19: íconos de banca digital y app móvil en cada fila */
+.canales-digitales {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.canal {
+  display: inline-flex;
+}
+
+.canal-si {
+  color: var(--accent, currentColor);
+}
+
+/* Sin el canal: gris y tachado con una línea, para no depender solo del color */
+.canal-no {
+  position: relative;
+  opacity: 0.35;
+}
+
+.canal-no::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -2px;
+  right: -2px;
+  border-top: 2px solid currentColor;
+  transform: rotate(-45deg);
+}

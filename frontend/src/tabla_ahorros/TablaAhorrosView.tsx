@@ -1,3 +1,4 @@
+import { DigitalChannelIcons } from "../filters/DigitalChannelIcons";
 import type { ColumnaTabla, CriterioOrden, EstadoTabla, FilaAhorro } from "./tipos";
 import "./TablaAhorrosView.css";
 
@@ -69,6 +70,7 @@ export function TablaAhorrosView({
                 </th>
               );
             })}
+            <th scope="col">Canales digitales</th>
           </tr>
         </thead>
         <tbody>
@@ -79,6 +81,10 @@ export function TablaAhorrosView({
                   {columna.mostrar ? columna.mostrar(fila[columna.clave]) : fila[columna.clave]}
                 </td>
               ))}
+              {/* US19: íconos de banca digital y app móvil */}
+              <td>
+                <DigitalChannelIcons channels={fila.digitalChannels} />
+              </td>
             </tr>
           ))}
         </tbody>

@@ -9,4 +9,6 @@ export interface ResultadoFormateado {
   monthlyMaintenanceFee: string;
   /** US18: misma forma que en POST /api/simulations/fixed-deposits. */
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
+  /** US19: misma forma que en POST /api/simulations/fixed-deposits. */
+  digitalChannels: { hasDigitalBanking: boolean; hasMobileApp: boolean };
 }

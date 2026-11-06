@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { DigitalChannels } from "./DigitalChannels";
 import { ServiceChannels } from "./ServiceChannels";
 
 // Resultado de simular un producto: lo que muestra la tabla del frontend (US12).
@@ -12,5 +13,7 @@ export class SimulationResult {
     // null en AT_MATURITY: el interés mensual no aplica
     readonly monthlyInterest: Decimal | null,
     readonly channels: ServiceChannels,
+    // US19: banca digital y app móvil de la entidad
+    readonly digitalChannels: DigitalChannels,
   ) {}
 }

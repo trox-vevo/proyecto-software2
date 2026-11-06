@@ -50,6 +50,10 @@ export class FormateadorResultados {
           hasPhysicalBranches: d.channels.hasPhysicalBranches,
           hasAtms: d.channels.hasAtms,
         },
+        digitalChannels: {
+          hasDigitalBanking: d.digitalChannels.hasDigitalBanking,
+          hasMobileApp: d.digitalChannels.hasMobileApp,
+        },
       };
     });
   }

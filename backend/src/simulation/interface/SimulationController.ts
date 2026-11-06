@@ -23,6 +23,11 @@ const toResponse = (result: SimulationResult) => ({
     hasPhysicalBranches: result.channels.hasPhysicalBranches,
     hasAtms: result.channels.hasAtms,
   },
+  // US19
+  digitalChannels: {
+    hasDigitalBanking: result.digitalChannels.hasDigitalBanking,
+    hasMobileApp: result.digitalChannels.hasMobileApp,
+  },
 });
 
 // Traduce HTTP ↔ servicio para POST /api/simulations/fixed-deposits, sin lógica de negocio.
