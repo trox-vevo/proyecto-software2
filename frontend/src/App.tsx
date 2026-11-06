@@ -1,43 +1,67 @@
+import { useState } from "react";
+import { applyFilters } from "./filters/resultFilters";
+import { ResultFiltersPanel } from "./filters/ResultFiltersPanel";
+import { useResultFilters } from "./filters/useResultFilters";
+import { FormularioInversion } from "./inversiones/FormularioInversion";
+import type { TipoInstrumento } from "./inversiones/FormularioInversion";
 import { PanelBloqueos } from "./monitor/PanelBloqueos";
 import { useMonitorBloqueos } from "./monitor/useMonitorBloqueos";
+import { RegistrationRoute } from "./registration/RegistrationRoute";
 import { COLUMNAS } from "./tabla_ahorros/columnas";
 import { TablaAhorrosView } from "./tabla_ahorros/TablaAhorrosView";
 import { useTablaAhorrosController } from "./tabla_ahorros/useTablaAhorrosController";
-import { LoginView, type AuthSession } from "./auth/LoginView";
-import { useState } from "react";
 import "./App.css";
 
 export default function App() {
-  const [session, setSession] = useState<AuthSession | null>(null);
-
-  if (session === null) {
-    return <LoginView onLogin={setSession} />;
-  }
-
-  return <Dashboard onLogout={() => setSession(null)} />;
+  return (
+    <RegistrationRoute>
+      <FinanceApp />
+    </RegistrationRoute>
+  );
 }
 
-function Dashboard({ onLogout }: { onLogout: () => void }) {
+function FinanceApp() {
+  const [tipoInstrumento, setTipoInstrumento] =
+    useState<TipoInstrumento>("AHORROS");
   const tabla = useTablaAhorrosController();
   const monitor = useMonitorBloqueos(tabla.vista);
+  const filtros = useResultFilters("SAVINGS");
+  const filasVisibles = applyFilters(tabla.filas, filtros.active);
+  const estado =
+    tabla.estado === "CON_DATOS" && filasVisibles.length === 0
+      ? "VACIO"
+      : tabla.estado;
 
   return (
     <main className="pagina">
-      <header className="pagina-encabezado">
-        <h1>Cuentas de ahorro</h1>
-        <button className="boton-cerrar-sesion" type="button" onClick={onLogout}>
-          Cerrar sesión
-        </button>
-      </header>
-      <TablaAhorrosView
-        columnas={COLUMNAS}
-        filas={tabla.filas}
-        estado={tabla.estado}
-        mensajeError={tabla.mensajeError}
-        criterioActivo={tabla.criterioActivo}
-        onOrdenar={tabla.onOrdenar}
-        onReintentar={tabla.reintentar}
+      <h1>Yupay Finance</h1>
+      <FormularioInversion
+        tipoInstrumento={tipoInstrumento}
+        onTipoInstrumentoChange={setTipoInstrumento}
       />
+      {tipoInstrumento === "AHORROS" && (
+        <section aria-labelledby="titulo-resultados-ahorros">
+          <h2 id="titulo-resultados-ahorros">Cuentas de ahorro disponibles</h2>
+          {tabla.estado === "CON_DATOS" && (
+            <ResultFiltersPanel
+              available={filtros.available}
+              active={filtros.active}
+              onToggle={filtros.toggle}
+              visibleCount={filasVisibles.length}
+              totalCount={tabla.filas.length}
+            />
+          )}
+          <TablaAhorrosView
+            columnas={COLUMNAS}
+            filas={filasVisibles}
+            estado={estado}
+            mensajeError={tabla.mensajeError}
+            criterioActivo={tabla.criterioActivo}
+            onOrdenar={tabla.onOrdenar}
+            onReintentar={tabla.reintentar}
+          />
+        </section>
+      )}
       <PanelBloqueos eventos={monitor.eventos} umbralMs={monitor.umbralMs} />
     </main>
   );

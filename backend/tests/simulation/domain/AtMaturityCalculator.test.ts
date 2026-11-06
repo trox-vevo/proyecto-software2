@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { AtMaturityCalculator } from "../../../src/simulation/domain/AtMaturityCalculator";
 import { FinancialProduct } from "../../../src/simulation/domain/FinancialProduct";
+import { ServiceChannels } from "../../../src/simulation/domain/ServiceChannels";
 
 const productWithTea = (tea: string) =>
-  new FinancialProduct(1, "Banco de Prueba", new Decimal(tea), new Decimal("500"));
+  new FinancialProduct(1, "Banco de Prueba", new Decimal(tea), new Decimal("500"), new ServiceChannels(true, true));
 
 // US10 · Escenario 1 — Pago al final del periodo.
 // Valores esperados: tabla "Casos de prueba" de CLAUDE.md §6.
@@ -36,13 +37,15 @@ describe("AtMaturityCalculator", () => {
     expect(result.monthlyInterest).toBeNull();
   });
 
-  it("copia id, entidad y TEA del producto al resultado", () => {
-    const product = new FinancialProduct(7, "Caja Arequipa", new Decimal("0.05"), new Decimal("500"));
+  it("copia id, entidad, TEA y canales del producto al resultado", () => {
+    const channels = new ServiceChannels(true, false);
+    const product = new FinancialProduct(7, "Caja Arequipa", new Decimal("0.05"), new Decimal("500"), channels);
 
     const result = calculator.calculate(new Decimal("1000"), product, 180);
 
     expect(result.productId).toBe(7);
     expect(result.entityName).toBe("Caja Arequipa");
     expect(result.tea.equals("0.05")).toBe(true);
+    expect(result.channels).toBe(channels);
   });
 });

@@ -1,0 +1,102 @@
+.formulario-inversion {
+  margin-bottom: 2rem;
+}
+
+.formulario-inversion h2 {
+  margin-bottom: 1rem;
+}
+
+.selector-instrumento,
+.parametros-inversion {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.selector-instrumento {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  margin: 0 0 1rem;
+}
+
+.selector-instrumento legend {
+  padding: 0 0.35rem;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.selector-instrumento label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.parametros-inversion h3 {
+  margin: 0 0 1rem;
+  color: var(--text-h);
+  font-size: 1.1rem;
+}
+
+.campos-inversion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 1rem;
+}
+
+.campos-inversion label {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  color: var(--text-h);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.campos-inversion input,
+.campos-inversion select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.5rem 0.65rem;
+  color: var(--text-h);
+  background: var(--bg);
+  font: inherit;
+}
+
+.campos-inversion input:focus-visible,
+.campos-inversion select:focus-visible,
+.selector-instrumento input:focus-visible,
+.boton-inversion:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.ayuda-inversion {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.boton-inversion {
+  margin-top: 1rem;
+  border: 0;
+  border-radius: 5px;
+  padding: 0.7rem 1rem;
+  color: white;
+  background: #6c2db5;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton-inversion:hover {
+  background: #55218f;
+}
+
+.confirmacion-inversion {
+  margin-top: 0.75rem;
+  color: var(--text-h);
+}

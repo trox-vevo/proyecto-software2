@@ -1,10 +1,22 @@
 import { once } from "node:events";
 import { Server } from "node:http";
 import { AddressInfo } from "node:net";
+import Decimal from "decimal.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { app } from "../../../src/app";
+import { createApp } from "../../../src/app";
+import { FinancialProduct } from "../../../src/simulation/domain/FinancialProduct";
+import { ServiceChannels } from "../../../src/simulation/domain/ServiceChannels";
 
-// Prueba de integración: app real (InMemoryProductRepository) en un puerto libre.
+// Prueba de integración: app real en un puerto libre, con datos propios (no los de demostración).
+const products = [
+  new FinancialProduct(1, "Entidad 1", new Decimal("0.055"), new Decimal("500"), new ServiceChannels(true, true)),
+  new FinancialProduct(2, "Entidad 2", new Decimal("0.0575"), new Decimal("1000"), new ServiceChannels(true, false)),
+  new FinancialProduct(3, "Entidad 3", new Decimal("0.042"), new Decimal("500"), new ServiceChannels(false, true)),
+];
+const app = createApp({
+  findFixedDepositsByDepartment: async (department) => (department === "Lima" ? products : []),
+});
+
 let server: Server;
 let endpoint: string;
 
@@ -34,33 +46,44 @@ const validRequest = {
 };
 
 describe("POST /api/simulations/fixed-deposits", () => {
-  it("200: devuelve los productos ordenados, con decimales como string", async () => {
+  it("200: devuelve los productos ordenados, con decimales como string y canales (US18)", async () => {
     const response = await post(validRequest);
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual([
       {
         productId: 2,
-        entityName: "Caja Huancayo",
+        entityName: "Entidad 2",
         tea: "0.0575",
         totalInterest: "57.50",
         monthlyInterest: null,
+        channels: { hasPhysicalBranches: true, hasAtms: false },
       },
       {
         productId: 1,
-        entityName: "Caja Arequipa",
+        entityName: "Entidad 1",
         tea: "0.055",
         totalInterest: "55.00",
         monthlyInterest: null,
+        channels: { hasPhysicalBranches: true, hasAtms: true },
       },
       {
         productId: 3,
-        entityName: "Interbank",
+        entityName: "Entidad 3",
         tea: "0.042",
         totalInterest: "42.00",
         monthlyInterest: null,
+        channels: { hasPhysicalBranches: false, hasAtms: true },
       },
     ]);
+  });
+
+  it("200: no incluye monthlyMaintenanceFee (US17 no aplica a plazo fijo)", async () => {
+    const results: Record<string, unknown>[] = await (await post(validRequest)).json();
+
+    for (const result of results) {
+      expect(result).not.toHaveProperty("monthlyMaintenanceFee");
+    }
   });
 
   it("200: en MONTHLY devuelve monthlyInterest con 2 decimales", async () => {

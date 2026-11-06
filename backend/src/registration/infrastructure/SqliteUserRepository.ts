@@ -11,6 +11,7 @@ export class SqliteUserRepository implements UserRepository {
   constructor(filePath = "data/usuarios.sqlite") {
     if (filePath !== ":memory:") mkdirSync(dirname(filePath), { recursive: true });
     this.database = new DatabaseSync(filePath);
+    this.database.exec("PRAGMA busy_timeout = 5000");
     this.database.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
