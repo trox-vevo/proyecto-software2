@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import type { MouseEvent, ReactNode } from "react";
 import { LoginView, type AuthSession } from "../auth/LoginView";
+import { ForgotPasswordView } from "../auth/ForgotPasswordView";
+import { ResetPasswordView } from "../auth/ResetPasswordView";
 import { RegistrationForm } from "./RegistrationForm";
 
 export function RegistrationRoute({ children }: { children: ReactNode }) {
   const [path, setPath] = useState(window.location.pathname);
   const [registered, setRegistered] = useState(false);
+  const [loginNotice, setLoginNotice] = useState("");
   const [session, setSession] = useState<AuthSession | null>(null);
   useEffect(() => {
     const onPopState = () => setPath(window.location.pathname);
@@ -48,11 +51,13 @@ export function RegistrationRoute({ children }: { children: ReactNode }) {
     return (
       <>
         {registered && <p role="status">Cuenta creada correctamente.</p>}
+        {loginNotice && <p role="status">{loginNotice}</p>}
         <LoginView
           onLogin={(nextSession) => {
             setSession(nextSession);
             navigate("/");
           }}
+          onForgotPassword={() => navigate("/recuperar-contrasena")}
         />
         <a href="/" onClick={(event) => navigateLink(event, "/")}>
           Volver al inicio
@@ -60,6 +65,34 @@ export function RegistrationRoute({ children }: { children: ReactNode }) {
         <p className="sesion-estado" aria-live="polite">
           {session ? "Sesión iniciada." : ""}
         </p>
+      </>
+    );
+  }
+
+  if (path === "/recuperar-contrasena") {
+    return (
+      <>
+        <ForgotPasswordView />
+        <a href="/login" onClick={(event) => navigateLink(event, "/login")}>
+          Volver a iniciar sesión
+        </a>
+      </>
+    );
+  }
+
+  if (path === "/restablecer-contrasena") {
+    return (
+      <>
+        <ResetPasswordView
+          token={new URLSearchParams(window.location.search).get("token")}
+          onReset={() => {
+            setLoginNotice("Contraseña actualizada correctamente. Inicia sesión con tu nueva contraseña.");
+            navigate("/login");
+          }}
+        />
+        <a href="/login" onClick={(event) => navigateLink(event, "/login")}>
+          Volver a iniciar sesión
+        </a>
       </>
     );
   }

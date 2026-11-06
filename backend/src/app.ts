@@ -11,10 +11,21 @@ import { createUserRouter } from "./registration/interface/userRoutes";
 import { AuthService } from "./auth/application/AuthService";
 import { AuthController } from "./auth/interface/AuthController";
 import { createAuthRouter } from "./auth/interface/authRoutes";
+import type { RecoveryTokenRepository } from "./recovery/domain/RecoveryTokenRepository";
+import {
+  PasswordRecoveryService,
+  type RecoveryEmailService,
+} from "./recovery/application/PasswordRecoveryService";
+import { PasswordRecoveryController } from "./recovery/interface/PasswordRecoveryController";
+import { createPasswordRecoveryRouter } from "./recovery/interface/passwordRecoveryRoutes";
+import { PasswordResetService } from "./recovery/application/PasswordResetService";
+import { PasswordResetController } from "./recovery/interface/PasswordResetController";
 
 export function createApp(
   productRepository: FinancialProductRepository,
   userRepository?: UserRepository,
+  recoveryTokenRepository?: RecoveryTokenRepository,
+  recoveryEmailService?: RecoveryEmailService,
 ) {
   const app = express();
   app.use(cors());
@@ -42,6 +53,21 @@ export function createApp(
       "/api/auth",
       createAuthRouter(new AuthController(new AuthService(userRepository))),
     );
+    if (recoveryTokenRepository && recoveryEmailService) {
+      app.use(
+        "/api/auth",
+        createPasswordRecoveryRouter(
+          new PasswordRecoveryController(
+            new PasswordRecoveryService(
+              userRepository,
+              recoveryTokenRepository,
+              recoveryEmailService,
+            ),
+          ),
+          new PasswordResetController(new PasswordResetService(recoveryTokenRepository)),
+        ),
+      );
+    }
   }
 
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {

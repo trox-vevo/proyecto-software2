@@ -95,6 +95,13 @@
   font-size: 0.9rem;
 }
 
+.login-enlace-recuperacion {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
 .pagina-encabezado {
   display: flex;
   align-items: center;

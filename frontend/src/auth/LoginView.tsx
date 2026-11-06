@@ -12,9 +12,10 @@ export interface AuthSession {
 
 interface Props {
   onLogin: (session: AuthSession) => void;
+  onForgotPassword: () => void;
 }
 
-export function LoginView({ onLogin }: Props) {
+export function LoginView({ onLogin, onForgotPassword }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -121,6 +122,16 @@ export function LoginView({ onLogin }: Props) {
             {cargando ? "Ingresando…" : "Ingresar"}
           </button>
         </form>
+        <a
+          className="login-enlace-recuperacion"
+          href="/recuperar-contrasena"
+          onClick={(event) => {
+            event.preventDefault();
+            onForgotPassword();
+          }}
+        >
+          ¿Olvidaste tu contraseña?
+        </a>
       </section>
     </main>
   );
