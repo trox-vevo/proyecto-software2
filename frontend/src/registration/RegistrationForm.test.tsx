@@ -88,7 +88,7 @@ describe("Formulario de registro", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     render(<App />);
-    await screen.findByText("No hay cuentas que mostrar.");
+    await screen.findByText("Sin resultados");
     await userEvent.click(screen.getByRole("link", { name: "Crear cuenta" }));
     await complete();
     await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
