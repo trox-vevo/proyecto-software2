@@ -31,3 +31,9 @@ Para probar el flujo local sin correo real, configura `RECOVERY_EMAIL_MODE=conso
 en `backend/.env` y `FRONTEND_URL=http://localhost:5173`. El backend imprimirá
 el enlace de recuperación en su terminal. Este modo se rechaza si
 `NODE_ENV=production`; no debe habilitarse en despliegues reales.
+
+## Perfil de usuario
+
+El perfil de demostración se sirve mediante `GET /api/perfil` y se actualiza con
+`PUT /api/perfil`, enviando `nombre` y `correo` como JSON. Los datos se guardan en
+`backend/data/perfiles.json`; los correos deben ser únicos entre los perfiles.
