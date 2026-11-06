@@ -4,6 +4,7 @@ import { ResultFiltersPanel } from "./filters/ResultFiltersPanel";
 import { useResultFilters } from "./filters/useResultFilters";
 import { FormularioInversion } from "./inversiones/FormularioInversion";
 import type { TipoInstrumento } from "./inversiones/FormularioInversion";
+import { ProfileEditor } from "./profile/ProfileEditor";
 import { PanelBloqueos } from "./monitor/PanelBloqueos";
 import { useMonitorBloqueos } from "./monitor/useMonitorBloqueos";
 import { COLUMNAS } from "./tabla_ahorros/columnas";
@@ -26,6 +27,7 @@ export default function App() {
   return (
     <main className="pagina">
       <h1>Yupay Finance</h1>
+      <ProfileEditor />
       <FormularioInversion
         tipoInstrumento={tipoInstrumento}
         onTipoInstrumentoChange={setTipoInstrumento}
