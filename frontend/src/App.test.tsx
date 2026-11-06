@@ -24,7 +24,16 @@ const LIMA = [
 ];
 
 function renderAppWith(filas: FilaAhorro[]) {
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify({ resultados: filas })));
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    if (String(input).includes("/api/perfil")) {
+      return new Response(JSON.stringify({
+        id: "usuario-demo",
+        nombre: "Usuario de demostración",
+        correo: "usuario@ejemplo.com",
+      }));
+    }
+    return new Response(JSON.stringify({ resultados: filas }));
+  });
   vi.stubGlobal("fetch", fetchMock);
   render(<App />);
   return fetchMock;
@@ -59,7 +68,7 @@ describe("Filtros de resultados en la tabla de ahorros (US17/US18)", () => {
     await userEvent.click(screen.getByLabelText("Con agencias físicas"));
     await userEvent.click(screen.getByLabelText("Con cajeros disponibles"));
     expect(screen.getByText("Mostrando 5 de 5 opciones")).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls.filter(([url]) => String(url).includes("/api/ahorros/"))).toHaveLength(1);
   });
 
   it("si el filtro deja 0 resultados, muestra el zero-state de la tabla", async () => {

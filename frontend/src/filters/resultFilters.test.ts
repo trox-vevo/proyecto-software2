@@ -49,6 +49,26 @@ describe("applyFilters (US17/US18): tabla de casos de CLAUDE.md §7", () => {
     applyFilters(lima, [noMaintenanceFeeFilter]);
     expect(lima).toEqual(copy);
   });
+
+  it("combina todos los filtros activos en menos de un segundo con 50 000 resultados", () => {
+    const resultados = Array.from({ length: 50_000 }, (_, index) =>
+      result(
+        String(index),
+        index % 2 === 0 ? "0.00" : "4.00",
+        index % 3 !== 0,
+        index % 5 !== 0,
+      ),
+    );
+    const inicio = performance.now();
+    const filtrados = applyFilters(resultados, [
+      noMaintenanceFeeFilter,
+      hasPhysicalBranchesFilter,
+      hasAtmsFilter,
+    ]);
+
+    expect(filtrados.length).toBeGreaterThan(0);
+    expect(performance.now() - inicio).toBeLessThan(1000);
+  });
 });
 
 describe("noMaintenanceFeeFilter (US17)", () => {

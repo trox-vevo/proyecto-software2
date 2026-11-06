@@ -18,7 +18,7 @@ const fila = (cuentaId: string, hasDigitalBanking: boolean, hasMobileApp: boolea
 const FILAS = [fila("A", true, true), fila("B", true, false), fila("C", false, true), fila("D", false, false)];
 
 function renderAppWith(filas: FilaAhorro[]) {
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify({ resultados: filas })));
+  const fetchMock = vi.fn<(input: RequestInfo | URL) => Promise<Response>>(async () => new Response(JSON.stringify({ resultados: filas })));
   vi.stubGlobal("fetch", fetchMock);
   render(<App />);
   return fetchMock;
@@ -39,7 +39,8 @@ describe("Filtros de accesibilidad digital en la tabla de ahorros (US19)", () =>
 
     expect(screen.getByText("Mostrando 2 de 4 opciones")).toBeInTheDocument();
     expect(visibleIds()).toEqual(["A", "B"]);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // Solo cuenta las consultas de la tabla de ahorros (el perfil hace su propia petición)
+    expect(fetchMock.mock.calls.filter(([url]) => String(url).includes("/api/ahorros/"))).toHaveLength(1);
   });
 
   it("'Con app móvil' + 'Solo con banca digital' combina con AND", async () => {

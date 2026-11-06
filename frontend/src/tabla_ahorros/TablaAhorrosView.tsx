@@ -1,10 +1,15 @@
+import { Fragment } from "react";
 import { DigitalChannelIcons } from "../filters/DigitalChannelIcons";
-import type { ColumnaTabla, CriterioOrden, EstadoTabla, FilaAhorro } from "./tipos";
+import type { ColumnaTabla, CriterioOrden, EstadoTabla } from "./tipos";
+import type { FilaConRiesgo } from "../semaforo/tipos";
+import { SemaforoRiesgo } from "../semaforo/SemaforoRiesgo";
+import { PanelDescripcionRiesgo } from "../semaforo/PanelDescripcionRiesgo";
+import { useSemaforoPanel } from "../semaforo/useSemaforoPanel";
 import "./TablaAhorrosView.css";
 
 interface Props {
   columnas: ColumnaTabla[];
-  filas: FilaAhorro[];
+  filas: FilaConRiesgo[];
   estado: EstadoTabla;
   mensajeError?: string;
   criterioActivo: CriterioOrden;
@@ -22,6 +27,7 @@ export function TablaAhorrosView({
   onOrdenar,
   onReintentar,
 }: Props) {
+  const { filaAbiertaId, alternar } = useSemaforoPanel();
   if (estado === "CARGANDO") {
     return (
       <p className="tabla-mensaje" role="status">
@@ -51,7 +57,8 @@ export function TablaAhorrosView({
         <thead>
           <tr>
             {columnas.map((columna) => {
-              const activa = columna.ordenable && columna.criterio === criterioActivo;
+              const activa =
+                columna.ordenable && columna.criterio === criterioActivo;
               return (
                 <th
                   key={columna.clave}
@@ -74,19 +81,49 @@ export function TablaAhorrosView({
           </tr>
         </thead>
         <tbody>
-          {filas.map((fila) => (
-            <tr key={fila.cuentaId}>
-              {columnas.map((columna) => (
-                <td key={columna.clave} className={columna.numerica ? "num" : undefined}>
-                  {columna.mostrar ? columna.mostrar(fila[columna.clave]) : fila[columna.clave]}
-                </td>
-              ))}
-              {/* US19: íconos de banca digital y app móvil */}
-              <td>
-                <DigitalChannelIcons channels={fila.digitalChannels} />
-              </td>
-            </tr>
-          ))}
+          {filas.map((fila) => {
+            const abierta = filaAbiertaId === fila.cuentaId;
+            const panelId = `panel-riesgo-${fila.cuentaId}`;
+            return (
+              <Fragment key={fila.cuentaId}>
+                <tr>
+                  {columnas.map((columna) => (
+                    <td
+                      key={columna.clave}
+                      className={columna.numerica ? "num" : undefined}
+                    >
+                      {columna.clave === "riesgo" ? (
+                        <SemaforoRiesgo
+                          riesgo={fila.riesgo}
+                          expandido={abierta}
+                          panelId={panelId}
+                          onToggle={() => alternar(fila.cuentaId)}
+                        />
+                      ) : columna.mostrar ? (
+                        columna.mostrar(fila[columna.clave])
+                      ) : (
+                        fila[columna.clave]
+                      )}
+                    </td>
+                  ))}
+                  {/* US19: íconos de banca digital y app móvil */}
+                  <td>
+                    <DigitalChannelIcons channels={fila.digitalChannels} />
+                  </td>
+                </tr>
+                {abierta && (
+                  <tr className="fila-panel-riesgo">
+                    <td colSpan={columnas.length + 1}>
+                      <PanelDescripcionRiesgo
+                        id={panelId}
+                        riesgo={fila.riesgo}
+                      />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>
