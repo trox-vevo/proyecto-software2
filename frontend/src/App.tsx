@@ -7,22 +7,31 @@ import type { TipoInstrumento } from "./inversiones/FormularioInversion";
 import { ProfileEditor } from "./profile/ProfileEditor";
 import { PanelBloqueos } from "./monitor/PanelBloqueos";
 import { useMonitorBloqueos } from "./monitor/useMonitorBloqueos";
+import { RegistrationRoute } from "./registration/RegistrationRoute";
 import { COLUMNAS } from "./tabla_ahorros/columnas";
 import { TablaAhorrosView } from "./tabla_ahorros/TablaAhorrosView";
 import { useTablaAhorrosController } from "./tabla_ahorros/useTablaAhorrosController";
 import "./App.css";
 
 export default function App() {
+  return (
+    <RegistrationRoute>
+      <FinanceApp />
+    </RegistrationRoute>
+  );
+}
+
+function FinanceApp() {
   const [tipoInstrumento, setTipoInstrumento] =
     useState<TipoInstrumento>("AHORROS");
   const tabla = useTablaAhorrosController();
   const monitor = useMonitorBloqueos(tabla.vista);
-  // US17/US18: se filtra en el cliente sobre las filas ya recibidas (sin nueva petición).
-  // "SAVINGS" fijo: los filtros solo se muestran en la sección de ahorros.
   const filtros = useResultFilters("SAVINGS");
   const filasVisibles = applyFilters(tabla.filas, filtros.active);
-  // Si los filtros dejan 0 filas, la tabla muestra su zero-state
-  const estado = tabla.estado === "CON_DATOS" && filasVisibles.length === 0 ? "VACIO" : tabla.estado;
+  const estado =
+    tabla.estado === "CON_DATOS" && filasVisibles.length === 0
+      ? "VACIO"
+      : tabla.estado;
 
   return (
     <main className="pagina">
