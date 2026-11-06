@@ -4,6 +4,14 @@ import { ahorrosRouter } from "./routes/ahorros";
 import { FixedDepositSimulationService } from "./simulation/application/FixedDepositSimulationService";
 import type { FinancialProductRepository } from "./simulation/domain/FinancialProductRepository";
 import { SimulationController } from "./simulation/interface/SimulationController";
+import { ServicioPerfiles } from "./profile/application/ServicioPerfiles";
+import {
+  CorreoDuplicadoError,
+  DatosPerfilInvalidosError,
+  PerfilNoEncontradoError,
+} from "./profile/application/ErroresPerfil";
+import { RepositorioPerfilesJson } from "./profile/infrastructure/RepositorioPerfilesJson";
+import type { RepositorioPerfiles } from "./profile/domain/RepositorioPerfiles";
 import { RegistrationService } from "./registration/application/RegistrationService";
 import type { UserRepository } from "./registration/domain/UserRepository";
 import { UserController } from "./registration/interface/UserController";
@@ -21,16 +29,40 @@ import { createPasswordRecoveryRouter } from "./recovery/interface/passwordRecov
 import { PasswordResetService } from "./recovery/application/PasswordResetService";
 import { PasswordResetController } from "./recovery/interface/PasswordResetController";
 
+const PERFIL_DEMO_ID = "usuario-demo";
+
 export function createApp(
   productRepository: FinancialProductRepository,
-  userRepository?: UserRepository,
+  userOrProfileRepository?: UserRepository | RepositorioPerfiles,
   recoveryTokenRepository?: RecoveryTokenRepository,
   recoveryEmailService?: RecoveryEmailService,
+  profileRepository: RepositorioPerfiles = new RepositorioPerfilesJson(),
 ) {
+  const isUserRepository = (
+    repository: UserRepository | RepositorioPerfiles,
+  ): repository is UserRepository => "findByEmail" in repository;
+  const userRepository =
+    userOrProfileRepository && isUserRepository(userOrProfileRepository)
+      ? userOrProfileRepository
+      : undefined;
+  const selectedProfileRepository =
+    userOrProfileRepository && !isUserRepository(userOrProfileRepository)
+      ? userOrProfileRepository
+      : profileRepository;
+
   const app = express();
   app.use(cors());
   app.use(express.json());
   app.use("/api/ahorros", ahorrosRouter);
+  const profileService = new ServicioPerfiles(selectedProfileRepository);
+
+  app.get("/api/perfil", (_req, res) => {
+    res.json(profileService.obtener(PERFIL_DEMO_ID));
+  });
+
+  app.put("/api/perfil", (req, res) => {
+    res.json(profileService.actualizar(PERFIL_DEMO_ID, req.body));
+  });
 
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
@@ -71,6 +103,18 @@ export function createApp(
   }
 
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    if (error instanceof DatosPerfilInvalidosError) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+    if (error instanceof CorreoDuplicadoError) {
+      res.status(409).json({ message: error.message });
+      return;
+    }
+    if (error instanceof PerfilNoEncontradoError) {
+      res.status(404).json({ message: error.message });
+      return;
+    }
     if (error instanceof SyntaxError) {
       res.status(400).json({
         message: "El cuerpo de la petición no es un JSON válido.",
