@@ -4,6 +4,7 @@ import { FixedDepositSimulationService } from "../application/FixedDepositSimula
 import { InvalidSimulationParametersError } from "../application/InvalidSimulationParametersError";
 import { PaymentMode } from "../domain/PaymentMode";
 import { SimulationResult } from "../domain/SimulationResult";
+import { validarCoberturaFSD } from "../../fsd/CoberturaFSD";
 
 // Monto en soles como string: no negativo y con máximo 2 decimales
 const AMOUNT_FORMAT = /^\d+(\.\d{1,2})?$/;
@@ -14,6 +15,7 @@ const isPaymentMode = (value: unknown): value is PaymentMode =>
 // Los Decimal viajan como string para no perder precisión ni los ceros finales
 const toResponse = (result: SimulationResult) => ({
   productId: result.productId,
+  coberturaFSD: validarCoberturaFSD(result.coberturaFSD),
   entityName: result.entityName,
   tea: result.tea.toString(),
   totalInterest: result.totalInterest.toFixed(2),

@@ -1,5 +1,6 @@
 import Decimal from "decimal.js";
 import { ServiceChannels } from "./ServiceChannels";
+import { crearCoberturaNoVerificada, type CoberturaFSD } from "../../fsd/CoberturaFSD";
 
 // Resultado de simular un producto: lo que muestra la tabla del frontend (US12).
 // Los montos ya vienen redondeados a 2 decimales.
@@ -12,5 +13,6 @@ export class SimulationResult {
     // null en AT_MATURITY: el interés mensual no aplica
     readonly monthlyInterest: Decimal | null,
     readonly channels: ServiceChannels,
+    readonly coberturaFSD: CoberturaFSD = crearCoberturaNoVerificada(),
   ) {}
 }

@@ -82,6 +82,7 @@ describe("MotorCalculoTest", () => {
      expect(salida).toEqual([
       {
         cuentaId: "B",
+        coberturaFSD: { entidadFinanciera: null, estado: "NO_VERIFICADO", fechaVerificacion: null, vigenteHasta: null, fuente: null },
         capitalInicial: "5,000.00",
         interesGenerado: "100.00",
         saldoFinal: "5,100.00",

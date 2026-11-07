@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { applyFilters } from "./filters/resultFilters";
 import { ResultFiltersPanel } from "./filters/ResultFiltersPanel";
 import { useResultFilters } from "./filters/useResultFilters";
@@ -15,6 +15,7 @@ import { RegistrationRoute } from "./registration/RegistrationRoute";
 import { PlanComparison } from "./commerce/PlanComparison";
 import { Checkout } from "./commerce/Checkout";
 import "./commerce/commerce.css";
+import { GlosarioFinanciero } from "./glosario/GlosarioFinanciero";
 
 export default function App() {
   return <RegistrationRoute><CommerceApp /></RegistrationRoute>;
@@ -45,6 +46,8 @@ function CommerceApp() {
 }
 
 function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
+  const [glosario, setGlosario] = useState<{ termino: string | null } | null>(null);
+  const cerrarGlosario = useCallback(() => setGlosario(null), []);
   const [tipoInstrumento, setTipoInstrumento] =
     useState<TipoInstrumento>("AHORROS");
   const tabla = useTablaAhorrosController();
@@ -60,6 +63,11 @@ function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
     <main className="pagina">
       <h1>Yupay Finance</h1>
       <ProfileEditor />
+      <div className="glosario-enlaces">
+        <button className="glosario-enlace" type="button" onClick={() => setGlosario({ termino: null })}>Glosario financiero</button>
+        <span>Consulta:</span>
+        {["TEA", "TREA", "Rentabilidad", "Depósito a plazo fijo"].map((termino) => <button className="glosario-enlace" key={termino} type="button" onClick={() => setGlosario({ termino })}>{termino}</button>)}
+      </div>
       <FormularioInversion
         tipoInstrumento={tipoInstrumento}
         onTipoInstrumentoChange={setTipoInstrumento}
@@ -85,10 +93,12 @@ function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
             onOrdenar={tabla.onOrdenar}
             onReintentar={tabla.reintentar}
             favoritos={{ days: tabla.dias, onViewPlans }}
+            onConsultarTermino={(termino) => setGlosario({ termino })}
           />
         </section>
       )}
       <PanelBloqueos eventos={monitor.eventos} umbralMs={monitor.umbralMs} />
+      <GlosarioFinanciero abierto={glosario !== null} terminoSeleccionado={glosario?.termino ?? null} onCerrar={cerrarGlosario} />
     </main>
   );
 }

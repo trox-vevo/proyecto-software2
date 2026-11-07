@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../../../src/app";
 import { FinancialProduct } from "../../../src/simulation/domain/FinancialProduct";
 import { ServiceChannels } from "../../../src/simulation/domain/ServiceChannels";
+import { crearCoberturaNoVerificada } from "../../../src/fsd/CoberturaFSD";
 
 // Prueba de integración: app real en un puerto libre, con datos propios (no los de demostración).
 const products = [
@@ -53,6 +54,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
     expect(await response.json()).toEqual([
       {
         productId: 2,
+        coberturaFSD: crearCoberturaNoVerificada(),
         entityName: "Entidad 2",
         tea: "0.0575",
         totalInterest: "57.50",
@@ -61,6 +63,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
       },
       {
         productId: 1,
+        coberturaFSD: crearCoberturaNoVerificada(),
         entityName: "Entidad 1",
         tea: "0.055",
         totalInterest: "55.00",
@@ -69,6 +72,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
       },
       {
         productId: 3,
+        coberturaFSD: crearCoberturaNoVerificada(),
         entityName: "Entidad 3",
         tea: "0.042",
         totalInterest: "42.00",
