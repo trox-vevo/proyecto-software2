@@ -1,5 +1,7 @@
 # Sprint 2: US21 y US24
 
+Estado actualizado el 7 de noviembre de 2026: integración de `origin/main` en `3baf458c3548814d4fefa9f9ffec60871dfec818`, conservando registro, autenticación, recuperación, perfil, filtros y estado vacío junto con FSD y glosario. Ver [informe verificable de Sprint 1 y Sprint 2](INTEGRACION_SPRINTS1_2_MAIN.md). Las verificaciones fechadas anteriormente en este documento corresponden a la entrega original.
+
 Rama: `feat/sprint2-us21-us24-completo`.
 Directorio: `C:\Users\Magaz_\proyecto-software2\.worktrees\sprint2`.
 Base independiente: `origin/main`, commit `8cc91626a456e03f52f83ae5e0e143dd6e2405de`, comprobado de nuevo mediante fetch el 4 de noviembre de 2026. No deriva del Sprint 1.
@@ -179,4 +181,4 @@ git ls-remote --heads origin refs/heads/feat/sprint2-us21-us24-completo
 
 Destino autorizado: [rama del Sprint 2 en GitHub](https://github.com/trox-vevo/proyecto-software2/tree/feat/sprint2-us21-us24-completo). La publicación debe utilizar únicamente `git push -u origin feat/sprint2-us21-us24-completo`, sin force. El informe de la tarea confirma la subida y el hash resultante.
 
-Main, las ramas anteriores y los datos locales se conservan. No se autorizaron PR, merge, rebase, reset, clean ni integración con main. Para una copia nueva desde GitHub, instala Node 24 y ejecuta `npm.cmd ci` en backend y frontend; `.tools` es un recurso local excluido de Git.
+Main, las ramas anteriores y los datos locales se conservan. La restricción de integración de la entrega original fue sustituida el 7 de noviembre por autorización expresa para integrar `origin/main` dentro de Sprint 2, crear el commit y publicar esta rama mediante push normal. No se autoriza fusionar PR, activar auto-merge, modificar main o Sprint 3, reescribir historial, reset, clean ni crear otro PR. Para una copia nueva desde GitHub, instala Node 24 y ejecuta `npm.cmd ci` en backend y frontend; `.tools` es un recurso local excluido de Git.

@@ -4,6 +4,7 @@ import type { FilaConRiesgo } from "../semaforo/tipos";
 import { SemaforoRiesgo } from "../semaforo/SemaforoRiesgo";
 import { PanelDescripcionRiesgo } from "../semaforo/PanelDescripcionRiesgo";
 import { useSemaforoPanel } from "../semaforo/useSemaforoPanel";
+import { EmptyStateComponent } from "./EmptyStateComponent";
 import "./TablaAhorrosView.css";
 import { IndicadorFSD } from "../fsd/IndicadorFSD";
 import { TERMINO_POR_COLUMNA } from "../glosario/terminos";
@@ -51,7 +52,13 @@ export function TablaAhorrosView({
   }
 
   if (estado === "VACIO") {
-    return <p className="tabla-mensaje">No hay cuentas que mostrar.</p>;
+    return (
+      <EmptyStateComponent
+        titulo="Sin resultados"
+        mensaje="No encontramos opciones para esta configuración. Intenta cambiar a otros parámetros"
+        icono="busqueda"
+      />
+    );
   }
 
   return (
