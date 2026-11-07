@@ -79,7 +79,7 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
     query.setReadBigInts(true);
     const row = query.get(email) as unknown as UserRow | undefined;
     if (row && row.plan !== "BASICO" && row.plan !== "PRO") {
-      throw new Error(`Plan de usuario inv?lido en la base de datos: ${String(row.plan)}`);
+      throw new Error(`Plan de usuario inválido en la base de datos: ${String(row.plan)}`);
     }
     return row
       ? {
@@ -91,6 +91,13 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
           createdAt: row.created_at,
         }
       : null;
+  }
+
+  findById(id: number): User | null {
+    if (!Number.isSafeInteger(id) || id <= 0) return null;
+    const row = this.database.prepare("SELECT email FROM users WHERE id = ?").get(id) as { email: string } | undefined;
+    // Reutiliza el mapeo y la validación de planes del repositorio existente.
+    return row ? this.findByEmail(row.email) : null;
   }
 
   create(user: NewUser): User {

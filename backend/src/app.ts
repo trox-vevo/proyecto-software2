@@ -30,32 +30,54 @@ import { createPasswordRecoveryRouter } from "./recovery/interface/passwordRecov
 import { PasswordResetService } from "./recovery/application/PasswordResetService";
 import { PasswordResetController } from "./recovery/interface/PasswordResetController";
 
+import { PLAN_FEATURES, PLANS } from "./plans/Plan";
+import { createCheckoutRouter } from "./checkout/checkoutRoutes";
+import { createFavoriteRouter } from "./favorites/interface/favoriteRoutes";
+import type { FavoriteService } from "./favorites/application/FavoriteService";
+import type { ResolveUser } from "./favorites/domain/Favorite";
+
+export interface Sprint3Dependencies {
+  resolveUser?: ResolveUser;
+  favoriteService?: FavoriteService;
+}
+
+
 const PERFIL_DEMO_ID = "usuario-demo";
 
 export function createApp(
   productRepository: FinancialProductRepository,
-  userOrProfileRepository?: UserRepository | RepositorioPerfiles,
+  userOrProfileRepository?: UserRepository | RepositorioPerfiles | Sprint3Dependencies,
   recoveryTokenRepository?: RecoveryTokenRepository,
   recoveryEmailService?: RecoveryEmailService,
   profileRepository: RepositorioPerfiles = new RepositorioPerfilesJson(),
+  sprint3Dependencies: Sprint3Dependencies = {},
 ) {
   const isUserRepository = (
-    repository: UserRepository | RepositorioPerfiles,
+    repository: UserRepository | RepositorioPerfiles | Sprint3Dependencies,
   ): repository is UserRepository => "findByEmail" in repository;
   const userRepository =
     userOrProfileRepository && isUserRepository(userOrProfileRepository)
       ? userOrProfileRepository
       : undefined;
+  const isProfileRepository = (
+    repository: UserRepository | RepositorioPerfiles | Sprint3Dependencies,
+  ): repository is RepositorioPerfiles => "buscarPorId" in repository;
   const selectedProfileRepository =
-    userOrProfileRepository && !isUserRepository(userOrProfileRepository)
+    userOrProfileRepository && isProfileRepository(userOrProfileRepository)
       ? userOrProfileRepository
       : profileRepository;
+  const dependencies = userOrProfileRepository && !isUserRepository(userOrProfileRepository) && !isProfileRepository(userOrProfileRepository)
+    ? userOrProfileRepository
+    : sprint3Dependencies;
 
   const app = express();
   app.use(cors());
   app.use(express.json());
   app.use("/api", optionalAuthMiddleware);
   app.use("/api/ahorros", ahorrosRouter);
+  app.get("/api/plans", (_req, res) => res.json({ plans: PLANS, features: PLAN_FEATURES }));
+  app.use("/api/checkout", createCheckoutRouter());
+  app.use("/api/favorites", createFavoriteRouter(dependencies.resolveUser ?? (async () => null), dependencies.favoriteService));
   const profileService = new ServicioPerfiles(selectedProfileRepository);
 
   app.get("/api/perfil", (_req, res) => {
