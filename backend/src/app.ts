@@ -4,15 +4,28 @@ import { ahorrosRouter } from "./routes/ahorros";
 import { FixedDepositSimulationService } from "./simulation/application/FixedDepositSimulationService";
 import { FinancialProductRepository } from "./simulation/domain/FinancialProductRepository";
 import { SimulationController } from "./simulation/interface/SimulationController";
+import { PLAN_FEATURES, PLANS } from "./plans/Plan";
+import { createCheckoutRouter } from "./checkout/checkoutRoutes";
+import { createFavoriteRouter } from "./favorites/interface/favoriteRoutes";
+import type { FavoriteService } from "./favorites/application/FavoriteService";
+import type { ResolveUser } from "./favorites/domain/Favorite";
+
+export interface Sprint3Dependencies {
+  resolveUser?: ResolveUser;
+  favoriteService?: FavoriteService;
+}
 
 // Arma la aplicación Express: middlewares, rutas de cada HU, conexión de dependencias
 // y el manejador global de errores. No escucha ningún puerto (eso lo hace index.ts).
 // Recibe el repositorio para que las pruebas usen sus propios datos y no los de demostración.
-export function createApp(productRepository: FinancialProductRepository) {
+export function createApp(productRepository: FinancialProductRepository, dependencies: Sprint3Dependencies = {}) {
   const app = express();
   app.use(cors());
   app.use(express.json());
   app.use("/api/ahorros", ahorrosRouter);
+  app.get("/api/plans", (_req, res) => res.json({ plans: PLANS, features: PLAN_FEATURES }));
+  app.use("/api/checkout", createCheckoutRouter());
+  app.use("/api/favorites", createFavoriteRouter(dependencies.resolveUser ?? (async () => null), dependencies.favoriteService));
 
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });

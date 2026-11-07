@@ -103,6 +103,7 @@ export function useTablaAhorrosController() {
     filas: carga?.filas ?? [],
     mensajeError: carga?.error,
     criterioActivo: consulta.criterio,
+    dias: DIAS,
     vista,
     onOrdenar,
     reintentar,

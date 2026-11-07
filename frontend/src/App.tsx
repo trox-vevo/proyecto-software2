@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { applyFilters } from "./filters/resultFilters";
 import { ResultFiltersPanel } from "./filters/ResultFiltersPanel";
 import { useResultFilters } from "./filters/useResultFilters";
@@ -10,8 +10,35 @@ import { COLUMNAS } from "./tabla_ahorros/columnas";
 import { TablaAhorrosView } from "./tabla_ahorros/TablaAhorrosView";
 import { useTablaAhorrosController } from "./tabla_ahorros/useTablaAhorrosController";
 import "./App.css";
+import { PlanComparison } from "./commerce/PlanComparison";
+import { Checkout } from "./commerce/Checkout";
+import "./commerce/commerce.css";
 
 export default function App() {
+  const [path, setPath] = useState(window.location.pathname);
+  useEffect(() => {
+    const onPopState = () => setPath(window.location.pathname);
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  function navigate(next: string) {
+    window.history.pushState(null, "", next);
+    setPath(next);
+  }
+
+  return <>
+    <nav className="comercio-nav" aria-label="Navegación principal">
+      <a href="/" aria-current={path === "/" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/"); }}>Inicio</a>
+      <a href="/planes" aria-current={path === "/planes" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/planes"); }}>Planes</a>
+    </nav>
+    {path === "/planes" ? <PlanComparison onCheckout={() => navigate("/checkout")} />
+      : path === "/checkout" ? <Checkout onViewPlans={() => navigate("/planes")} onReturnToApp={() => navigate("/")} />
+        : <FinanceApp onViewPlans={() => navigate("/planes")} />}
+  </>;
+}
+
+function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
   const [tipoInstrumento, setTipoInstrumento] =
     useState<TipoInstrumento>("AHORROS");
   const tabla = useTablaAhorrosController();
@@ -50,6 +77,7 @@ export default function App() {
             criterioActivo={tabla.criterioActivo}
             onOrdenar={tabla.onOrdenar}
             onReintentar={tabla.reintentar}
+            favoritos={{ days: tabla.dias, onViewPlans }}
           />
         </section>
       )}
