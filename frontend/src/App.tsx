@@ -10,11 +10,17 @@ import { COLUMNAS } from "./tabla_ahorros/columnas";
 import { TablaAhorrosView } from "./tabla_ahorros/TablaAhorrosView";
 import { useTablaAhorrosController } from "./tabla_ahorros/useTablaAhorrosController";
 import "./App.css";
+import { ProfileEditor } from "./profile/ProfileEditor";
+import { RegistrationRoute } from "./registration/RegistrationRoute";
 import { PlanComparison } from "./commerce/PlanComparison";
 import { Checkout } from "./commerce/Checkout";
 import "./commerce/commerce.css";
 
 export default function App() {
+  return <RegistrationRoute><CommerceApp /></RegistrationRoute>;
+}
+
+function CommerceApp() {
   const [path, setPath] = useState(window.location.pathname);
   useEffect(() => {
     const onPopState = () => setPath(window.location.pathname);
@@ -53,6 +59,7 @@ function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
   return (
     <main className="pagina">
       <h1>Yupay Finance</h1>
+      <ProfileEditor />
       <FormularioInversion
         tipoInstrumento={tipoInstrumento}
         onTipoInstrumentoChange={setTipoInstrumento}

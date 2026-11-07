@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { API_URL } from "./types";
+import { fetchWithAuth } from "../auth/session";
 
 interface Props {
   accountId: string;
@@ -22,7 +23,7 @@ export function FavoriteButton({ accountId, days, onViewPlans }: Props) {
     setMessage("");
     setShowPlans(false);
     try {
-      const response = await fetch(`${API_URL}/api/favorites`, {
+      const response = await fetchWithAuth(`${API_URL}/api/favorites`, {
         method: "POST", credentials: "same-origin", signal: controller.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ instrument: "AHORROS", accountId, days }),
@@ -38,7 +39,7 @@ export function FavoriteButton({ accountId, days, onViewPlans }: Props) {
       } else {
         setStatus("error");
         const messages: Record<number, string> = {
-          401: "Inicia sesión para guardar favoritos. La conexión con tu cuenta está pendiente de integración.",
+          401: "Inicia sesión con una cuenta válida para guardar favoritos.",
           403: "Guardar favoritos requiere el Plan Pro.",
           404: "La simulación ya no está disponible. Actualiza los resultados.",
           503: "El guardado está pendiente de integrar la cuenta y su persistencia.",

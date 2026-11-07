@@ -1,12 +1,14 @@
 # Sprint 3 de Yupay Finance
 
+Actualización del 7 de noviembre de 2026: integración de main, conexión de favoritos con el JWT y el plan persistido del equipo, y protección del arranque frente a bases anteriores. Ver [informe de resolución](INTEGRACION_SPRINT3_MAIN.md). Los resultados fechados antes de esta actualización son históricos.
+
 ## Estado de la entrega local
 
 Rama `feat/sprint3-us28-us31-us32`.
 
 Worktree `C:\Users\Magaz_\proyecto-software2\.worktrees\sprint3`.
 
-Base `main` y `origin/main` en `8cc91626a456e03f52f83ae5e0e143dd6e2405de`, comprobada el 4 de noviembre de 2026 mediante fetch. Los cambios están pendientes de commit en este worktree. Las implementaciones de los Sprints 1 y 2 se consultaron como referencia de arquitectura y persistencia.
+Base original: `8cc91626a456e03f52f83ae5e0e143dd6e2405de`. La entrega anterior se publicó en `20cbe73f9210e90e23095bcda13d11756c51dd6a`. El 7 de noviembre se integra `origin/main` en `3baf458c3548814d4fefa9f9ffec60871dfec818` mediante merge normal autorizado, conservando la independencia de las ramas de Sprint 1 y Sprint 2.
 
 La referencia de requisitos es el archivo entregado `C:\Users\Magaz_\Downloads\Sprint3_Backlog.xlsx`. El texto de la solicitud menciona una variante con sufijo `(2)`, pero el archivo disponible tiene el nombre indicado aquí.
 
@@ -28,9 +30,9 @@ La interfaz incorpora un botón Guardar favorito en cada fila de la tabla de aho
 
 ### Contrato de autenticación
 
-`createApp` admite un segundo argumento opcional de tipo `Sprint3Dependencies`. La integración de autenticación debe aportar `resolveUser(request)` y devolver un usuario verificado con `id` y `plan` vigente, o `null`.
+`createApp` conserva el segundo argumento opcional `Sprint3Dependencies` para consumidores existentes. También admite los argumentos de usuarios, recuperación y perfiles de main y un sexto argumento de dependencias Sprint 3. El arranque conecta `resolveUser(request)` con el middleware JWT de main y la consulta por ID al repositorio SQLite; devuelve `id` y el plan persistido actual, o `null`.
 
-El arranque normal devuelve `null` mientras esa integración esté pendiente. En consecuencia, Guardar favorito muestra el mensaje de inicio de sesión y la API responde 401. El servicio aplica también la autorización Pro cuando se llama directamente. El transporte de sesión del frontend debe integrarse con el mecanismo de autenticación del equipo. El cliente actual utiliza credenciales del mismo origen. Un desarrollo con cookies entre los puertos 5173 y 3000 necesita que el equipo defina conjuntamente el transporte y su política CORS.
+El arranque normal ya utiliza el JWT verificado de main: una cuenta persistida PRO puede guardar; una cuenta BASICO obtiene 403 y una identidad ausente, inválida, expirada o sin cuenta obtiene 401. El cliente usa `fetchWithAuth` para enviar el bearer almacenado por el login. El servidor no acepta el plan del cliente, de una cabecera ni de un claim JWT para autorizar: vuelve a leerlo de SQLite en cada solicitud. Una aprobación DEMO no activa Pro. La ausencia de dependencias en consumidores aislados de `createApp` continúa resolviendo anónimamente de forma segura.
 
 El usuario y la membresía deben resolverse a partir de una sesión comprobada y del estado de suscripción mantenido por US33 y su ciclo de vida. Los cuerpos y cabeceras que declaren un usuario o plan arbitrario son rechazados o ignorados. El fixture de integración utiliza identidades sintéticas únicamente dentro de un proceso con `NODE_ENV=test` y canal IPC.
 
@@ -85,7 +87,7 @@ El equipo acordó identificadores numéricos para entidades internas. Se sustitu
 
 `POST /api/favorites` conserva su cuerpo y sus códigos de respuesta. El cambio contractual afecta a `favorite.id` y `favorite.userId` en la respuesta, que ahora son números JSON. Un ejemplo reducido es `{"favorite":{"id":1,"userId":1},"created":true}`. El frontend comprueba que el identificador recibido sea un `number` entero positivo seguro antes de confirmar el guardado. US29 deberá utilizar el mismo contrato numérico para favoritos y propietarios.
 
-Los límites de identidad se validan mediante `Number.isSafeInteger()`, sin convertir cadenas, UUID ni tokens a números. La ruta, el servicio y el repositorio rechazan identidades incompatibles. Los identificadores que entregue la futura autenticación deben ser números comprobados, con valores entre `1` y `9007199254740991` inclusive. El resolvedor predeterminado sigue siendo `null`: el arranque normal mantiene HTTP 401 hasta integrar autenticación y membresía reales.
+Los límites de identidad se validan mediante `Number.isSafeInteger()`, sin convertir UUID ni tokens a números. La ruta, el servicio y el repositorio rechazan identidades incompatibles. La autenticación integrada entrega números comprobados, entre `1` y `9007199254740991`. El JWT conserva el subject textual canónico de main y su middleware lo valida antes de usarlo como número; no se utiliza como un UUID ni se cambia el token de sesión opaco.
 
 Las nuevas columnas incorporan restricciones `CHECK` para ese rango. Las lecturas de identificadores SQLite utilizan `setReadBigInts(true)` y solo convierten a `number` después de comprobar el límite. Ningún `bigint` se envía directamente como JSON. Un identificador persistido fuera del rango, o el agotamiento del rango al insertar, produce HTTP 503 con `ENTITY_ID_OUT_OF_RANGE`, sin redondearlo ni conservar una inserción parcial. Los reintentos de un favorito existente siguen funcionando incluso si su clave es `Number.MAX_SAFE_INTEGER`.
 
@@ -373,7 +375,7 @@ npm.cmd test -- src/commerce/Sprint3.integration.test.tsx
 
 ## Demostración desde la aplicación
 
-1. Abre el inicio y pulsa Guardar favorito en una fila. En el arranque normal aparece la dependencia de inicio de sesión. El guardado Pro se demuestra mediante las pruebas integradas hasta que el equipo conecte la autenticación real.
+1. Inicia sesión con una cuenta persistida y pulsa Guardar favorito en una fila. PRO guarda y los reintentos conservan el ID; BASICO muestra el acceso a planes; sin sesión válida se solicita iniciar sesión. Una cuenta nueva continúa siendo BASICO y el checkout DEMO no la convierte en PRO.
 2. Abre Planes desde la navegación. Revisa la comparación, el precio pendiente y el enlace al checkout Pro.
 3. Pulsa Continuar al checkout Pro y confirma el formulario vacío para comprobar las validaciones.
 4. Completa facturación y titular con datos ficticios. Escribe cualquier secuencia de 16 dígitos, por ejemplo `0000 1111 2222 3333`, una fecha igual o posterior al mes actual en MM/AA y un CVV ficticio de 3 dígitos. Deja desactivada la casilla de rechazo y pulsa **Pagar (simulación)**. Comprueba aprobación, referencia DEMO, fecha/hora y Plan Pro.
