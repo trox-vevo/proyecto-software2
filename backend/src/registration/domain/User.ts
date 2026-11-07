@@ -11,3 +11,6 @@ export interface User {
 }
 
 export type PublicUser = Omit<User, "passwordHash">;
+
+// El alta todavía no tiene identidad. SQLite la asigna al persistirla.
+export type NewUser = Omit<User, "id">;
