@@ -37,3 +37,16 @@ el enlace de recuperación en su terminal. Este modo se rechaza si
 El perfil de demostración se sirve mediante `GET /api/perfil` y se actualiza con
 `PUT /api/perfil`, enviando `nombre` y `correo` como JSON. Los datos se guardan en
 `backend/data/perfiles.json`; los correos deben ser únicos entre los perfiles.
+
+## SQLite e integraci?n del Sprint 1
+
+La base `backend/data/usuarios.sqlite` es un archivo local de ejecuci?n y permanece
+ignorada por Git. Una instalaci?n nueva genera el esquema num?rico al iniciar.
+Si ya existe una base con IDs TEXT, el servidor la conserva y solicita una
+migraci?n expl?cita; no cambia sus datos al arrancar. El procedimiento de
+[copia con respaldo](docs/MIGRACION_IDENTIFICADORES.md) admite usuarios, favoritos
+y tokens de recuperaci?n de los esquemas documentados. No reemplaces una base
+local por un archivo descargado del repositorio.
+
+Consulta [la integraci?n de Sprint 1 con main](docs/INTEGRACION_SPRINT1_MAIN.md)
+para las decisiones, pruebas y dependencias de esta entrega.

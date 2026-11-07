@@ -1,6 +1,6 @@
-import type { User } from "./User";
+import type { NewUser, User } from "./User";
 
-export type NewUser = Omit<User, "id">;
+export type { NewUser } from "./User";
 
 export interface UserRepository {
   findByEmail(email: string): User | null;

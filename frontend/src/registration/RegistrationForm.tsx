@@ -47,6 +47,12 @@ export function RegistrationForm({ onRegistered }: { onRegistered: () => void })
         setMessage(response.status === 400 ? "Revisa los datos del registro e inténtalo nuevamente." : "No se pudo crear tu cuenta. Inténtalo más tarde.");
         return;
       }
+      const result = await response.json() as { user?: { id?: unknown } } | null;
+      const id = result?.user?.id;
+      if (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0) {
+        setMessage("La respuesta de registro no contiene un identificador de usuario válido. Revisa la integración del servicio.");
+        return;
+      }
       onRegistered();
     } catch {
       if (!controller.signal.aborted) {
