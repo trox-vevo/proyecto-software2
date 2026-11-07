@@ -1,8 +1,8 @@
-import type { User } from "./User";
+import type { NewUser, User } from "./User";
 
 export interface UserRepository {
   findByEmail(email: string): User | null;
-  create(user: User): User;
+  create(user: NewUser): User;
 }
 
 export class DuplicateEmailError extends Error {
