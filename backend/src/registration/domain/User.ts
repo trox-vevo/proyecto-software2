@@ -1,10 +1,12 @@
 // US01: usuario registrado con plan basico.
+export type UserPlan = "BASICO" | "PRO";
+
 export interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
   passwordHash: string;
-  plan: "BASICO";
+  plan: UserPlan;
   createdAt: string;
 }
 

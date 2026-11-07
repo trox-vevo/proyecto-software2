@@ -5,7 +5,7 @@ import { RegistrationForm } from "./RegistrationForm";
 import { RegistrationRoute } from "./RegistrationRoute";
 import App from "../App";
 
-afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, "", "/"); });
+afterEach(() => { vi.unstubAllGlobals(); localStorage.clear(); window.history.replaceState(null, "", "/"); });
 async function complete(email = "estudiante@example.com") {
   await userEvent.type(screen.getByLabelText("Nombre de usuario"), "Estudiante");
   await userEvent.type(screen.getByLabelText("Correo electrónico"), email);
@@ -105,6 +105,33 @@ describe("Formulario de registro", () => {
     await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo crear tu cuenta");
     expect(success).not.toHaveBeenCalled();
+  });
+  it("guarda la sesión del login y la restaura al volver a cargar la ruta", async () => {
+    const session = {
+      id: "session-id",
+      userId: 42,
+      tokenJwt: "token-valido",
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      plan: "PRO",
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ session, plan: "PRO" }), { status: 200 }),
+    ));
+    window.history.replaceState(null, "", "/login");
+    const firstRender = render(<RegistrationRoute><p>Inicio</p></RegistrationRoute>);
+    await userEvent.type(screen.getByLabelText("Correo electrónico"), "pro@example.com");
+    await userEvent.type(screen.getByLabelText("Contraseña"), "Clave-segura-123");
+    await userEvent.click(screen.getByRole("button", { name: "Ingresar" }));
+    expect(await screen.findByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem("yupay.auth.session")!)).toEqual(session);
+    expect(screen.getByText("Plan: PRO")).toBeInTheDocument();
+
+    firstRender.unmount();
+    window.history.replaceState(null, "", "/");
+    render(<RegistrationRoute><p>Inicio</p></RegistrationRoute>);
+    expect(screen.getByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
+    expect(localStorage.getItem("yupay.auth.session")).toBeNull();
   });
   it("abandonar el formulario cancela la espera y evita una redirección tardía", async () => {
     let resolve!: (response: Response) => void;

@@ -19,6 +19,7 @@ import { createUserRouter } from "./registration/interface/userRoutes";
 import { AuthService } from "./auth/application/AuthService";
 import { AuthController } from "./auth/interface/AuthController";
 import { createAuthRouter } from "./auth/interface/authRoutes";
+import { optionalAuthMiddleware } from "./auth/interface/optionalAuthMiddleware";
 import type { RecoveryTokenRepository } from "./recovery/domain/RecoveryTokenRepository";
 import {
   PasswordRecoveryService,
@@ -53,6 +54,7 @@ export function createApp(
   const app = express();
   app.use(cors());
   app.use(express.json());
+  app.use("/api", optionalAuthMiddleware);
   app.use("/api/ahorros", ahorrosRouter);
   const profileService = new ServicioPerfiles(selectedProfileRepository);
 

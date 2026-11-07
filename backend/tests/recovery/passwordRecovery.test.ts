@@ -1,4 +1,4 @@
-import { createHash, randomUUID, scryptSync } from "node:crypto";
+import { createHash, scryptSync } from "node:crypto";
 import { once } from "node:events";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -9,21 +9,21 @@ import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/app";
 import { SqliteUserRepository } from "../../src/registration/infrastructure/SqliteUserRepository";
+import jwt from "jsonwebtoken";
 
 const directory = mkdtempSync(join(tmpdir(), "yupay-recovery-"));
 const databasePath = join(directory, "users.sqlite");
 const repository = new SqliteUserRepository(databasePath);
 const salt = Buffer.from("1234567890123456");
 const passwordHash = `scrypt$${salt.toString("hex")}$${scryptSync("Clave-segura-123", salt, 64).toString("hex")}`;
-const userId = randomUUID();
-repository.create({
-  id: userId,
+const user = repository.create({
   username: "Estudiante",
   email: "cuenta@example.com",
   passwordHash,
   plan: "BASICO",
   createdAt: new Date().toISOString(),
 });
+const userId = user.id;
 
 const emailService = {
   sendRecoveryLink: vi.fn(async () => true),
@@ -176,7 +176,12 @@ describe("POST /api/auth/forgot-password", () => {
         body: JSON.stringify({ email: "cuenta@example.com", password }),
       });
     expect((await login("Clave-segura-123")).status).toBe(401);
-    expect((await login("Nueva-clave-segura-456")).status).toBe(200);
+    const loginResponse = await login("Nueva-clave-segura-456");
+    expect(loginResponse.status).toBe(200);
+    const body = await loginResponse.json();
+    expect(body.plan).toBe("BASICO");
+    expect(body.session).toMatchObject({ userId, plan: "BASICO" });
+    expect(jwt.decode(body.session.tokenJwt)).toMatchObject({ sub: String(userId) });
 
     const reused = await reset({ token, newPassword: "Otra-clave-segura-789" });
     expect(reused.status).toBe(400);

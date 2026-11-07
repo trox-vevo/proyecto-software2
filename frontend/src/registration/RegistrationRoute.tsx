@@ -3,13 +3,14 @@ import type { MouseEvent, ReactNode } from "react";
 import { LoginView, type AuthSession } from "../auth/LoginView";
 import { ForgotPasswordView } from "../auth/ForgotPasswordView";
 import { ResetPasswordView } from "../auth/ResetPasswordView";
+import { clearAuthSession, getStoredSession, saveAuthSession } from "../auth/session";
 import { RegistrationForm } from "./RegistrationForm";
 
 export function RegistrationRoute({ children }: { children: ReactNode }) {
   const [path, setPath] = useState(window.location.pathname);
   const [registered, setRegistered] = useState(false);
   const [loginNotice, setLoginNotice] = useState("");
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(getStoredSession);
   useEffect(() => {
     const onPopState = () => setPath(window.location.pathname);
     window.addEventListener("popstate", onPopState);
@@ -54,6 +55,7 @@ export function RegistrationRoute({ children }: { children: ReactNode }) {
         {loginNotice && <p role="status">{loginNotice}</p>}
         <LoginView
           onLogin={(nextSession) => {
+            saveAuthSession(nextSession);
             setSession(nextSession);
             navigate("/");
           }}
@@ -63,7 +65,7 @@ export function RegistrationRoute({ children }: { children: ReactNode }) {
           Volver al inicio
         </a>
         <p className="sesion-estado" aria-live="polite">
-          {session ? "Sesión iniciada." : ""}
+          {session ? `Sesión iniciada. Plan: ${session.plan}.` : ""}
         </p>
       </>
     );
@@ -108,15 +110,19 @@ export function RegistrationRoute({ children }: { children: ReactNode }) {
           Iniciar sesión
         </a>
         {session && (
-          <button
-            type="button"
-            onClick={() => {
-              setSession(null);
-              navigate("/login");
-            }}
-          >
-            Cerrar sesión
-          </button>
+          <>
+            <span>Plan: {session.plan}</span>
+            <button
+              type="button"
+              onClick={() => {
+                clearAuthSession();
+                setSession(null);
+                navigate("/login");
+              }}
+            >
+              Cerrar sesión
+            </button>
+          </>
         )}
       </nav>
       {children}

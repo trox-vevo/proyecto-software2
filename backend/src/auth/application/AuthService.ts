@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 import { scrypt as scryptCallback } from "node:crypto";
 import jwt from "jsonwebtoken";
-import type { User } from "../../registration/domain/User";
 import type { UserRepository } from "../../registration/domain/UserRepository";
 import type { Session } from "../domain/Session";
 import { InMemorySessionRepository } from "../infrastructure/InMemorySessionRepository";
+import { getJwtSecret } from "../jwtSecret";
 
 const scrypt = promisify(scryptCallback) as (
   password: string | Buffer,
@@ -48,15 +48,15 @@ export class AuthService {
     const ok = await this.verifyPassword(password, user.passwordHash);
     if (!ok) throw new InvalidCredentialsError();
 
-    const secret = process.env.JWT_SECRET ?? "dev-secret";
     const expiresInSec = 7 * 24 * 3600; // 7 days
-    const token = jwt.sign({ sub: user.id, email: user.email }, secret, { expiresIn: expiresInSec });
+    const token = jwt.sign({ sub: String(user.id), email: user.email }, getJwtSecret(), { expiresIn: expiresInSec });
 
     const session: Session = {
       id: randomUUID(),
       userId: user.id,
       tokenJwt: token,
       expiresAt: new Date(Date.now() + expiresInSec * 1000).toISOString(),
+      plan: user.plan,
     };
 
     this.sessionRepository.create(session);

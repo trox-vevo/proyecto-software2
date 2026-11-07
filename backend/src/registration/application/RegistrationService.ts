@@ -1,6 +1,6 @@
-import { randomBytes, randomUUID, scrypt as scryptCallback } from "node:crypto";
+import { randomBytes, scrypt as scryptCallback } from "node:crypto";
 import { promisify } from "node:util";
-import type { User, PublicUser } from "../domain/User";
+import type { PublicUser, User } from "../domain/User";
 import { DuplicateEmailError, type UserRepository } from "../domain/UserRepository";
 
 const scrypt = promisify(scryptCallback);
@@ -64,8 +64,7 @@ export class RegistrationService {
     const salt = randomBytes(16);
     const key = (await scrypt(input.password, salt, 64)) as Buffer;
     const passwordHash = `scrypt$${salt.toString("hex")}$${key.toString("hex")}`;
-    const user: User = {
-      id: randomUUID(),
+    const user: Omit<User, "id"> = {
       username,
       email,
       passwordHash,
@@ -75,7 +74,13 @@ export class RegistrationService {
 
     // US02: el UNIQUE de SQLite es la defensa final contra peticiones simultaneas.
     const saved = this.repository.create(user);
-    const { passwordHash: _passwordHash, ...publicUser } = saved;
+    const publicUser: PublicUser = {
+      id: saved.id,
+      username: saved.username,
+      email: saved.email,
+      plan: saved.plan,
+      createdAt: saved.createdAt,
+    };
     return publicUser;
   }
 }

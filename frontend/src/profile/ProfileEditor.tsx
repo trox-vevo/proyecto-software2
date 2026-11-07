@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
+import { fetchWithAuth } from "../auth/session";
 import "./ProfileEditor.css";
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -42,7 +43,7 @@ export function ProfileEditor() {
 
   useEffect(() => {
     const controlador = new AbortController();
-    fetch(`${API_URL}/api/perfil`, { signal: controlador.signal })
+    fetchWithAuth(`${API_URL}/api/perfil`, { signal: controlador.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error(await leerMensajeError(response));
         const datos: unknown = await response.json();
@@ -69,7 +70,7 @@ export function ProfileEditor() {
     setError("");
     setConfirmacion("");
     try {
-      const response = await fetch(`${API_URL}/api/perfil`, {
+      const response = await fetchWithAuth(`${API_URL}/api/perfil`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nombre: perfil.nombre, correo: perfil.correo }),
