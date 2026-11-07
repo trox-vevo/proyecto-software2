@@ -1,0 +1,134 @@
+.login-pagina {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  padding: 2rem 1rem;
+  background:
+    radial-gradient(ellipse at 50% 0, rgba(170, 59, 255, 0.1), transparent 55%),
+    var(--bg);
+}
+
+.login-tarjeta {
+  width: min(100%, 420px);
+  box-sizing: border-box;
+  padding: 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.login-etiqueta {
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.login-tarjeta h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+}
+
+.login-descripcion {
+  margin-top: 0.5rem;
+  color: var(--text);
+}
+
+.login-formulario {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1.75rem;
+}
+
+.login-formulario label {
+  margin-top: 0.4rem;
+  color: var(--text-h);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.login-formulario input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+}
+
+.login-formulario input:focus {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent-bg);
+}
+
+.login-formulario button,
+.boton-cerrar-sesion {
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-formulario button {
+  margin-top: 0.75rem;
+  padding: 0.8rem 1rem;
+}
+
+.login-formulario button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.login-error {
+  margin-top: 0.3rem;
+  color: #b42318;
+  font-size: 0.9rem;
+}
+
+.login-enlace-recuperacion {
+  display: inline-block;
+  margin-top: 1rem;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.pagina-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pagina-encabezado h1 {
+  margin: 0 0 1.5rem;
+}
+
+.boton-cerrar-sesion {
+  flex: 0 0 auto;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 520px) {
+  .login-tarjeta {
+    padding: 1.75rem;
+  }
+
+  .pagina-encabezado {
+    align-items: flex-start;
+  }
+
+  .pagina-encabezado h1 {
+    font-size: 2rem;
+  }
+}

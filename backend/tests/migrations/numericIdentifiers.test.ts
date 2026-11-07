@@ -51,7 +51,93 @@ function addFavorite(database: DatabaseSync, id: string | number | bigint, owner
 }
 const hash = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex");
 
+function recoverySchema(database: DatabaseSync) {
+  database.exec(`CREATE TABLE password_recovery_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL REFERENCES users(id),
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    used INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+  )`);
+}
+
 describe("Migración explícita de identificadores sobre copias nuevas", () => {
+  it("preserva propietarios, estados, hashes y secuencia de recuperación junto con favoritos", async () => {
+    const paths = files();
+    const source = fixture(paths.source, "TEXT", "TEXT");
+    recoverySchema(source);
+    addUser(source, "user-b", "b@example.com");
+    addUser(source, "user-a", "a@example.com");
+    addFavorite(source, "fav-b", "user-b");
+    source.exec(`INSERT INTO password_recovery_tokens VALUES
+      (2, 'user-b', 'hash-used', '2030-01-01', 1, '2026-11-07'),
+      (5, 'user-a', 'hash-active', '2030-01-02', 0, '2026-11-06'),
+      (90, 'user-a', 'hash-deleted', '2030-01-03', 0, '2026-11-06');
+      DELETE FROM password_recovery_tokens WHERE id = 90;`);
+    source.close();
+    const before = hash(paths.source);
+    expect(await migrateNumericIdentifiers(paths)).toMatchObject({ users: 2, favorites: 1, recoveryTokens: 2 });
+    expect(hash(paths.source)).toBe(before);
+    const backup = new DatabaseSync(paths.backup, { readOnly: true });
+    try {
+      expect(backup.prepare("SELECT id, user_id, token_hash FROM password_recovery_tokens ORDER BY id").all()).toEqual([
+        { id: 2, user_id: "user-b", token_hash: "hash-used" },
+        { id: 5, user_id: "user-a", token_hash: "hash-active" },
+      ]);
+      expect(backup.prepare("SELECT seq FROM sqlite_sequence WHERE name = 'password_recovery_tokens'").get()).toEqual({ seq: 90 });
+      expect(backup.prepare("PRAGMA integrity_check").get()).toEqual({ integrity_check: "ok" });
+    } finally { backup.close(); }
+    const output = new DatabaseSync(paths.output);
+    try {
+      expect(output.prepare("SELECT id, user_id, token_hash, expires_at, used, created_at FROM password_recovery_tokens ORDER BY id").all()).toEqual([
+        { id: 2, user_id: 2, token_hash: "hash-used", expires_at: "2030-01-01", used: 1, created_at: "2026-11-07" },
+        { id: 5, user_id: 1, token_hash: "hash-active", expires_at: "2030-01-02", used: 0, created_at: "2026-11-06" },
+      ]);
+      expect(output.prepare("SELECT user_id FROM favorite_simulations").get()).toEqual({ user_id: 2 });
+      expect(output.prepare("INSERT INTO password_recovery_tokens(user_id, token_hash, expires_at, created_at) VALUES (1, 'next', '2030', '2026')").run().lastInsertRowid).toBe(91);
+      expect(output.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
+    } finally { output.close(); }
+  });
+
+  it("rechaza recuperación huérfana antes de crear destinos", async () => {
+    const paths = files();
+    const source = fixture(paths.source);
+    recoverySchema(source);
+    source.exec("PRAGMA foreign_keys = OFF; INSERT INTO password_recovery_tokens VALUES (1, 'missing', 'hash', '2030', 0, '2026')");
+    source.close();
+    const before = hash(paths.source);
+    await expect(migrateNumericIdentifiers(paths)).rejects.toThrow(/huérfanas/);
+    expect(hash(paths.source)).toBe(before);
+    expect(existsSync(paths.output)).toBe(false);
+  });
+
+  it("rechaza restricciones de recuperación desconocidas sin descartarlas", async () => {
+    const paths = files();
+    const source = fixture(paths.source);
+    recoverySchema(source);
+    source.exec("ALTER TABLE password_recovery_tokens ADD COLUMN origin TEXT");
+    source.close();
+    await expect(migrateNumericIdentifiers(paths)).rejects.toThrow(/esquema de recuperación/);
+    expect(existsSync(paths.output)).toBe(false);
+  });
+
+  it.each(["id", "sequence"])("revierte tokens fuera del rango seguro: %s", async (field) => {
+    const paths = files();
+    const source = fixture(paths.source);
+    recoverySchema(source);
+    addUser(source, "user-a");
+    source.prepare("INSERT INTO password_recovery_tokens VALUES (?, 'user-a', 'hash', '2030', 0, '2026')")
+      .run(field === "id" ? BigInt(Number.MAX_SAFE_INTEGER) + 1n : 1);
+    if (field === "sequence") source.prepare("UPDATE sqlite_sequence SET seq = ? WHERE name = 'password_recovery_tokens'").run(BigInt(Number.MAX_SAFE_INTEGER) + 1n);
+    source.close();
+    const before = hash(paths.source);
+    await expect(migrateNumericIdentifiers(paths)).rejects.toThrow(/enteros seguros/);
+    expect(hash(paths.source)).toBe(before);
+    const rolledBack = new DatabaseSync(paths.output, { readOnly: true });
+    try { expect(rolledBack.prepare("SELECT name FROM sqlite_schema WHERE type = 'table'").all()).toEqual([]); }
+    finally { rolledBack.close(); }
+  });
   it("preserva hashes, correo, JSON, relaciones y unicidad sin escribir la fuente", async () => {
     const paths = files();
     const legacy = fixture(paths.source, "TEXT", "TEXT");

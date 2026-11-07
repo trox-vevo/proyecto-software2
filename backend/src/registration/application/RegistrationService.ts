@@ -75,6 +75,12 @@ export class RegistrationService {
 
     // US02: el UNIQUE de SQLite es la defensa final contra peticiones simultaneas.
     const saved = this.repository.create(user);
-    return { id: numericIdentifier(saved.id), username: saved.username, email: saved.email, plan: saved.plan, createdAt: saved.createdAt };
+    return {
+      id: numericIdentifier(saved.id),
+      username: saved.username,
+      email: saved.email,
+      plan: saved.plan,
+      createdAt: saved.createdAt,
+    };
   }
 }

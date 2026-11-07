@@ -3,9 +3,10 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { scryptSync } from "node:crypto";
-import { DatabaseSync } from "node:sqlite";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { DatabaseSync } from "node:sqlite";
+import { migrateNumericIdentifiers } from "../../src/migrations/NumericIdentifierMigration";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/app";
 import { InvalidRegistrationError, RegistrationService } from "../../src/registration/application/RegistrationService";
@@ -78,12 +79,84 @@ describe("US01 / US02: registro y persistencia", () => {
   it("persiste después de cerrar y reabrir la base de datos", () => {
     const dbPath = join(directory, "restart.sqlite");
     const first = new SqliteUserRepository(dbPath);
-    const original = repository.findByEmail(valid.email)!;
-    const saved = first.create({ username: original.username, email: original.email, passwordHash: original.passwordHash, plan: original.plan, createdAt: original.createdAt });
+    const user = repository.findByEmail(valid.email)!;
+    const saved = first.create({
+      username: user.username,
+      email: "restart@example.com",
+      passwordHash: user.passwordHash,
+      plan: user.plan,
+      createdAt: user.createdAt,
+    });
     first.close();
     const reopened = new SqliteUserRepository(dbPath);
-    try { expect(reopened.findByEmail(valid.email)?.id).toBe(saved.id); }
+    try { expect(reopened.findByEmail("restart@example.com")?.id).toBe(saved.id); }
     finally { reopened.close(); }
+  });
+
+  it("persists the selected user plan", () => {
+    repository.create({
+      username: "Pro",
+      email: "pro@example.com",
+      passwordHash: "hash",
+      plan: "PRO",
+      createdAt: new Date().toISOString(),
+    });
+    expect(repository.findByEmail("pro@example.com")?.plan).toBe("PRO");
+  });
+
+  it("migrates existing text IDs and recovery tokens on an explicit backed-up copy without losing accounts", async () => {
+    const dbPath = join(directory, "legacy-with-recovery.sqlite");
+    const legacy = new DatabaseSync(dbPath);
+    legacy.exec(`
+      CREATE TABLE users (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL,
+        email TEXT NOT NULL COLLATE NOCASE UNIQUE,
+        password_hash TEXT NOT NULL,
+        plan TEXT NOT NULL DEFAULT 'BASICO',
+        created_at TEXT NOT NULL
+      );
+      CREATE TABLE password_recovery_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL REFERENCES users(id),
+        token_hash TEXT NOT NULL UNIQUE,
+        expires_at TEXT NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
+      );
+    `);
+    legacy.prepare(
+      "INSERT INTO users (id, username, email, password_hash, plan, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+    ).run("uuid-anterior", "Cuenta antigua", "antigua@example.com", "hash", "PRO", new Date().toISOString());
+    legacy.prepare(
+      "INSERT INTO password_recovery_tokens (user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?)",
+    ).run("uuid-anterior", "token-hash", new Date(Date.now() + 60_000).toISOString(), new Date().toISOString());
+    legacy.close();
+
+    const originalBytes = readFileSync(dbPath);
+    expect(() => new SqliteUserRepository(dbPath)).toThrow(UserSchemaMigrationRequiredError);
+    expect(readFileSync(dbPath)).toEqual(originalBytes);
+    const output = join(directory, "migrated-recovery.sqlite");
+    const backup = join(directory, "backup-recovery.sqlite");
+    await migrateNumericIdentifiers({ source: dbPath, output, backup, applyCopy: true });
+    expect(readFileSync(dbPath)).toEqual(originalBytes);
+    const migrated = new SqliteUserRepository(output);
+    try {
+      const savedUser = migrated.findByEmail("antigua@example.com")!;
+      expect(savedUser).toMatchObject({
+        username: "Cuenta antigua",
+        plan: "PRO",
+      });
+      expect(typeof savedUser.id).toBe("number");
+      expect(migrated.updatePasswordWithRecoveryToken(
+        "token-hash",
+        "nuevo-hash",
+        new Date().toISOString(),
+      )).toBe(true);
+      expect(migrated.findByEmail("antigua@example.com")?.passwordHash).toBe("nuevo-hash");
+    } finally {
+      migrated.close();
+    }
   });
 });
 
@@ -129,7 +202,8 @@ describe("API de registro", () => {
   it("un fallo de persistencia devuelve 500 sin exponer detalles internos", async () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
     const failing = createApp({ findFixedDepositsByDepartment: async () => [] }, {
-      findByEmail: () => { throw new Error("ruta privada de la base"); }, create: (user) => ({ ...user, id: 1 }),
+      findByEmail: () => { throw new Error("ruta privada de la base"); },
+      create: (user) => ({ ...user, id: 1 }),
     }).listen(0);
     try {
       await once(failing, "listening");
@@ -196,6 +270,47 @@ describe("Contrato numérico y protección de esquemas existentes", () => {
     incompatible.exec("CREATE TABLE users (id INTEGER PRIMARY KEY, email TEXT) WITHOUT ROWID");
     incompatible.close();
     expect(() => new SqliteUserRepository(incompatiblePath)).toThrow(UserSchemaMigrationRequiredError);
+  });
+
+  it("detecta referencias de recuperación TEXT sin modificar una base de usuarios INTEGER", () => {
+    const path = join(directory, "legacy-token-reference.sqlite");
+    const seed = new SqliteUserRepository(path);
+    seed.close();
+    const legacy = new DatabaseSync(path);
+    legacy.exec(`DROP TABLE password_recovery_tokens;
+      CREATE TABLE password_recovery_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL REFERENCES users(id),
+        token_hash TEXT NOT NULL UNIQUE, expires_at TEXT NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
+      )`);
+    legacy.close();
+    const before = readFileSync(path);
+    expect(() => new SqliteUserRepository(path)).toThrow(UserSchemaMigrationRequiredError);
+    expect(readFileSync(path)).toEqual(before);
+  });
+
+  it("aplica integridad referencial y revierte tokens que exceden el rango numérico", () => {
+    const path = join(directory, "recovery-boundary.sqlite");
+    const seed = new SqliteUserRepository(path);
+    const user = seed.create(pendingUser);
+    seed.close();
+    const fixture = new DatabaseSync(path);
+    fixture.exec(`DROP TABLE password_recovery_tokens;
+      CREATE TABLE password_recovery_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL REFERENCES users(id),
+        token_hash TEXT NOT NULL UNIQUE, expires_at TEXT NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
+      )`);
+    fixture.prepare("INSERT INTO password_recovery_tokens VALUES (?, ?, 'last', '2030', 0, '2026')")
+      .run(BigInt(Number.MAX_SAFE_INTEGER), user.id);
+    fixture.close();
+    const limited = new SqliteUserRepository(path);
+    try {
+      expect(() => limited.createRecoveryToken({ userId: user.id, tokenHash: "overflow", expiresAt: "2030" })).toThrow(RangeError);
+      expect(limited.hasValidRecoveryToken("overflow", "2026")).toBe(false);
+      expect(() => limited.createRecoveryToken({ userId: user.id + 1, tokenHash: "orphan", expiresAt: "2030" })).toThrow();
+      expect(limited.hasValidRecoveryToken("orphan", "2026")).toBe(false);
+    } finally { limited.close(); }
   });
 
   it("detecta ids int64 fuera del rango seguro al leer y revierte un alta imprecisa", () => {

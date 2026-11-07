@@ -16,6 +16,7 @@ export interface NumericMigrationOptions {
 export interface NumericMigrationResult {
   users: number;
   favorites: number;
+  recoveryTokens: number;
   sourceUnchanged: true;
   source: string;
   output: string;
@@ -79,10 +80,10 @@ function canonical(sql: string): string {
     .replace(/CHECK\((ID|USER_ID)>=1AND\1<=9007199254740991\)/g, ""));
 }
 
-function inspect(database: DatabaseSync): { users: IdKind; favorites: IdKind | null } {
+function inspect(database: DatabaseSync): { users: IdKind; favorites: IdKind | null; recovery: boolean } {
   checkIntegrity(database);
   const objects = rows(database, "SELECT type, name, sql FROM sqlite_schema WHERE lower(substr(name, 1, 7)) <> 'sqlite_'");
-  if (objects.some((item) => item.type !== "table" || !["users", "favorite_simulations"].includes(String(item.name)))) {
+  if (objects.some((item) => item.type !== "table" || !["users", "favorite_simulations", "password_recovery_tokens"].includes(String(item.name)))) {
     return fail("Esquema extendido o ya migrado: hay tablas, índices, vistas o triggers que requieren una migración coordinada.");
   }
   const userTable = objects.find((item) => item.name === "users");
@@ -100,12 +101,21 @@ function inspect(database: DatabaseSync): { users: IdKind; favorites: IdKind | n
   const expectedUser = `CREATETABLEUSERS(ID${userKind}PRIMARYKEY,USERNAMETEXTNOTNULL,EMAILTEXTNOTNULLCOLLATENOCASEUNIQUE,PASSWORD_HASHTEXTNOTNULL,PLANTEXTNOTNULLDEFAULT'BASICO',CREATED_ATTEXTNOTNULL)`;
   if (canonical(text(userTable.sql)) !== expectedUser) return fail("El esquema de usuarios contiene diferencias no admitidas; se conserva sin cambios.");
   const favoriteTable = objects.find((item) => item.name === "favorite_simulations");
-  if (!favoriteTable) return { users: userKind, favorites: null };
+  const recoveryTable = objects.find((item) => item.name === "password_recovery_tokens");
+  if (recoveryTable) {
+    if (kind("password_recovery_tokens") !== "INTEGER") return fail("Los tokens requieren identificadores INTEGER.");
+    const expectedRecovery = (owner: IdKind) => `CREATETABLEPASSWORD_RECOVERY_TOKENS(IDINTEGERPRIMARYKEYAUTOINCREMENT,USER_ID${owner}NOTNULLREFERENCESUSERS(ID),TOKEN_HASHTEXTNOTNULLUNIQUE,EXPIRES_ATTEXTNOTNULL,USEDINTEGERNOTNULLDEFAULT0,CREATED_ATTEXTNOTNULL)`;
+    const recoverySql = canonical(text(recoveryTable.sql));
+    if (recoverySql !== expectedRecovery("TEXT") && recoverySql !== expectedRecovery("INTEGER")) {
+      return fail("El esquema de recuperación contiene diferencias no admitidas; se conserva sin cambios.");
+    }
+  }
+  if (!favoriteTable) return { users: userKind, favorites: null, recovery: !!recoveryTable };
   const favoriteKind = kind("favorite_simulations");
   const sql = canonical(text(favoriteTable.sql));
   const expectedFavorite = (ownerKind: IdKind) => `CREATETABLEFAVORITE_SIMULATIONS(ID${favoriteKind}PRIMARYKEY,USER_ID${ownerKind}NOTNULLREFERENCESUSERS(ID)ONDELETECASCADE,FINGERPRINTTEXTNOTNULL,INSTRUMENTTEXTNOTNULLCHECK(INSTRUMENTIN('AHORROS','PLAZO_FIJO')),PARAMETERS_JSONTEXTNOTNULL,SNAPSHOT_JSONTEXTNOTNULL,CREATED_ATTEXTNOTNULL,UNIQUE(USER_ID,FINGERPRINT))`;
   if (sql !== expectedFavorite("TEXT") && sql !== expectedFavorite("INTEGER")) return fail("El esquema de favoritos contiene diferencias no admitidas; se conserva sin cambios.");
-  return { users: userKind, favorites: favoriteKind };
+  return { users: userKind, favorites: favoriteKind, recovery: !!recoveryTable };
 }
 
 function destinationPath(file: string): string {
@@ -133,7 +143,7 @@ function reserve(file: string): void {
   closeSync(descriptor);
 }
 
-function createSchema(database: DatabaseSync, favorites: boolean): void {
+function createSchema(database: DatabaseSync, favorites: boolean, recovery: boolean): void {
   database.exec(`
     CREATE TABLE users (
       id INTEGER PRIMARY KEY CHECK(id BETWEEN 1 AND 9007199254740991),
@@ -144,11 +154,21 @@ function createSchema(database: DatabaseSync, favorites: boolean): void {
       created_at TEXT NOT NULL
     );
     CREATE TABLE identifier_migration_map (
-      entity TEXT NOT NULL CHECK(entity IN ('users', 'favorite_simulations')),
+      entity TEXT NOT NULL CHECK(entity IN ('users', 'favorite_simulations', 'password_recovery_tokens')),
       legacy_id TEXT NOT NULL,
       numeric_id INTEGER NOT NULL CHECK(numeric_id BETWEEN 1 AND 9007199254740991),
       PRIMARY KEY(entity, legacy_id),
       UNIQUE(entity, numeric_id)
+    );
+  `);
+  if (recovery) database.exec(`
+    CREATE TABLE password_recovery_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT CHECK(id BETWEEN 1 AND 9007199254740991),
+      user_id INTEGER NOT NULL REFERENCES users(id) CHECK(user_id BETWEEN 1 AND 9007199254740991),
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      used INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
     );
   `);
   if (favorites) database.exec(`
@@ -183,7 +203,7 @@ export async function migrateNumericIdentifiers(options: NumericMigrationOptions
     output = new DatabaseSync(files.output);
     output.exec("PRAGMA foreign_keys = ON; BEGIN IMMEDIATE");
     try {
-      createSchema(output, schema.favorites !== null);
+      createSchema(output, schema.favorites !== null, schema.recovery);
       const map = output.prepare("INSERT INTO identifier_migration_map(entity, legacy_id, numeric_id) VALUES (?, ?, ?)");
       const userMap = new Map<string, number>();
       const users = rows(snapshot, "SELECT id, username, email, password_hash, plan, created_at FROM users ORDER BY id COLLATE BINARY");
@@ -213,10 +233,34 @@ export async function migrateNumericIdentifiers(options: NumericMigrationOptions
       }
       const sourceFavorites = schema.favorites === null ? 0n : rows(snapshot, "SELECT COUNT(*) AS n FROM favorite_simulations")[0].n;
       if (BigInt(favorites.length) !== sourceFavorites) return fail("El recuento de favoritos no coincide; la copia se revierte.");
+      const tokens = !schema.recovery ? [] : rows(snapshot, `
+        SELECT t.id, u.id AS owner_id, t.token_hash, t.expires_at, t.used, t.created_at
+        FROM password_recovery_tokens t JOIN users u ON u.id = t.user_id ORDER BY t.id
+      `);
+      for (const token of tokens) {
+        const owner = userMap.get(legacyId(token.owner_id, schema.users));
+        if (!owner) return fail("No se pudo preservar el propietario de un token de recuperación.");
+        const id = positiveId(token.id);
+        if (typeof token.used !== "bigint") return fail("El estado del token de recuperación no es INTEGER.");
+        output.prepare("INSERT INTO password_recovery_tokens(id, user_id, token_hash, expires_at, used, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+          .run(id, owner, text(token.token_hash), text(token.expires_at), token.used, text(token.created_at));
+        map.run("password_recovery_tokens", String(id), id);
+      }
+      if (schema.recovery) {
+        const count = rows(snapshot, "SELECT COUNT(*) AS n FROM password_recovery_tokens")[0].n;
+        if (BigInt(tokens.length) !== count) return fail("El recuento de tokens no coincide; la copia se revierte.");
+        // Conserva AUTOINCREMENT incluso si se borró el último token antes de migrar.
+        const sequence = rows(snapshot, "SELECT seq FROM sqlite_sequence WHERE name = 'password_recovery_tokens'")[0]?.seq;
+        if (sequence !== undefined && sequence !== 0n) {
+          const highWater = positiveId(sequence);
+          output.prepare("DELETE FROM sqlite_sequence WHERE name = 'password_recovery_tokens'").run();
+          output.prepare("INSERT INTO sqlite_sequence(name, seq) VALUES ('password_recovery_tokens', ?)").run(highWater);
+        }
+      }
       checkIntegrity(output);
       output.exec("COMMIT");
       checkIntegrity(output);
-      return { ...files, users: users.length, favorites: favorites.length, sourceUnchanged: true };
+      return { ...files, users: users.length, favorites: favorites.length, recoveryTokens: tokens.length, sourceUnchanged: true };
     } catch (error) {
       if (output.isTransaction) output.exec("ROLLBACK");
       throw error;

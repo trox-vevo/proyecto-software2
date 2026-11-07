@@ -12,9 +12,9 @@ La fuente siempre se abre en modo de solo lectura. El procedimiento produce un r
 
 - `backend/src/migrations/NumericIdentifierMigration.ts` implementa el procedimiento.
 - `backend/src/migrations/migrateNumericIdentifiers.ts` proporciona el CLI.
-- `backend/tests/migrations/numericIdentifiers.test.ts` contiene 26 casos de prueba.
+- `backend/tests/migrations/numericIdentifiers.test.ts` contiene 31 casos de prueba.
 
-El esquema de destino conserva los campos de usuarios y favoritos. Las claves internas son `INTEGER PRIMARY KEY`, y `favorite_simulations.user_id` es `INTEGER` con referencia a `users(id) ON DELETE CASCADE`. El contrato de aplicación admite exclusivamente enteros positivos hasta `9007199254740991`, representables exactamente como `number`.
+El esquema de destino conserva los campos de usuarios, favoritos y tokens de recuperaci?n cuando existen. Las claves internas son `INTEGER PRIMARY KEY`, y `favorite_simulations.user_id` es `INTEGER` con referencia a `users(id) ON DELETE CASCADE`. El contrato de aplicación admite exclusivamente enteros positivos hasta `9007199254740991`, representables exactamente como `number`.
 
 SQLite genera los identificadores nuevos cuando la fuente utiliza claves TEXT. Los identificadores INTEGER válidos existentes conservan su valor. No se convierte ningún UUID mediante `Number`, `parseInt`, hashes numéricos, timestamps o contadores locales.
 
@@ -24,7 +24,7 @@ Los nombres, correos, hashes de contraseña, planes, fechas, huellas y textos JS
 
 ## Alcance deliberadamente estricto
 
-La herramienta reconoce los esquemas administrados de `users` y, si existe, `favorite_simulations`, tanto con las claves TEXT anteriores como con claves INTEGER compatibles. Debe existir la tabla completa de usuarios. Un archivo de favoritos sin usuarios no permite fabricar propietarios y se rechaza.
+La herramienta reconoce los esquemas administrados de `users` y, si existen, `favorite_simulations` y `password_recovery_tokens`, tanto con las claves TEXT anteriores como con claves INTEGER compatibles. Debe existir la tabla completa de usuarios. Un archivo de favoritos sin usuarios no permite fabricar propietarios y se rechaza.
 
 Se rechazan antes de crear destinos las extensiones desconocidas del esquema, entre ellas tablas adicionales, vistas, triggers, índices explícitos y columnas o restricciones que la herramienta no pueda preservar. También se rechazan variantes con AUTOINCREMENT, columnas generadas, esquemas de usuarios incompletos y fuentes ya dotadas de `identifier_migration_map`. Estas situaciones requieren una migración coordinada específica, no eliminar componentes para que esta herramienta acepte la base.
 
@@ -39,7 +39,7 @@ Un entero fuera del rango seguro, una clave textual nula o vacía, una relación
 3. Reservar los destinos con apertura exclusiva `wx`, evitando sobrescrituras incluso si otro proceso crea un archivo durante la comprobación.
 4. Generar el respaldo mediante la API `backup` de SQLite. Esto incluye las escrituras confirmadas que todavía estén en WAL.
 5. Cerrar la fuente y abrir el respaldo en modo de solo lectura. Toda la transformación parte de esa instantánea consistente.
-6. Crear el esquema de salida e insertar usuarios, correspondencias y favoritos dentro de `BEGIN IMMEDIATE`.
+6. Crear el esquema de salida e insertar usuarios, correspondencias, favoritos y tokens de recuperaci?n dentro de `BEGIN IMMEDIATE`.
 7. Validar claves numéricas antes de convertir bigint, comprobar recuentos, `PRAGMA integrity_check` y `PRAGMA foreign_key_check`.
 8. Confirmar la transacción y volver a comprobar integridad.
 

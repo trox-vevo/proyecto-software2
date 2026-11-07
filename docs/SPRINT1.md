@@ -2,7 +2,7 @@
 
 Rama: `feat/sprint1-us01-us02-completo`.
 Directorio: `C:\Users\Magaz_\proyecto-software2\.worktrees\sprint1`.
-Base: `origin/main`, commit `8cc91626a456e03f52f83ae5e0e143dd6e2405de`, comprobado de nuevo mediante fetch el 4 de noviembre de 2026.
+Base original: `8cc91626a456e03f52f83ae5e0e143dd6e2405de`. Integraci?n del 7 de noviembre: `origin/main` en `3baf458c3548814d4fefa9f9ffec60871dfec818`.
 
 La entrega original fue revisada y publicada el 4 de noviembre de 2026 en el commit `a7afd4622a01aabf022584e5b3aed9bf6ba32b70`, con la autorización de esa entrega. La auditoría del 6 de noviembre corrige sus identificadores mediante cambios locales pendientes de revisión. No autoriza commits, push ni migración de bases existentes. Usa este worktree para revisar y ejecutar el Sprint.
 

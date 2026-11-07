@@ -4,10 +4,16 @@ import "dotenv/config";
 import { createApp } from "./app";
 import { InMemoryProductRepository } from "./simulation/infrastructure/InMemoryProductRepository";
 import { SqliteUserRepository } from "./registration/infrastructure/SqliteUserRepository";
+import { SmtpRecoveryEmailService } from "./recovery/infrastructure/SmtpRecoveryEmailService";
 
 const PORT = process.env.PORT ?? 3000;
 const users = new SqliteUserRepository(process.env.USER_DB_PATH ?? "data/usuarios.sqlite");
-const server = createApp(new InMemoryProductRepository(), users).listen(PORT, () => {
+const server = createApp(
+  new InMemoryProductRepository(),
+  users,
+  users,
+  new SmtpRecoveryEmailService(),
+).listen(PORT, () => {
   console.log(`Backend escuchando en http://localhost:${PORT}`);
 });
 

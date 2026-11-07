@@ -1,5 +1,7 @@
 import type { NewUser, User } from "./User";
 
+export type { NewUser } from "./User";
+
 export interface UserRepository {
   findByEmail(email: string): User | null;
   create(user: NewUser): User;
