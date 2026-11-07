@@ -167,6 +167,13 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
     };
   }
 
+  findById(id: number): User | null {
+    if (!Number.isSafeInteger(id) || id <= 0) return null;
+    const row = this.database.prepare("SELECT email FROM users WHERE id = ?").get(id) as { email: string } | undefined;
+    // Reutiliza el mapeo y la validación de planes del repositorio existente.
+    return row ? this.findByEmail(row.email) : null;
+  }
+
   create(user: Omit<User, "id">): User {
     try {
       const result = this.database

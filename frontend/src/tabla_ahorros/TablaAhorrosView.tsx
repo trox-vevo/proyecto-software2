@@ -6,6 +6,7 @@ import { PanelDescripcionRiesgo } from "../semaforo/PanelDescripcionRiesgo";
 import { useSemaforoPanel } from "../semaforo/useSemaforoPanel";
 import { EmptyStateComponent } from "./EmptyStateComponent";
 import "./TablaAhorrosView.css";
+import { FavoriteButton } from "../commerce/FavoriteButton";
 
 interface Props {
   columnas: ColumnaTabla[];
@@ -15,6 +16,7 @@ interface Props {
   criterioActivo: CriterioOrden;
   onOrdenar: (columna: ColumnaTabla) => void;
   onReintentar: () => void;
+  favoritos?: { days: number; onViewPlans: () => void };
 }
 
 /** Solo dibuja: según el estado muestra un mensaje o la tabla. No sabe de dónde vienen los datos. */
@@ -26,6 +28,7 @@ export function TablaAhorrosView({
   criterioActivo,
   onOrdenar,
   onReintentar,
+  favoritos,
 }: Props) {
   const { filaAbiertaId, alternar } = useSemaforoPanel();
   if (estado === "CARGANDO") {
@@ -83,6 +86,7 @@ export function TablaAhorrosView({
                 </th>
               );
             })}
+            {favoritos && <th scope="col">Favoritos Pro</th>}
           </tr>
         </thead>
         <tbody>
@@ -111,10 +115,11 @@ export function TablaAhorrosView({
                       )}
                     </td>
                   ))}
+                  {favoritos && <td><FavoriteButton accountId={fila.cuentaId} days={favoritos.days} onViewPlans={favoritos.onViewPlans} /></td>}
                 </tr>
                 {abierta && (
                   <tr className="fila-panel-riesgo">
-                    <td colSpan={columnas.length}>
+                    <td colSpan={columnas.length + (favoritos ? 1 : 0)}>
                       <PanelDescripcionRiesgo
                         id={panelId}
                         riesgo={fila.riesgo}
