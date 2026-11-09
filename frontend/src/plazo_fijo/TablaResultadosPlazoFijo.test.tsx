@@ -52,4 +52,8 @@ describe("US12 | TS-34 y TS-35 | Tabla de resultados", () => {
     expect(formatearTasa("0.000123456789123456789")).toBe("0.0123456789123456789 %");
     expect(formatearTasa("1e-7")).toBe("0.00001 %");
   });
+  it("representa el minimo no disponible", () => {
+    render(<TablaResultadosPlazoFijo resultados={[{ ...resultado, minimumAmount: null }]} modalidad="AT_MATURITY" />);
+    expect(screen.getByRole("cell", { name: "\u2014" })).toBeInTheDocument();
+  });
 });

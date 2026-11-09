@@ -1,0 +1,7 @@
+{
+  "name": "yupay-finance",
+  "private": true,
+  "scripts": {
+    "test": "node scripts/test-sprint-review.mjs"
+  }
+}

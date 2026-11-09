@@ -14,7 +14,7 @@ const COLUMNAS: readonly ColumnaPlazoFijo[] = [
   { clave: "totalInterest", titulo: "Intereses Totales", numerica: true,
     presentar: (fila) => formatearImporte(fila.totalInterest) },
   { clave: "minimumAmount", titulo: "Monto Mínimo de Cuenta", numerica: true,
-    presentar: (fila) => fila.minimumAmount === null ? "�" : formatearImporte(fila.minimumAmount) },
+    presentar: (fila) => fila.minimumAmount === null ? "—" : formatearImporte(fila.minimumAmount) },
 ];
 
 const COLUMNA_MENSUAL: ColumnaPlazoFijo = {

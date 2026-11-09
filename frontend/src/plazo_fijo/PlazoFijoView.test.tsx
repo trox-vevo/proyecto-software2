@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PlazoFijoView } from "./PlazoFijoView";
@@ -17,7 +17,7 @@ function completar() {
   fireEvent.submit(screen.getByRole("form"));
 }
 
-describe("Integraci髇 US06 + US12 | Flujo de simulaci髇", () => {
+describe("Integraci贸n US06 + US12 | Flujo de simulaci贸n", () => {
   it("env铆a los cuatro par谩metros al endpoint existente y muestra su respuesta", async () => {
     const fetchMock = vi.fn().mockResolvedValue(json([fila]));
     vi.stubGlobal("fetch", fetchMock);
@@ -98,19 +98,22 @@ describe("Integraci髇 US06 + US12 | Flujo de simulaci髇", () => {
 
   it("mantiene el m贸dulo de ahorros y conserva los par谩metros al alternar las secciones", async () => {
     const user = userEvent.setup();
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(json({ resultados: [{
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(json({ resultados: [{
       cuentaId: "AH-001", capitalInicial: "1,000.00", interesGenerado: "50.00",
-      saldoFinal: "1,050.00", fechaApertura: "10/01/2023",
-    }] })));
+      saldoFinal: "1,050.00", fechaApertura: "10/01/2023", monthlyMaintenanceFee: "0.00",
+      channels: { hasPhysicalBranches: true, hasAtms: true },
+    }] }))));
+    window.history.replaceState(null, "", "/");
+    localStorage.clear();
     render(<App />);
     expect(await screen.findByText("AH-001")).toBeVisible();
-    await user.click(screen.getByRole("button", { name: "Dep贸sito a Plazo Fijo" }));
+    await user.click(screen.getByRole("radio", { name: /Plazo Fijo/ }));
     await user.type(screen.getByLabelText(/Monto de inversi贸n/), "1234.50");
-    await user.selectOptions(screen.getByLabelText(/Modalidad/), "MONTHLY");
+    await user.selectOptions(within(screen.getByRole("region", { name: /Plazo Fijo/ })).getByLabelText(/Modalidad/), "MONTHLY");
     await user.click(screen.getByRole("radio", { name: "Cuenta de Ahorros" }));
     expect(screen.getByText("AH-001")).toBeVisible();
-    await user.click(screen.getByRole("button", { name: "Dep贸sito a Plazo Fijo" }));
+    await user.click(screen.getByRole("radio", { name: /Plazo Fijo/ }));
     expect(screen.getByLabelText(/Monto de inversi贸n/)).toHaveValue("1234.50");
-    expect(screen.getByLabelText(/Modalidad/)).toHaveValue("MONTHLY");
+    expect(within(screen.getByRole("region", { name: /Plazo Fijo/ })).getByLabelText(/Modalidad/)).toHaveValue("MONTHLY");
   });
 });

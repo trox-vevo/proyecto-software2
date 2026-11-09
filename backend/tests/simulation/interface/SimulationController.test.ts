@@ -54,6 +54,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
     expect(await response.json()).toEqual([
       {
         productId: 2,
+        minimumAmount: "1000.00",
         coberturaFSD: crearCoberturaNoVerificada(),
         entityName: "Entidad 2",
         tea: "0.0575",
@@ -63,6 +64,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
       },
       {
         productId: 1,
+        minimumAmount: "500.00",
         coberturaFSD: crearCoberturaNoVerificada(),
         entityName: "Entidad 1",
         tea: "0.055",
@@ -72,6 +74,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
       },
       {
         productId: 3,
+        minimumAmount: "500.00",
         coberturaFSD: crearCoberturaNoVerificada(),
         entityName: "Entidad 3",
         tea: "0.042",
@@ -92,11 +95,12 @@ describe("POST /api/simulations/fixed-deposits", () => {
 
   it("200: en MONTHLY devuelve monthlyInterest con 2 decimales", async () => {
     const response = await post({ ...validRequest, paymentMode: "MONTHLY" });
-    const results: { monthlyInterest: string }[] = await response.json();
+    const results: { monthlyInterest: string; minimumAmount: string }[] = await response.json();
 
     expect(response.status).toBe(200);
     expect(results).toHaveLength(3);
     for (const result of results) {
+      expect(result.minimumAmount).toMatch(/^\d+\.\d{2}$/);
       expect(result.monthlyInterest).toMatch(/^\d+\.\d{2}$/);
     }
   });
