@@ -16,4 +16,11 @@ export class SimulationResult {
     readonly coberturaFSD: CoberturaFSD = crearCoberturaNoVerificada(),
     readonly minimumAmount: Decimal | null = null,
   ) {}
+
+  // US25 lo llena; US27 lo borra para usuarios no Pro
+  riskRating: string | null = null;
+
+  hideRiskRating(): void {
+    this.riskRating = null;
+  }
 }

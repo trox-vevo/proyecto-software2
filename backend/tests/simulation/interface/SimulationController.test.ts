@@ -61,6 +61,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
         totalInterest: "57.50",
         monthlyInterest: null,
         channels: { hasPhysicalBranches: true, hasAtms: false },
+        riskRating: null,
       },
       {
         productId: 1,
@@ -71,6 +72,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
         totalInterest: "55.00",
         monthlyInterest: null,
         channels: { hasPhysicalBranches: true, hasAtms: true },
+        riskRating: null,
       },
       {
         productId: 3,
@@ -81,6 +83,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
         totalInterest: "42.00",
         monthlyInterest: null,
         channels: { hasPhysicalBranches: false, hasAtms: true },
+        riskRating: null,
       },
     ]);
   });
