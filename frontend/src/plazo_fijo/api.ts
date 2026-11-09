@@ -1,3 +1,4 @@
+import { fetchWithAuth } from "../auth/session";
 import type { ParametrosPlazoFijo, ResultadoPlazoFijo } from "./tipos";
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -7,7 +8,8 @@ export async function simularPlazoFijo(
   parametros: ParametrosPlazoFijo,
   signal: AbortSignal,
 ): Promise<ResultadoPlazoFijo[]> {
-  const respuesta = await fetch(`${API_URL}/api/simulations/fixed-deposits`, {
+  // US27: con el token, el backend sabe si el usuario es Pro; sin él, oculta la calificación
+  const respuesta = await fetchWithAuth(`${API_URL}/api/simulations/fixed-deposits`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(parametros),

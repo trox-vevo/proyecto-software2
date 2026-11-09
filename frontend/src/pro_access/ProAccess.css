@@ -1,0 +1,65 @@
+/* US27: candado "Exclusivo Pro" y paywall. Mismas variables que tabla_ahorros/TablaAhorrosView.css */
+.riesgo-pro-boton {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.riesgo-pro-boton:focus-visible {
+  outline: 2px solid var(--accent, currentColor);
+  outline-offset: 3px;
+}
+
+.riesgo-pro--bloqueado {
+  color: var(--text, #6b6375);
+  white-space: nowrap;
+}
+
+/* El emoji 🔒 es dorado en casi todos los sistemas; el criterio pide un candado gris */
+.riesgo-pro-candado {
+  filter: grayscale(1);
+}
+
+.paywall-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 20px;
+}
+
+.paywall {
+  width: 100%;
+  max-width: 480px;
+  padding: 28px;
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.3));
+  border-radius: 16px;
+  background: var(--bg);
+  color: var(--text);
+  box-sizing: border-box;
+}
+
+.paywall h2 {
+  margin-top: 0;
+  color: var(--text-h, inherit);
+}
+
+.paywall button {
+  margin-right: 0.5rem;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.paywall-suscribirse {
+  color: #fff;
+  background: var(--accent, #aa3bff);
+  border: none;
+  border-radius: 8px;
+}

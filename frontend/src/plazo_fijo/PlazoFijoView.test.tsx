@@ -27,7 +27,8 @@ describe("Integración US06 + US12 | Flujo de simulación", () => {
     const [url, opciones] = fetchMock.mock.calls[0];
     expect(url).toMatch(/\/api\/simulations\/fixed-deposits$/);
     expect(opciones.method).toBe("POST");
-    expect(opciones.headers).toEqual({ "Content-Type": "application/json" });
+    // US27: fetchWithAuth entrega los encabezados como Headers
+    expect(new Headers(opciones.headers).get("Content-Type")).toBe("application/json");
     expect(JSON.parse(opciones.body)).toEqual({
       amount: "1000.00", department: "Lima", paymentMode: "MONTHLY", termDays: 360,
     });
