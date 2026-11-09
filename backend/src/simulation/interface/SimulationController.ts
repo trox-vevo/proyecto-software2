@@ -15,6 +15,7 @@ const isPaymentMode = (value: unknown): value is PaymentMode =>
 // Los Decimal viajan como string para no perder precisión ni los ceros finales
 const toResponse = (result: SimulationResult) => ({
   productId: result.productId,
+  minimumAmount: result.minimumAmount?.toFixed(2) ?? null,
   coberturaFSD: validarCoberturaFSD(result.coberturaFSD),
   entityName: result.entityName,
   tea: result.tea.toString(),

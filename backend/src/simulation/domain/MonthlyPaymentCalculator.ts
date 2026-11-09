@@ -32,6 +32,7 @@ export class MonthlyPaymentCalculator implements InterestCalculator {
       monthlyInterest.toDecimalPlaces(2, Decimal.ROUND_HALF_UP),
       product.channels,
       product.coberturaFSD,
+      product.minimumAmount,
     );
   }
 }

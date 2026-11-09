@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import "./FormularioInversion.css";
 
 export type TipoInstrumento = "AHORROS" | "PLAZO_FIJO";
@@ -8,6 +8,7 @@ const DEPARTAMENTOS = ["Lima", "Arequipa", "Cusco"];
 const PLAZOS_DIAS = [180, 360, 540, 720, 900, 1080];
 
 interface Props {
+  plazoFijo?: ReactNode;
   tipoInstrumento: TipoInstrumento;
   onTipoInstrumentoChange: (tipo: TipoInstrumento) => void;
 }
@@ -25,6 +26,7 @@ interface ParametrosPlazoFijo extends ParametrosAhorro {
 export function FormularioInversion({
   tipoInstrumento,
   onTipoInstrumentoChange,
+  plazoFijo,
 }: Props) {
   const [parametrosAhorro, setParametrosAhorro] = useState<ParametrosAhorro>({
     monto: "",
@@ -76,7 +78,7 @@ export function FormularioInversion({
         </label>
       </fieldset>
 
-      <form className="parametros-inversion" onSubmit={guardarParametros}>
+      <form hidden={Boolean(plazoFijo) && tipoInstrumento === "PLAZO_FIJO"} className="parametros-inversion" onSubmit={guardarParametros}>
         <h3>
           {tipoInstrumento === "AHORROS"
             ? "Parámetros de Cuenta de Ahorros"
@@ -215,6 +217,7 @@ export function FormularioInversion({
           </p>
         )}
       </form>
+      <div hidden={tipoInstrumento !== "PLAZO_FIJO"}>{plazoFijo}</div>
     </section>
   );
 }
