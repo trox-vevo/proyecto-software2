@@ -20,6 +20,9 @@ import { AuthService } from "./auth/application/AuthService";
 import { AuthController } from "./auth/interface/AuthController";
 import { createAuthRouter } from "./auth/interface/authRoutes";
 import { optionalAuthMiddleware } from "./auth/interface/optionalAuthMiddleware";
+import { ProAccessService } from "./auth/application/ProAccessService";
+import { ProAccessMiddleware } from "./auth/interface/ProAccessMiddleware";
+import { RiskRatingFilter } from "./simulation/application/RiskRatingFilter";
 import type { RecoveryTokenRepository } from "./recovery/domain/RecoveryTokenRepository";
 import {
   PasswordRecoveryService,
@@ -92,8 +95,15 @@ export function createApp(
     res.json({ status: "ok" });
   });
 
+  // US27: una sola regla de acceso Pro para el informe (403) y la simulación (oculta la calificación).
+  // Sin repositorio de usuarios (algunas pruebas), nadie es Pro.
+  const proAccessService = new ProAccessService(userRepository ?? { findById: () => null });
+  const proAccessMiddleware = new ProAccessMiddleware(proAccessService);
+  app.use("/api/risk-reports", proAccessMiddleware.handle); // protege la ruta de la US26
+
   const simulationController = new SimulationController(
     new FixedDepositSimulationService(productRepository),
+    new RiskRatingFilter(proAccessService),
   );
   app.post(
     "/api/simulations/fixed-deposits",

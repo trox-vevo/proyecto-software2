@@ -6,14 +6,14 @@ import type { ResultadoPlazoFijo } from "./tipos";
 
 const resultado: ResultadoPlazoFijo = {
   productId: 2, entityName: "Entidad de prueba", tea: "0.0575",
-  totalInterest: "56.04", monthlyInterest: "4.67", minimumAmount: "1000.00",
+  totalInterest: "56.04", monthlyInterest: "4.67", minimumAmount: "1000.00", riskRating: null,
 };
 
 describe("US12 | TS-34 y TS-35 | Tabla de resultados", () => {
   it("muestra entidades e importes recibidos y los encabezados estándar", () => {
     render(<TablaResultadosPlazoFijo resultados={[resultado]} modalidad="AT_MATURITY" />);
     expect(screen.getAllByRole("columnheader").map((celda) => celda.textContent)).toEqual([
-      "Entidad", "Tasa (TEA)", "Intereses Totales", "Monto Mínimo de Cuenta",
+      "Entidad", "Tasa (TEA)", "Intereses Totales", "Monto Mínimo de Cuenta", "Calificación", // US27
     ]);
     for (const valor of ["Entidad de prueba", "5.75 %", "S/ 56.04", "S/ 1,000.00"]) {
       expect(screen.getByRole("cell", { name: valor })).toBeInTheDocument();
@@ -26,10 +26,11 @@ describe("US12 | TS-34 y TS-35 | Tabla de resultados", () => {
     expect(screen.getByRole("columnheader", { name: "Intereses Mensuales (Aproximado)" })).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "S/ 4.67" })).toBeInTheDocument();
     rerender(<TablaResultadosPlazoFijo resultados={[resultado]} modalidad="AT_MATURITY" />);
-    expect(screen.getAllByRole("columnheader")).toHaveLength(4);
+    // US27: +1 por la columna "Calificación"
+    expect(screen.getAllByRole("columnheader")).toHaveLength(5);
     expect(screen.queryByText("Intereses Mensuales (Aproximado)")).not.toBeInTheDocument();
     rerender(<TablaResultadosPlazoFijo resultados={[resultado]} modalidad="MONTHLY" />);
-    expect(screen.getAllByRole("columnheader")).toHaveLength(5);
+    expect(screen.getAllByRole("columnheader")).toHaveLength(6);
   });
 
   it("no inventa un interés mensual cuando llega null", () => {

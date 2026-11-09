@@ -4,6 +4,7 @@ export type { NewUser } from "./User";
 
 export interface UserRepository {
   findByEmail(email: string): User | null;
+  findById(id: number): User | null;
   create(user: NewUser): User;
 }
 

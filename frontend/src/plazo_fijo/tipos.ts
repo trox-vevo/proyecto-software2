@@ -17,6 +17,8 @@ export interface ResultadoPlazoFijo {
   totalInterest: string;
   monthlyInterest: string | null;
   minimumAmount: string | null;
+  /** US27: null si el usuario no es Pro (el backend la oculta) o si la US25 aún no la llena. */
+  riskRating: string | null;
 }
 
 export function esPlazoPermitido(value: number): value is PlazoDias {

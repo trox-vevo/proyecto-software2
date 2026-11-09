@@ -10,6 +10,8 @@ export default defineConfig({
       // DoD: ≥ 80 % en el código nuevo. Cada HU agrega aquí su carpeta.
       thresholds: {
         "src/simulation/**": { lines: 80, functions: 80, branches: 80, statements: 80 },
+        // US27 (src/simulation/** ya cubre RiskRatingFilter)
+        "src/auth/**/ProAccess*.ts": { lines: 80, functions: 80, branches: 80, statements: 80 },
       },
     },
   },

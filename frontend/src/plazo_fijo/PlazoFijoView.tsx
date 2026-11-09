@@ -2,7 +2,7 @@ import { FormularioPlazoFijo } from "./FormularioPlazoFijo";
 import { TablaResultadosPlazoFijo } from "./TablaResultadosPlazoFijo";
 import { usePlazoFijoController } from "./usePlazoFijoController";
 
-export function PlazoFijoView() {
+export function PlazoFijoView({ onViewPlans }: { onViewPlans?: () => void }) {
   const flujo = usePlazoFijoController();
   return (
     <section className="plazo-seccion" aria-labelledby="titulo-plazo-fijo">
@@ -15,7 +15,7 @@ export function PlazoFijoView() {
       {flujo.error && <p role="alert">{flujo.error}</p>}
       {flujo.simulacion && (
         <TablaResultadosPlazoFijo resultados={flujo.simulacion.resultados}
-          modalidad={flujo.simulacion.parametros.paymentMode} />
+          modalidad={flujo.simulacion.parametros.paymentMode} onViewPlans={onViewPlans} />
       )}
     </section>
   );

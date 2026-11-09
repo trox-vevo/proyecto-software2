@@ -70,7 +70,7 @@ function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
         {["TEA", "TREA", "Rentabilidad", "Depósito a plazo fijo"].map((termino) => <button className="glosario-enlace" key={termino} type="button" onClick={() => setGlosario({ termino })}>{termino}</button>)}
       </div>
       <FormularioInversion
-        plazoFijo={<PlazoFijoView />}
+        plazoFijo={<PlazoFijoView onViewPlans={onViewPlans} />}
         tipoInstrumento={tipoInstrumento}
         onTipoInstrumentoChange={setTipoInstrumento}
       />
