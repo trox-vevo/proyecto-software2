@@ -1,3 +1,4 @@
+import { PlazoFijoView } from "./plazo_fijo/PlazoFijoView";
 import { useCallback, useEffect, useState } from "react";
 import { applyFilters } from "./filters/resultFilters";
 import { ResultFiltersPanel } from "./filters/ResultFiltersPanel";
@@ -69,6 +70,7 @@ function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
         {["TEA", "TREA", "Rentabilidad", "Depósito a plazo fijo"].map((termino) => <button className="glosario-enlace" key={termino} type="button" onClick={() => setGlosario({ termino })}>{termino}</button>)}
       </div>
       <FormularioInversion
+        plazoFijo={<PlazoFijoView />}
         tipoInstrumento={tipoInstrumento}
         onTipoInstrumentoChange={setTipoInstrumento}
       />

@@ -14,5 +14,6 @@ export class SimulationResult {
     readonly monthlyInterest: Decimal | null,
     readonly channels: ServiceChannels,
     readonly coberturaFSD: CoberturaFSD = crearCoberturaNoVerificada(),
+    readonly minimumAmount: Decimal | null = null,
   ) {}
 }
