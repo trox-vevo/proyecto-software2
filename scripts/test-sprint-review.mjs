@@ -72,7 +72,7 @@ for (const [label, tests] of groups) {
 console.log("");
 for (const step of steps) console.log(`[${step.passed ? "OK" : "ERROR"}] ${step.name}`);
 console.log("\nPENDIENTE: aprobación UX formal de TS-21; los tests no equivalen a su aprobación.");
-console.log("US22: solo TS-66 preparada en otra rama; reglas financieras pendientes de aprobación.");
+console.log("US22: contratos TS-66 integrados mediante PR #5; criterios financieros pendientes de aprobacion.");
 console.log("TS-67, TS-68 y TS-69 quedan al equipo; no se prueban clasificaciones de riesgo aquí.");
 console.log("La UI se prueba en jsdom con HTTP simulado; el backend incluye pruebas HTTP reales.");
 console.log("Esto no reemplaza la demostración visual en el navegador.\n");

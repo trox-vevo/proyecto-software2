@@ -51,6 +51,6 @@ local por un archivo descargado del repositorio.
 Consulta [la integraci?n de Sprint 1 con main](docs/INTEGRACION_SPRINT1_MAIN.md)
 para las decisiones, pruebas y dependencias de esta entrega.
 
-## Verificaci髇 de la integraci髇 US06 y US12
+## Verificaci贸n de la integraci贸n US06 y US12
 
-Instala con `npm ci --prefix frontend` y `npm ci --prefix backend`. Ejecuta `npm test` en la ra韟 para correr ambas suites, builds y linters. Los reportes quedan en `.test-results/`. Las pruebas frontend usan jsdom y HTTP simulado. La aprobaci髇 UX y los criterios financieros de TS-66 requieren revisi髇 del equipo.
+Instala con `npm ci --prefix frontend` y `npm ci --prefix backend`. Ejecuta `npm test` en la ra铆z para correr ambas suites, builds y linters. Los reportes quedan en `.test-results/`. Las pruebas frontend usan jsdom y HTTP simulado. La aprobaci贸n UX y los criterios financieros de TS-66 requieren revisi贸n del equipo.
