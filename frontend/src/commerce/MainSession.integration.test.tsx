@@ -27,7 +27,7 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
     });
     if (url.endsWith("/api/checkout/config")) return Response.json({ environment: "DEMO", provider: "LOCAL_MOCK",
       simulation: true, cardCaptureAvailable: true, processingAvailable: true,
-      realPaymentsAvailable: false, membershipActivationAvailable: false });
+      realPaymentsAvailable: false, membershipActivationAvailable: true });
     throw new Error(`Petición inesperada: ${url}`);
   });
   vi.stubGlobal("fetch", fetchMock);

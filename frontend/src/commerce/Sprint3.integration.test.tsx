@@ -10,6 +10,8 @@ import App from "../App";
 
 let server: ChildProcess;
 let endpoint: string;
+// US33: JWT reales firmados por el fixture (un usuario por prueba que cambia de plan).
+let tokens: { pro: string; basic: string; declineThenApprove: string; upgrade: string };
 const realFetch = globalThis.fetch;
 
 beforeAll(async () => {
@@ -24,8 +26,9 @@ beforeAll(async () => {
   server.stderr?.on("data", (chunk) => { details += String(chunk); });
   endpoint = await new Promise<string>((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error("El backend de integración no inició. " + details)), 15000);
-    server.once("message", (message: { port: number }) => {
+    server.once("message", (message: { port: number; tokens: typeof tokens }) => {
       clearTimeout(timeout);
+      tokens = message.tokens;
       resolve(`http://127.0.0.1:${message.port}`);
     });
     server.once("error", (error) => { clearTimeout(timeout); reject(error); });
@@ -70,7 +73,7 @@ async function fillDemoCheckout(cardNumber = "0000111122223333", decline = false
 
 describe("Sprint 3, frontend con Express y SQLite reales", () => {
   it("guarda desde la tabla, visita planes y aprueba una transacción DEMO mediante HTTP", async () => {
-    const requests = connectAs("integration-pro");
+    const requests = connectAs(tokens.pro);
     render(<App />);
     const buttons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(buttons[0]);
@@ -87,11 +90,8 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     await screen.findByLabelText("Nombre o razón social");
     await fillDemoCheckout();
     await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
-    expect(await screen.findByRole("heading", { name: "Pago aprobado" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).toBeInTheDocument();
     expect(screen.getByText(/^DEMO-[A-Fa-f0-9]{24}$/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Intentar otra simulación" }));
-    expect(screen.getByLabelText("Número de tarjeta de demostración")).toHaveValue("");
-    expect(screen.getByLabelText("CVV ficticio")).toHaveValue("");
     const submitted = requests.filter((request) => request.path === "/api/checkout/simulate");
     expect(submitted).toEqual([{ path: "/api/checkout/simulate", body: {
       planId: "PRO", scenarioId: "DEMO_APPROVED", billing: { name: "Prueba de integración", email: "integracion@example.com" },
@@ -100,7 +100,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
   });
 
   it("aplica por HTTP la restricción Básica y ofrece acceder a planes", async () => {
-    connectAs("integration-basic");
+    connectAs(tokens.basic);
     render(<App />);
     const buttons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(buttons[0]);
@@ -109,45 +109,55 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     expect(await screen.findByRole("heading", { name: "Compara los planes" })).toBeInTheDocument();
   });
 
-  it("permite un rechazo DEMO sin cuenta, luego un reintento aprobado y conserva la protección de favoritos", async () => {
-    const requests = connectAs("unrecognized-demo-visitor");
+  async function goToCheckout() {
     render(<App />);
     await userEvent.click(screen.getByRole("link", { name: "Planes" }));
     await screen.findByRole("columnheader", { name: "Pro" });
     await userEvent.click(screen.getByRole("button", { name: "Continuar al checkout Pro" }));
     await screen.findByLabelText("Nombre o razón social");
-    await fillDemoCheckout(undefined, true);
-    await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
-    expect(await screen.findByRole("heading", { name: "Pago simulado rechazado" })).toBeInTheDocument();
-    expect(screen.getByText(/Fondos ficticios insuficientes\./)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Intentar otra simulación" }));
+  }
+
+  it("sin sesión el pago responde 401, pide iniciar sesión y conserva la protección de favoritos", async () => {
+    connectAs("unrecognized-demo-visitor");
+    await goToCheckout();
     await fillDemoCheckout();
     await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
-    expect(await screen.findByRole("heading", { name: "Pago aprobado" })).toBeInTheDocument();
-    expect(requests.filter((request) => request.path === "/api/checkout/simulate").map((request) => request.body)).toEqual([
-      { planId: "PRO", scenarioId: "DEMO_DECLINED", billing: { name: "Prueba de integración", email: "integracion@example.com" } },
-      { planId: "PRO", scenarioId: "DEMO_APPROVED", billing: { name: "Prueba de integración", email: "integracion@example.com" } },
-    ]);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Inicia sesión para suscribirte al Plan Pro.");
+    expect(screen.queryByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Volver a planes" }));
     await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
     const favoriteButtons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(favoriteButtons[0]);
     expect(await screen.findByRole("alert")).toHaveTextContent("Inicia sesión");
   });
 
-  it("una aprobación DEMO no cambia los privilegios de una identidad Básica", async () => {
-    connectAs("integration-basic");
-    render(<App />);
-    await userEvent.click(screen.getByRole("link", { name: "Planes" }));
-    await screen.findByRole("columnheader", { name: "Pro" });
-    await userEvent.click(screen.getByRole("button", { name: "Continuar al checkout Pro" }));
-    await screen.findByLabelText("Nombre o razón social");
+  it("un rechazo DEMO autenticado muestra el motivo y permite intentar nuevamente con aprobación", async () => {
+    const requests = connectAs(tokens.declineThenApprove);
+    await goToCheckout();
+    await fillDemoCheckout(undefined, true);
+    await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
+    expect(await screen.findByRole("heading", { name: "No pudimos procesar tu pago" })).toBeInTheDocument();
+    expect(screen.getByText(/Fondos ficticios insuficientes\./)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Intentar nuevamente" }));
     await fillDemoCheckout();
     await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
-    expect(await screen.findByRole("heading", { name: "Pago aprobado" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).toBeInTheDocument();
+    expect(requests.filter((request) => request.path === "/api/checkout/simulate").map((request) => request.body)).toEqual([
+      { planId: "PRO", scenarioId: "DEMO_DECLINED", billing: { name: "Prueba de integración", email: "integracion@example.com" } },
+      { planId: "PRO", scenarioId: "DEMO_APPROVED", billing: { name: "Prueba de integración", email: "integracion@example.com" } },
+    ]);
+  });
+
+  it("US33: una aprobación DEMO activa el Plan Pro de una identidad Básica y desbloquea favoritos", async () => {
+    connectAs(tokens.upgrade);
+    await goToCheckout();
+    await fillDemoCheckout();
+    await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
+    expect(await screen.findByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Volver a la aplicación" }));
     expect(window.location.pathname).toBe("/");
     const favoriteButtons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(favoriteButtons[0]);
-    expect(await screen.findByRole("alert")).toHaveTextContent("requiere el Plan Pro");
+    expect(await screen.findByText("Simulación guardada como favorita.")).toBeInTheDocument();
   });
 });
