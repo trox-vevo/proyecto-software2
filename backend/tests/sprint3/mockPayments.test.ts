@@ -1,11 +1,15 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 import { once } from "node:events";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/app";
+import { getJwtSecret } from "../../src/auth/jwtSecret";
+import { CheckoutController } from "../../src/checkout/CheckoutController";
 import { createCheckoutRouter } from "../../src/checkout/checkoutRoutes";
 import { InvalidMockPaymentError, MockPaymentService } from "../../src/checkout/MockPaymentService";
+import { SqliteUserRepository } from "../../src/registration/infrastructure/SqliteUserRepository";
 
 const request = {
   planId: "PRO", scenarioId: "DEMO_APPROVED",
@@ -15,15 +19,19 @@ const service = new MockPaymentService();
 const nativeFetch = globalThis.fetch;
 let server: Server;
 let origin: string;
+// US33: el endpoint exige sesión. Un usuario real y un JWT de prueba firmado con el secreto de la app.
+const users = new SqliteUserRepository(":memory:");
+const payer = users.create({ username: "demo", email: "pagador@example.com", passwordHash: "h", plan: "BASICO", createdAt: new Date().toISOString() });
+const token = jwt.sign({ sub: String(payer.id) }, getJwtSecret());
 beforeAll(async () => {
-  server = createApp({ findFixedDepositsByDepartment: async () => [] }).listen(0, "127.0.0.1");
+  server = createApp({ findFixedDepositsByDepartment: async () => [] }, users).listen(0, "127.0.0.1");
   await once(server, "listening");
   origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
-afterAll(async () => { await new Promise<void>((resolve) => server.close(() => resolve())); });
+afterAll(async () => { await new Promise<void>((resolve) => server.close(() => resolve())); users.close(); });
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 const post = (body: unknown) => nativeFetch(`${origin}/api/checkout/simulate`, {
-  method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
 });
 
 describe("US32, servicio de pasarela académica", () => {
@@ -62,7 +70,10 @@ describe("US32, endpoint local de simulación", () => {
   it.each(["DEMO_APPROVED", "DEMO_DECLINED"])("responde HTTP 200 para el escenario válido %s", async (scenarioId) => {
     const response = await post({ ...request, scenarioId });
     expect(response.status).toBe(200);
-    const result = await response.json();
+    // plan y planExpiresAt (US33) dependen del historial del pagador; los cubre tests/checkout.
+    const { plan, planExpiresAt, ...result } = await response.json();
+    expect(["BASICO", "PRO"]).toContain(plan);
+    expect(planExpiresAt === null || typeof planExpiresAt === "string").toBe(true);
     expect(result).toEqual({
       reference: expect.stringMatching(/^DEMO-[0-9a-f]{24}$/),
       outcome: scenarioId === "DEMO_APPROVED" ? "APPROVED" : "DECLINED",
@@ -115,7 +126,7 @@ describe("US32, endpoint local de simulación", () => {
     const infoLog = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const app = express();
     app.use(express.json());
-    app.use("/api/checkout", createCheckoutRouter({ simulate: () => { throw new Error("CONTENIDO-PRIVADO-DE-PRUEBA"); } }));
+    app.use("/api/checkout", createCheckoutRouter(new CheckoutController({ processPayment: () => { throw new Error("CONTENIDO-PRIVADO-DE-PRUEBA"); } })));
     const isolated = app.listen(0, "127.0.0.1");
     await once(isolated, "listening");
     try {

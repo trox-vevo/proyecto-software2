@@ -29,13 +29,13 @@ describe("US31, catálogo de planes", () => {
 });
 
 describe("US32, límites de captura segura", () => {
-  it("declara la pasarela académica local sin pagos reales ni activación", async () => {
+  it("declara la pasarela académica local sin pagos reales y con activación Pro (US33)", async () => {
     const response = await fetch(`${url}/api/checkout/config`);
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       environment: "DEMO", provider: "LOCAL_MOCK", simulation: true,
       cardCaptureAvailable: true, processingAvailable: true,
-      realPaymentsAvailable: false, membershipActivationAvailable: false,
+      realPaymentsAvailable: false, membershipActivationAvailable: true,
     });
   });
   it("valida facturación sin devolver datos personales ni confirmar pagos", async () => {
@@ -79,7 +79,7 @@ describe("US32, límites de captura segura", () => {
   it("el arranque sin autenticación falla de forma cerrada para favoritos", async () => {
     expect((await fetch(`${url}/api/favorites`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer inventado" }, body: JSON.stringify({ userId: "pro", plan: "PRO" }) })).status).toBe(401);
   });
-  it("mantiene un endpoint de cobro real y la activación fuera de US32", async () => {
+  it("no expone un endpoint de cobro real", async () => {
     expect((await fetch(`${url}/api/checkout/pay`, { method: "POST" })).status).toBe(404);
   });
 });

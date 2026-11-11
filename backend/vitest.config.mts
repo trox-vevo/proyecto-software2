@@ -12,6 +12,8 @@ export default defineConfig({
         "src/simulation/**": { lines: 80, functions: 80, branches: 80, statements: 80 },
         // US27 (src/simulation/** ya cubre RiskRatingFilter)
         "src/auth/**/ProAccess*.ts": { lines: 80, functions: 80, branches: 80, statements: 80 },
+        // US33
+        "src/checkout/**": { lines: 80, functions: 80, branches: 80, statements: 80 },
       },
     },
   },

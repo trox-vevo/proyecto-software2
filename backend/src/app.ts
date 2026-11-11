@@ -35,6 +35,9 @@ import { PasswordResetController } from "./recovery/interface/PasswordResetContr
 
 import { PLAN_FEATURES, PLANS } from "./plans/Plan";
 import { createCheckoutRouter } from "./checkout/checkoutRoutes";
+import { CheckoutController } from "./checkout/CheckoutController";
+import { MockPaymentService } from "./checkout/MockPaymentService";
+import { PaymentProcessingService } from "./checkout/PaymentProcessingService";
 import { createFavoriteRouter } from "./favorites/interface/favoriteRoutes";
 import type { FavoriteService } from "./favorites/application/FavoriteService";
 import type { ResolveUser } from "./favorites/domain/Favorite";
@@ -79,7 +82,12 @@ export function createApp(
   app.use("/api", optionalAuthMiddleware);
   app.use("/api/ahorros", ahorrosRouter);
   app.get("/api/plans", (_req, res) => res.json({ plans: PLANS, features: PLAN_FEATURES }));
-  app.use("/api/checkout", createCheckoutRouter());
+  // US33: sin repositorio de usuarios (algunas pruebas), nadie puede pagar (401).
+  const checkoutController = new CheckoutController(new PaymentProcessingService(
+    new MockPaymentService(),
+    userRepository ?? { findById: () => null, activatePro: () => {} },
+  ));
+  app.use("/api/checkout", createCheckoutRouter(checkoutController));
   app.use("/api/favorites", createFavoriteRouter(dependencies.resolveUser ?? (async () => null), dependencies.favoriteService));
   const profileService = new ServicioPerfiles(selectedProfileRepository);
 
