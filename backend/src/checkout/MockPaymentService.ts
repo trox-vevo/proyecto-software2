@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { validateBilling, type BillingErrors } from "./BillingValidation";
+import type { PaymentGateway } from "./PaymentGateway";
 
 export type DemoScenarioId = "DEMO_APPROVED" | "DEMO_DECLINED";
 
@@ -35,7 +36,7 @@ function readScenario(input: unknown): DemoScenarioId {
 }
 
 /** Pasarela académica sin persistencia, credenciales ni conexiones externas. */
-export class MockPaymentService {
+export class MockPaymentService implements PaymentGateway {
   simulate(input: unknown): MockPaymentResult {
     const scenario = readScenario(input);
     const approved = scenario === "DEMO_APPROVED";

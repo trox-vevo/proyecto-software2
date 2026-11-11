@@ -20,6 +20,7 @@ interface UserRow {
   password_hash: string;
   created_at: string;
   plan: unknown;
+  plan_expires_at: string | null;
 }
 
 // US02: email es unico a nivel de base de datos, no solo en el frontend.
@@ -68,6 +69,10 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
           created_at TEXT NOT NULL
         )
       `);
+      // US33: CREATE TABLE IF NOT EXISTS no agrega columnas a bases anteriores.
+      const hasExpiry = this.database.prepare("PRAGMA table_info(users)").all()
+        .some((column) => column.name === "plan_expires_at");
+      if (!hasExpiry) this.database.exec("ALTER TABLE users ADD COLUMN plan_expires_at TEXT");
     } catch (error) {
       this.database.close();
       throw error;
@@ -75,7 +80,7 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
   }
 
   findByEmail(email: string): User | null {
-    const query = this.database.prepare("SELECT id, username, email, password_hash, plan, created_at FROM users WHERE email = ?");
+    const query = this.database.prepare("SELECT id, username, email, password_hash, plan, created_at, plan_expires_at FROM users WHERE email = ?");
     query.setReadBigInts(true);
     const row = query.get(email) as unknown as UserRow | undefined;
     if (row && row.plan !== "BASICO" && row.plan !== "PRO") {
@@ -89,6 +94,7 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
           passwordHash: row.password_hash,
           plan: row.plan as User["plan"],
           createdAt: row.created_at,
+          planExpiresAt: row.plan_expires_at || null,
         }
       : null;
   }
@@ -111,7 +117,7 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
       const insert = this.database.prepare("INSERT INTO users (username, email, password_hash, plan, created_at) VALUES (?, ?, ?, ?, ?)");
       insert.setReadBigInts(true);
       const result = insert.run(user.username, user.email, user.passwordHash, user.plan, user.createdAt);
-      const saved: User = { ...user, id: numericIdentifier(result.lastInsertRowid) };
+      const saved: User = { ...user, id: numericIdentifier(result.lastInsertRowid), planExpiresAt: null };
       this.database.exec("COMMIT");
       return saved;
     } catch (error: unknown) {
@@ -123,6 +129,14 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
       }
       throw error;
     }
+  }
+
+  activatePro(id: number, expiresAt: string): void {
+    // Un solo UPDATE: plan y vencimiento cambian juntos o no cambian.
+    const result = this.database
+      .prepare("UPDATE users SET plan = 'PRO', plan_expires_at = ? WHERE id = ?")
+      .run(expiresAt, numericIdentifier(id));
+    if (result.changes !== 1) throw new Error("No se pudo activar el Plan Pro.");
   }
 
   invalidateRecoveryTokens(userId: number, exceptId?: number): void {

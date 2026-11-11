@@ -1,9 +1,12 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import jwt from "jsonwebtoken";
 import type { AddressInfo } from "node:net";
 import { createApp } from "../../../src/app";
+import { getJwtSecret } from "../../../src/auth/jwtSecret";
+import { createFavoriteUserResolver } from "../../../src/favorites/infrastructure/createFavoriteUserResolver";
+import { SqliteUserRepository } from "../../../src/registration/infrastructure/SqliteUserRepository";
 import { FavoriteService } from "../../../src/favorites/application/FavoriteService";
 import { SqliteFavoriteRepository } from "../../../src/favorites/infrastructure/SqliteFavoriteRepository";
 import { RepositorioCuentas } from "../../../src/repositorio/RepositorioCuentas";
@@ -14,26 +17,31 @@ import { InMemoryProductRepository } from "../../../src/simulation/infrastructur
 if (process.env.NODE_ENV !== "test" || !process.send) throw new Error("Este fixture requiere el proceso de pruebas.");
 const directory = mkdtempSync(join(tmpdir(), "yupay-sprint3-integration-"));
 const file = join(directory, "users.sqlite");
-const users = new DatabaseSync(file);
-users.exec("CREATE TABLE users (id INTEGER PRIMARY KEY)");
-users.exec("INSERT INTO users DEFAULT VALUES; INSERT INTO users DEFAULT VALUES;");
-users.close();
+// US33: usuarios reales para que favoritos y pago (JWT) vean la misma identidad.
+const users = new SqliteUserRepository(file);
+const createUser = (name: string, plan: "BASICO" | "PRO") => jwt.sign({ sub: String(users.create({
+  username: name, email: `${name}@integration.test`, passwordHash: "h", plan, createdAt: new Date().toISOString(),
+}).id) }, getJwtSecret());
+// Un usuario por prueba que cambia de plan, para que el orden de las pruebas no importe.
+const tokens = {
+  pro: createUser("pro", "PRO"),
+  basic: createUser("basic", "BASICO"),
+  declineThenApprove: createUser("retry", "BASICO"),
+  upgrade: createUser("upgrade", "BASICO"),
+};
 const favorites = new SqliteFavoriteRepository(file);
 const products = new InMemoryProductRepository();
-const server = createApp(products, {
+const server = createApp(products, users, undefined, undefined, undefined, {
   favoriteService: new FavoriteService(favorites, new RepositorioCuentas(), new FixedDepositSimulationService(products)),
-  resolveUser: async (request) => {
-    if (request.headers.authorization === "Bearer integration-pro") return { id: 1, plan: "PRO" };
-    if (request.headers.authorization === "Bearer integration-basic") return { id: 2, plan: "BASICO" };
-    return null;
-  },
+  resolveUser: createFavoriteUserResolver(users),
 }).listen(0, "127.0.0.1", () => {
-  process.send!({ port: (server.address() as AddressInfo).port });
+  process.send!({ port: (server.address() as AddressInfo).port, tokens });
 });
 
 process.once("message", () => {
   server.close(() => {
     favorites.close();
+    users.close();
     rmSync(directory, { recursive: true, force: true });
     process.disconnect();
   });

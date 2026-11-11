@@ -8,12 +8,14 @@ export interface User {
   passwordHash: string;
   plan: UserPlan;
   createdAt: string;
+  // US33: fin del periodo Pro pagado (ISO). null si nunca pagó.
+  planExpiresAt: string | null;
 }
 
-export type PublicUser = Omit<User, "passwordHash">;
+export type PublicUser = Omit<User, "passwordHash" | "planExpiresAt">;
 
 // El alta todavía no tiene identidad. SQLite la asigna al persistirla.
-export type NewUser = Omit<User, "id">;
+export type NewUser = Omit<User, "id" | "planExpiresAt">;
 
 // US27: regla de negocio del plan
 export function hasProAccess(user: User): boolean {

@@ -317,7 +317,7 @@ describe("Contrato numérico y protección de esquemas existentes", () => {
     const boundaryPath = join(directory, "boundary.sqlite");
     const boundary = new DatabaseSync(boundaryPath);
     boundary.exec("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT NOT NULL, email TEXT UNIQUE COLLATE NOCASE, password_hash TEXT, plan TEXT, created_at TEXT)");
-    boundary.prepare("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)").run(BigInt(Number.MAX_SAFE_INTEGER), pendingUser.username, "limit@example.com", pendingUser.passwordHash, pendingUser.plan, pendingUser.createdAt);
+    boundary.prepare("INSERT INTO users (id, username, email, password_hash, plan, created_at) VALUES (?, ?, ?, ?, ?, ?)").run(BigInt(Number.MAX_SAFE_INTEGER), pendingUser.username, "limit@example.com", pendingUser.passwordHash, pendingUser.plan, pendingUser.createdAt);
     boundary.close();
     const limited = new SqliteUserRepository(boundaryPath);
     try {
@@ -326,7 +326,7 @@ describe("Contrato numérico y protección de esquemas existentes", () => {
       expect(limited.findByEmail(pendingUser.email)).toBeNull();
     } finally { limited.close(); }
     const unsafe = new DatabaseSync(boundaryPath);
-    unsafe.prepare("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)").run(BigInt(Number.MAX_SAFE_INTEGER) + 1n, pendingUser.username, "unsafe@example.com", pendingUser.passwordHash, pendingUser.plan, pendingUser.createdAt);
+    unsafe.prepare("INSERT INTO users (id, username, email, password_hash, plan, created_at) VALUES (?, ?, ?, ?, ?, ?)").run(BigInt(Number.MAX_SAFE_INTEGER) + 1n, pendingUser.username, "unsafe@example.com", pendingUser.passwordHash, pendingUser.plan, pendingUser.createdAt);
     unsafe.close();
     const reader = new SqliteUserRepository(boundaryPath);
     try { expect(() => reader.findByEmail("unsafe@example.com")).toThrow(RangeError); }
@@ -337,7 +337,7 @@ describe("Contrato numérico y protección de esquemas existentes", () => {
     const limitPath = join(directory, "duplicate-at-limit.sqlite");
     const limited = new SqliteUserRepository(limitPath);
     const seed = new DatabaseSync(limitPath);
-    seed.prepare("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)").run(BigInt(Number.MAX_SAFE_INTEGER), pendingUser.username, pendingUser.email, pendingUser.passwordHash, pendingUser.plan, pendingUser.createdAt);
+    seed.prepare("INSERT INTO users (id, username, email, password_hash, plan, created_at) VALUES (?, ?, ?, ?, ?, ?)").run(BigInt(Number.MAX_SAFE_INTEGER), pendingUser.username, pendingUser.email, pendingUser.passwordHash, pendingUser.plan, pendingUser.createdAt);
     seed.close();
     try {
       expect(() => limited.create({ ...pendingUser, email: pendingUser.email.toUpperCase() })).toThrow(DuplicateEmailError);
@@ -349,7 +349,7 @@ describe("Contrato numérico y protección de esquemas existentes", () => {
     const limitPath = join(directory, "concurrent-at-limit.sqlite");
     const limited = new SqliteUserRepository(limitPath);
     const seed = new DatabaseSync(limitPath);
-    seed.prepare("INSERT INTO users VALUES (?, ?, ?, ?, ?, ?)").run(BigInt(Number.MAX_SAFE_INTEGER) - 1n, pendingUser.username, pendingUser.email, pendingUser.passwordHash, pendingUser.plan, pendingUser.createdAt);
+    seed.prepare("INSERT INTO users (id, username, email, password_hash, plan, created_at) VALUES (?, ?, ?, ?, ?, ?)").run(BigInt(Number.MAX_SAFE_INTEGER) - 1n, pendingUser.username, pendingUser.email, pendingUser.passwordHash, pendingUser.plan, pendingUser.createdAt);
     seed.close();
     const limitedServer = createApp({ findFixedDepositsByDepartment: async () => [] }, limited).listen(0);
     const log = vi.spyOn(console, "error").mockImplementation(() => {});

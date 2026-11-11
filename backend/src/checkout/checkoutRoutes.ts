@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { validateBilling } from "./BillingValidation";
-import { InvalidMockPaymentError, MockPaymentService } from "./MockPaymentService";
+import type { CheckoutController } from "./CheckoutController";
 
 export { validateBilling } from "./BillingValidation";
 
-export function createCheckoutRouter(service: Pick<MockPaymentService, "simulate"> = new MockPaymentService()): Router {
+export function createCheckoutRouter(controller: Pick<CheckoutController, "processPayment">): Router {
   const router = Router();
   router.get("/config", (_req, res) => {
     res.json({
@@ -14,7 +14,7 @@ export function createCheckoutRouter(service: Pick<MockPaymentService, "simulate
       cardCaptureAvailable: true,
       processingAvailable: true,
       realPaymentsAvailable: false,
-      membershipActivationAvailable: false,
+      membershipActivationAvailable: true,
     });
   });
   router.post("/validate-billing", (req, res) => {
@@ -31,23 +31,7 @@ export function createCheckoutRouter(service: Pick<MockPaymentService, "simulate
       handoff: { planId: "PRO", paymentMethodToken: null },
     });
   });
-  router.post("/simulate", (req, res) => {
-    try {
-      res.json(service.simulate(req.body));
-    } catch (error) {
-      if (error instanceof InvalidMockPaymentError) {
-        res.status(400).json({
-          code: "INVALID_DEMO_PAYMENT", message: error.message, errors: error.errors,
-          simulation: true, environment: "DEMO",
-        });
-        return;
-      }
-      // No registrar excepciones que pudieran contener cuerpos de solicitudes.
-      res.status(503).json({
-        code: "DEMO_PAYMENT_UNAVAILABLE", message: "No se pudo procesar la simulación. Inténtalo nuevamente.",
-        simulation: true, environment: "DEMO",
-      });
-    }
-  });
+  // US33: el pago exige sesión y activa el Plan Pro; el controlador traduce HTTP.
+  router.post("/simulate", controller.processPayment);
   return router;
 }

@@ -22,7 +22,7 @@ function cleanup(directory: string) {
   rmSync(directory, { recursive: true, force: true });
 }
 
-it("integra JWT de main, plan persistido, favoritos idempotentes, recuperación y checkout sin elevar privilegios", async () => {
+it("integra JWT de main, plan persistido, favoritos idempotentes, recuperación y checkout que activa el Plan Pro (US33)", async () => {
   const directory = mkdtempSync(join(tmpdir(), "yupay-main-sprint3-"));
   const file = join(directory, "users.sqlite");
   assertNumericDatabase(file);
@@ -87,8 +87,9 @@ it("integra JWT de main, plan persistido, favoritos idempotentes, recuperación 
       billing: { name: "Persona ficticia", email: input.email } }, basicSession.tokenJwt);
     expect(payment.status).toBe(200);
     expect(await payment.json()).toMatchObject({ outcome: "APPROVED", simulation: true });
-    expect(users.findById(basic.id)?.plan).toBe("BASICO");
-    expect((await post("/favorites", parameters, basicSession.tokenJwt)).status).toBe(403);
+    // US33: la aprobación activa el Plan Pro en la base y desbloquea favoritos con la misma sesión.
+    expect(users.findById(basic.id)?.plan).toBe("PRO");
+    expect((await post("/favorites", parameters, basicSession.tokenJwt)).status).toBe(201);
     expect((await post("/auth/forgot-password", { email: pro.email })).status).toBe(202);
     const token = new URL(sendRecoveryLink.mock.calls[0][1]).searchParams.get("token");
     expect((await post("/auth/reset-password", { token, newPassword: "Nueva-clave-456" })).status).toBe(200);
