@@ -48,11 +48,11 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
   await userEvent.click(screen.getByRole("button", { name: "Continuar al checkout Pro" }));
   await screen.findByLabelText("Nombre del titular");
   await userEvent.type(screen.getByLabelText("Nombre del titular"), "Titular ficticio");
-  await userEvent.type(screen.getByLabelText("Número de tarjeta de demostración"), "0000111122223333");
-  await userEvent.type(screen.getByLabelText("CVV ficticio"), "456");
+  await userEvent.type(screen.getByLabelText("Número de tarjeta"), "0000111122223333");
+  await userEvent.type(screen.getByLabelText("CVV"), "456");
   await userEvent.click(screen.getByRole("link", { name: "Crear cuenta" }));
   expect(window.location.pathname).toBe("/registro");
-  expect(screen.queryByLabelText("CVV ficticio")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("CVV")).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Crear cuenta" })).toBeInTheDocument();
   await userEvent.click(screen.getByRole("link", { name: "Volver al inicio" }));
   await screen.findByRole("table");
@@ -61,7 +61,7 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
   await screen.findByRole("button", { name: "Continuar al checkout Pro" });
   await userEvent.click(screen.getByRole("button", { name: "Continuar al checkout Pro" }));
   expect(await screen.findByLabelText("Nombre del titular")).toHaveValue("");
-  expect(screen.getByLabelText("Número de tarjeta de demostración")).toHaveValue("");
-  expect(screen.getByLabelText("CVV ficticio")).toHaveValue("");
+  expect(screen.getByLabelText("Número de tarjeta")).toHaveValue("");
+  expect(screen.getByLabelText("CVV")).toHaveValue("");
   expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith("/api/checkout/simulate"))).toBe(false);
 });

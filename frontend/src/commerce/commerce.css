@@ -33,25 +33,21 @@
 .checkout-formulario input { box-sizing: border-box; width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: .65rem; font: inherit; background: var(--bg); color: var(--text-h); }
 .checkout-formulario [aria-invalid="true"] { border-color: #c33737; }
 
-/* US32: la demostración amplía el checkout existente y conserva las variables del tema. */
+/* US32: página de pago; conserva las variables del tema. */
 .checkout-demo { box-sizing: border-box; min-width: 0; }
-.checkout-encabezado { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; }
-.checkout-encabezado h1 { margin-top: .75rem; margin-bottom: 1rem; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.12; }
-.checkout-demo-insignia { display: inline-block; padding: .35rem .65rem; border: 1px solid var(--accent-border); border-radius: 999px; background: var(--accent-bg); color: var(--text-h); font-size: .75rem; font-weight: 700; letter-spacing: .04em; }
+.checkout-encabezado { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.checkout-encabezado h1 { margin-top: .75rem; margin-bottom: .25rem; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.12; }
+.checkout-demo .checkout-subtitulo { margin: 0; }
 .checkout-volver { margin-top: .25rem; }
-.checkout-contexto { padding: .15rem 0 1rem; border-bottom: 1px solid var(--border); }
-.checkout-contexto strong, .checkout-guia strong { color: var(--text-h); }
-.checkout-guia { margin-top: 1.5rem; padding: 1.25rem; border: 1px solid var(--border); border-radius: 12px; background: var(--social-bg); }
-.checkout-guia h2 { font-size: 1.15rem; }
-.checkout-guia p { margin: .65rem 0; }
-.checkout-aviso-demo { color: var(--text-h); }
-.checkout-opciones-demo { padding: 1rem; border: 1px dashed var(--accent-border); border-radius: 8px; }
-.checkout-opciones-demo label { display: flex; align-items: center; gap: .6rem; }
-.checkout-demo .checkout-opciones-demo input { width: 1.1rem; height: 1.1rem; padding: 0; margin: 0; flex-shrink: 0; accent-color: var(--accent); }
-.checkout-opciones-demo p { margin: .5rem 0 0; }
+.checkout-layout { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.5rem; align-items: start; margin-top: 1.5rem; }
+.checkout-demo .checkout-formulario { max-width: none; margin-top: 0; }
+.checkout-resumen { position: sticky; top: 1rem; padding: 1.25rem; border: 1px solid var(--border); border-radius: 12px; background: var(--social-bg); }
+.checkout-resumen h2 { margin: 0 0 1rem; font-size: 1.15rem; }
+.checkout-demo .checkout-resumen-plan { display: flex; justify-content: space-between; margin: 0; padding-bottom: .75rem; border-bottom: 1px solid var(--border); color: var(--text-h); }
+.checkout-resumen ul { margin: 1rem 0; padding-left: 1.2rem; display: grid; gap: .4rem; }
+.checkout-demo .checkout-opciones-demo { display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 400; opacity: .75; }
+.checkout-demo .checkout-opciones-demo input { width: .95rem; height: .95rem; padding: 0; margin: 0; flex-shrink: 0; accent-color: var(--accent); }
 .checkout-resultado-acciones { display: flex; flex-wrap: wrap; gap: .75rem; }
-.checkout-demo .checkout-formulario { max-width: none; }
-.checkout-campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; align-items: start; }
 .checkout-demo fieldset { min-width: 0; gap: .6rem; }
 .checkout-demo legend { padding: 0 .35rem; color: var(--text-h); font-weight: 650; }
 .checkout-demo label { color: var(--text-h); font-size: .9rem; font-weight: 600; }
@@ -79,8 +75,9 @@
   .checkout-demo { padding: 1.5rem 1rem; }
   .checkout-encabezado { gap: .5rem; }
   .checkout-encabezado h1 { font-size: 2rem; }
-  .checkout-campos, .checkout-referencia, .checkout-fecha-cvv { grid-template-columns: minmax(0, 1fr); }
-  .checkout-guia, .checkout-resultado { padding: 1rem; }
+  .checkout-layout, .checkout-referencia, .checkout-fecha-cvv { grid-template-columns: minmax(0, 1fr); }
+  .checkout-resumen { position: static; order: -1; }
+  .checkout-resumen, .checkout-resultado { padding: 1rem; }
   .checkout-confirmacion { flex-direction: column; align-items: stretch; }
   .checkout-confirmacion button { width: 100%; }
   .checkout-resultado-acciones { flex-direction: column; }

@@ -31,44 +31,109 @@ interface DemoResult {
   planExpiresAt: string | null;
 }
 
-type CheckoutErrors = Partial<Record<"name" | "email" | keyof DemoCardInput | "form", string>>;
+type CheckoutErrors = Partial<
+  Record<"name" | "email" | keyof DemoCardInput | "form", string>
+>;
 const emptyBilling = { name: "", email: "" };
-const emptyCard: DemoCardInput = { holder: "", number: "", expiry: "", cvv: "" };
+const emptyCard: DemoCardInput = {
+  holder: "",
+  number: "",
+  expiry: "",
+  cvv: "",
+};
 // Beneficios exclusivos del Plan Pro (mismos textos que /api/plans).
-const PRO_BENEFITS = ["Guardar simulaciones favoritas", "Informe de riesgo avanzado", "Reporte de solvencia en PDF"];
+const PRO_BENEFITS = [
+  "Guardar simulaciones favoritas",
+  "Informe de riesgo avanzado",
+  "Reporte de solvencia en PDF",
+];
 const AUTHENTICATION_REQUIRED = "Inicia sesión para suscribirte al Plan Pro.";
 
 function isIsoDate(value: unknown): value is string {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)
-    && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
+  return (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) &&
+    Number.isFinite(Date.parse(value)) &&
+    new Date(value).toISOString() === value
+  );
 }
 
 function isDemoConfig(value: unknown): value is CheckoutConfig {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const data = value as Record<string, unknown>;
-  const expected = { environment: "DEMO", provider: "LOCAL_MOCK", simulation: true, cardCaptureAvailable: true,
-    processingAvailable: true, realPaymentsAvailable: false, membershipActivationAvailable: true };
-  return Object.keys(data).length === Object.keys(expected).length
-    && Object.entries(expected).every(([key, expectedValue]) => data[key] === expectedValue);
+  const expected = {
+    environment: "DEMO",
+    provider: "LOCAL_MOCK",
+    simulation: true,
+    cardCaptureAvailable: true,
+    processingAvailable: true,
+    realPaymentsAvailable: false,
+    membershipActivationAvailable: true,
+  };
+  return (
+    Object.keys(data).length === Object.keys(expected).length &&
+    Object.entries(expected).every(
+      ([key, expectedValue]) => data[key] === expectedValue,
+    )
+  );
 }
 
-function isDemoResult(value: unknown, scenarioId: DemoScenarioId): value is DemoResult {
+function isDemoResult(
+  value: unknown,
+  scenarioId: DemoScenarioId,
+): value is DemoResult {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const data = value as Record<string, unknown>;
-  const expectedKeys = ["reference", "outcome", "simulation", "environment", "occurredAt", "planId", "amount", "message", "declineReason", "plan", "planExpiresAt"];
-  if (Object.keys(data).length !== expectedKeys.length || Object.keys(data).some((key) => !expectedKeys.includes(key))) return false;
-  if (data.simulation !== true || data.environment !== "DEMO" || data.planId !== "PRO" || data.amount !== null
-      || typeof data.reference !== "string" || !/^DEMO-[a-f0-9]{24}$/i.test(data.reference)
-      || typeof data.message !== "string" || !data.message.trim() || data.message.length > 500
-      || !isIsoDate(data.occurredAt)) return false;
+  const expectedKeys = [
+    "reference",
+    "outcome",
+    "simulation",
+    "environment",
+    "occurredAt",
+    "planId",
+    "amount",
+    "message",
+    "declineReason",
+    "plan",
+    "planExpiresAt",
+  ];
+  if (
+    Object.keys(data).length !== expectedKeys.length ||
+    Object.keys(data).some((key) => !expectedKeys.includes(key))
+  )
+    return false;
+  if (
+    data.simulation !== true ||
+    data.environment !== "DEMO" ||
+    data.planId !== "PRO" ||
+    data.amount !== null ||
+    typeof data.reference !== "string" ||
+    !/^DEMO-[a-f0-9]{24}$/i.test(data.reference) ||
+    typeof data.message !== "string" ||
+    !data.message.trim() ||
+    data.message.length > 500 ||
+    !isIsoDate(data.occurredAt)
+  )
+    return false;
   return scenarioId === "DEMO_APPROVED"
-    // US33: una aprobación debe traer el Plan Pro activo y su vencimiento.
-    ? data.outcome === "APPROVED" && data.declineReason === null && data.plan === "PRO" && isIsoDate(data.planExpiresAt)
-    : data.outcome === "DECLINED" && data.declineReason === "Fondos ficticios insuficientes."
-      && (data.plan === "BASICO" || data.plan === "PRO") && (data.planExpiresAt === null || isIsoDate(data.planExpiresAt));
+    ? // US33: una aprobación debe traer el Plan Pro activo y su vencimiento.
+      data.outcome === "APPROVED" &&
+        data.declineReason === null &&
+        data.plan === "PRO" &&
+        isIsoDate(data.planExpiresAt)
+    : data.outcome === "DECLINED" &&
+        data.declineReason === "Fondos ficticios insuficientes." &&
+        (data.plan === "BASICO" || data.plan === "PRO") &&
+        (data.planExpiresAt === null || isIsoDate(data.planExpiresAt));
 }
 
-export function Checkout({ onViewPlans, onReturnToApp = onViewPlans }: { onViewPlans: () => void; onReturnToApp?: () => void }) {
+export function Checkout({
+  onViewPlans,
+  onReturnToApp = onViewPlans,
+}: {
+  onViewPlans: () => void;
+  onReturnToApp?: () => void;
+}) {
   const [config, setConfig] = useState<CheckoutConfig | null>(null);
   const [configError, setConfigError] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -104,10 +169,13 @@ export function Checkout({ onViewPlans, onReturnToApp = onViewPlans }: { onViewP
       .then(async (response) => {
         if (!response.ok) throw new Error("Configuración no disponible");
         const data: unknown = await response.json();
-        if (!isDemoConfig(data)) throw new Error("Configuración DEMO no compatible");
+        if (!isDemoConfig(data))
+          throw new Error("Configuración DEMO no compatible");
         if (!controller.signal.aborted) setConfig(data);
       })
-      .catch(() => { if (!controller.signal.aborted) setConfigError(true); });
+      .catch(() => {
+        if (!controller.signal.aborted) setConfigError(true);
+      });
     return () => controller.abort();
   }, [attempt]);
 
@@ -128,7 +196,10 @@ export function Checkout({ onViewPlans, onReturnToApp = onViewPlans }: { onViewP
   }
 
   function updateCard(field: keyof DemoCardInput, value: string) {
-    setCard({ ...card, [field]: field === "number" ? formatDemoCardNumber(value) : value });
+    setCard({
+      ...card,
+      [field]: field === "number" ? formatDemoCardNumber(value) : value,
+    });
     setErrors({ ...errors, [field]: undefined, form: undefined });
   }
 
@@ -137,11 +208,18 @@ export function Checkout({ onViewPlans, onReturnToApp = onViewPlans }: { onViewP
     if (request.current || !config) return;
     const validation = validateDemoCard(card);
     const next: CheckoutErrors = { ...validation.errors };
-    if (!billing.name.trim() || billing.name.trim().length > 120) next.name = "Ingresa un nombre o razón social de hasta 120 caracteres.";
-    if (billing.email.trim().length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billing.email.trim())) next.email = "Ingresa un correo de facturación válido.";
+    if (!billing.name.trim() || billing.name.trim().length > 120)
+      next.name = "Ingresa un nombre o razón social de hasta 120 caracteres.";
+    if (
+      billing.email.trim().length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billing.email.trim())
+    )
+      next.email = "Ingresa un correo de facturación válido.";
     setErrors(next);
     if (Object.keys(next).length) return;
-    const scenarioId: DemoScenarioId = simulateDecline ? "DEMO_DECLINED" : "DEMO_APPROVED";
+    const scenarioId: DemoScenarioId = simulateDecline
+      ? "DEMO_DECLINED"
+      : "DEMO_APPROVED";
     const controller = new AbortController();
     request.current = controller;
     setPending(true);
@@ -149,27 +227,46 @@ export function Checkout({ onViewPlans, onReturnToApp = onViewPlans }: { onViewP
       // Los datos de tarjeta se validan solo aquí. El escenario procede del control DEMO.
       // US33: el token identifica a quién se le activa el Plan Pro.
       const response = await fetchWithAuth(`${API_URL}/api/checkout/simulate`, {
-        method: "POST", signal: controller.signal,
+        method: "POST",
+        signal: controller.signal,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId: "PRO", scenarioId, billing: { name: billing.name.trim(), email: billing.email.trim().toLowerCase() } }),
+        body: JSON.stringify({
+          planId: "PRO",
+          scenarioId,
+          billing: {
+            name: billing.name.trim(),
+            email: billing.email.trim().toLowerCase(),
+          },
+        }),
       });
       if (controller.signal.aborted) return;
       if (!response.ok) {
-        setErrors({ form: response.status === 401 ? AUTHENTICATION_REQUIRED : response.status === 400 ? "El servidor rechazó los datos de la simulación. Vuelve a ingresarlos y revisa el formulario."
-          : "No se pudo completar la simulación. Vuelve a ingresar los datos e inténtalo más tarde." });
+        setErrors({
+          form:
+            response.status === 401
+              ? AUTHENTICATION_REQUIRED
+              : response.status === 400
+                ? "Revisa los datos ingresados y vuelve a intentarlo."
+                : "No pudimos procesar tu pago. Vuelve a ingresar los datos e inténtalo más tarde.",
+        });
         return;
       }
       const data: unknown = await response.json();
       if (controller.signal.aborted) return;
       if (!isDemoResult(data, scenarioId)) {
-        setErrors({ form: "El servidor devolvió una respuesta DEMO incompatible. No se confirmó la operación. Vuelve a ingresar los datos." });
+        setErrors({
+          form: "No pudimos confirmar tu pago. Vuelve a ingresar los datos.",
+        });
         return;
       }
       // Desbloqueo en tiempo real: RiskBadge y el resto de la app leen este plan.
       if (data.outcome === "APPROVED") sessionStore.setPlan("PRO");
       setResult(data);
     } catch {
-      if (!controller.signal.aborted) setErrors({ form: "No se pudo conectar o completar la simulación. Los campos se limpiaron; vuelve a ingresar los datos para reintentar." });
+      if (!controller.signal.aborted)
+        setErrors({
+          form: "No se pudo conectar con el servicio de pagos. Vuelve a ingresar los datos para reintentar.",
+        });
     } finally {
       if (request.current === controller) request.current = null;
       if (!controller.signal.aborted) {
@@ -180,124 +277,354 @@ export function Checkout({ onViewPlans, onReturnToApp = onViewPlans }: { onViewP
   }
 
   function paymentDetails(result: DemoResult) {
-    return <>
-      <p>{result.message}</p>
-      <dl className="checkout-referencia">
-        <div><dt>Referencia de demostración</dt><dd>{result.reference}</dd></div>
-        <div><dt>Fecha y hora local</dt><dd><time dateTime={result.occurredAt}>{new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "medium" }).format(new Date(result.occurredAt))}</time></dd></div>
-        <div><dt>Plan seleccionado</dt><dd>Pro</dd></div>
-        <div><dt>Tipo de operación</dt><dd>DEMO · Transacción ficticia</dd></div>
-      </dl>
-      <p>Los campos del formulario se limpiaron.</p>
-    </>;
+    return (
+      <>
+        <dl className="checkout-referencia">
+          <div>
+            <dt>Número de operación</dt>
+            <dd>{result.reference.replace(/^DEMO-/, "").toUpperCase()}</dd>
+          </div>
+          <div>
+            <dt>Fecha y hora local</dt>
+            <dd>
+              <time dateTime={result.occurredAt}>
+                {new Intl.DateTimeFormat("es", {
+                  dateStyle: "medium",
+                  timeStyle: "medium",
+                }).format(new Date(result.occurredAt))}
+              </time>
+            </dd>
+          </div>
+          <div>
+            <dt>Plan seleccionado</dt>
+            <dd>Pro</dd>
+          </div>
+          <div>
+            <dt>Medio de pago</dt>
+            <dd>Tarjeta de crédito o débito</dd>
+          </div>
+        </dl>
+      </>
+    );
   }
 
   // US33, Escenario 1: pantalla festiva con el vencimiento y lo que se desbloqueó.
   function showSuccess(result: DemoResult) {
-    return <section className="checkout-resultado checkout-resultado-approved" role="status" aria-labelledby="demo-result-title">
-      <span className="checkout-resultado-icono" aria-hidden="true">🎉</span>
-      <h2 id="demo-result-title">¡Bienvenido al Plan Pro!</h2>
-      <p>Tu Plan Pro está activo hasta <strong><time dateTime={result.planExpiresAt ?? undefined}>
-        {new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(new Date(result.planExpiresAt ?? result.occurredAt))}</time></strong>.</p>
-      <p>Ya tienes desbloqueado:</p>
-      <ul>{PRO_BENEFITS.map((benefit) => <li key={benefit}>{benefit}</li>)}</ul>
-      {paymentDetails(result)}
-      <div className="checkout-resultado-acciones">
-        <button type="button" onClick={onReturnToApp}>Volver a la aplicación</button>
-      </div>
-    </section>;
+    return (
+      <section
+        className="checkout-resultado checkout-resultado-approved"
+        role="status"
+        aria-labelledby="demo-result-title"
+      >
+        <span className="checkout-resultado-icono" aria-hidden="true">
+          🎉
+        </span>
+        <h2 id="demo-result-title">¡Bienvenido al Plan Pro!</h2>
+        <p>
+          Tu Plan Pro está activo hasta{" "}
+          <strong>
+            <time dateTime={result.planExpiresAt ?? undefined}>
+              {new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(
+                new Date(result.planExpiresAt ?? result.occurredAt),
+              )}
+            </time>
+          </strong>
+          .
+        </p>
+        <p>Ya tienes desbloqueado:</p>
+        <ul>
+          {PRO_BENEFITS.map((benefit) => (
+            <li key={benefit}>{benefit}</li>
+          ))}
+        </ul>
+        {paymentDetails(result)}
+        <div className="checkout-resultado-acciones">
+          <button type="button" onClick={onReturnToApp}>
+            Volver a la aplicación
+          </button>
+        </div>
+      </section>
+    );
   }
 
   // US33, Escenario 2: motivo en lenguaje sencillo, sin códigos técnicos.
   function showDecline(result: DemoResult) {
-    return <section className="checkout-resultado checkout-resultado-declined" role="status" aria-labelledby="demo-result-title">
-      <span className="checkout-resultado-icono" aria-hidden="true">!</span>
-      <h2 id="demo-result-title">No pudimos procesar tu pago</h2>
-      <p><strong>Motivo:</strong> {result.declineReason}</p>
-      <p>Tu plan no cambió.</p>
-      {paymentDetails(result)}
-      <div className="checkout-resultado-acciones">
-        <button type="button" onClick={onReturnToApp}>Volver a la aplicación</button>
-        <button type="button" onClick={() => { setResult(null); setErrors({}); }}>Intentar nuevamente</button>
-      </div>
-    </section>;
+    return (
+      <section
+        className="checkout-resultado checkout-resultado-declined"
+        role="status"
+        aria-labelledby="demo-result-title"
+      >
+        <span className="checkout-resultado-icono" aria-hidden="true">
+          !
+        </span>
+        <h2 id="demo-result-title">No pudimos procesar tu pago</h2>
+        <p>
+          {/* El backend solo devuelve este motivo (lo valida isDemoResult). */}
+          <strong>Motivo:</strong> Fondos insuficientes.
+        </p>
+        <p>No se realizó ningún cargo y tu plan no cambió.</p>
+        {paymentDetails(result)}
+        <div className="checkout-resultado-acciones">
+          <button type="button" onClick={onReturnToApp}>
+            Volver a la aplicación
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setResult(null);
+              setErrors({});
+            }}
+          >
+            Intentar nuevamente
+          </button>
+        </div>
+      </section>
+    );
   }
 
-  return <main className="pagina comercio checkout-demo">
-    <div className="checkout-encabezado">
-      <div><span className="checkout-demo-insignia">DEMO · SIMULACIÓN ACADÉMICA</span><h1>Checkout del Plan Pro</h1></div>
-      <button type="button" className="checkout-volver" onClick={leaveCheckout}>Volver a planes</button>
-    </div>
-    <div className="checkout-contexto">
-      <p>Practica el proceso con los datos ficticios de esta pantalla. Todas las operaciones se simulan localmente.</p>
-      <p className="checkout-aviso-demo"><strong>Simulación académica — No utilizar tarjetas reales</strong></p>
-      <p><strong>Precio pendiente de definición.</strong> No se realizan cargos reales; un pago aprobado activa tu Plan Pro por 30 días.</p>
-    </div>
-    {configError ? <div role="alert" className="comercio-aviso">
-      <p>No se pudo cargar la configuración de la simulación académica.</p>
-      <button type="button" onClick={() => { setConfigError(false); setConfig(null); setAttempt(attempt + 1); }}>Reintentar</button>
-    </div> : !config ? <p role="status">Cargando checkout DEMO…</p> : result ? (result.outcome === "APPROVED" ? showSuccess(result) : showDecline(result)) : <>
-      <section className="checkout-guia" aria-labelledby="demo-cards-title">
-        <h2 id="demo-cards-title">Completa tu pago simulado</h2>
-        <p>Introduce una secuencia ficticia de <strong>16 dígitos</strong>, una fecha vigente en formato MM/AA y un CVV ficticio de <strong>3 dígitos</strong>.</p>
-        <p className="comercio-ayuda">Puedes usar cualquier combinación numérica ficticia. La aprobación es el resultado normal; el control DEMO permite ensayar un rechazo.</p>
-      </section>
-      <form className="checkout-formulario" onSubmit={submitPayment} noValidate autoComplete="off" aria-busy={pending}>
-        <div className="checkout-campos">
-          <fieldset disabled={pending}>
-            <legend>1. Datos de facturación</legend>
-            <p className="comercio-ayuda">Usa datos ficticios para esta práctica.</p>
-            <label htmlFor="billing-name">Nombre o razón social</label>
-            <input id="billing-name" name="demo-billing-name" autoComplete="off" required maxLength={120}
-              value={billing.name} aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? "billing-name-error" : undefined}
-              onChange={(event) => { setBilling({ ...billing, name: event.target.value }); setErrors({ ...errors, name: undefined, form: undefined }); }} />
-            {errors.name && <p id="billing-name-error" role="alert">{errors.name}</p>}
-            <label htmlFor="billing-email">Correo de facturación</label>
-            <input id="billing-email" name="demo-billing-email" type="email" autoComplete="off" required maxLength={254}
-              value={billing.email} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? "billing-email-error" : undefined}
-              onChange={(event) => { setBilling({ ...billing, email: event.target.value }); setErrors({ ...errors, email: undefined, form: undefined }); }} />
-            {errors.email && <p id="billing-email-error" role="alert">{errors.email}</p>}
-          </fieldset>
-          <fieldset disabled={pending}>
-            <legend>2. Tarjeta ficticia</legend>
-            <label htmlFor="demo-holder">Nombre del titular</label>
-            <input id="demo-holder" name="demo-holder" autoComplete="off" required maxLength={120} value={card.holder}
-              aria-invalid={Boolean(errors.holder)} aria-describedby={errors.holder ? "demo-holder-error" : undefined}
-              onChange={(event) => updateCard("holder", event.target.value)} />
-            {errors.holder && <p id="demo-holder-error" role="alert">{errors.holder}</p>}
-            <label htmlFor="demo-card-number">Número de tarjeta de demostración</label>
-            <input id="demo-card-number" name="demo-code" autoComplete="off" inputMode="numeric" spellCheck={false} required
-              className="checkout-codigo-input" placeholder="0000 1111 2222 3333" value={card.number}
-              aria-invalid={Boolean(errors.number)} aria-describedby={errors.number ? "demo-number-error" : "demo-number-help"}
-              onChange={(event) => updateCard("number", event.target.value)} />
-            <span id="demo-number-help" className="comercio-ayuda">Exactamente 16 dígitos, con o sin espacios.</span>
-            {errors.number && <p id="demo-number-error" role="alert">{errors.number}</p>}
-            <div className="checkout-fecha-cvv">
-              <div><label htmlFor="demo-expiry">Fecha de vencimiento</label>
-                <input id="demo-expiry" name="demo-expiry" autoComplete="off" required placeholder="MM/AA" value={card.expiry}
-                  aria-invalid={Boolean(errors.expiry)} aria-describedby={errors.expiry ? "demo-expiry-error" : undefined}
-                  onChange={(event) => updateCard("expiry", event.target.value)} />
-                {errors.expiry && <p id="demo-expiry-error" role="alert">{errors.expiry}</p>}</div>
-              <div><label htmlFor="demo-cvv">CVV ficticio</label>
-                <input id="demo-cvv" name="demo-cvv" type="password" inputMode="numeric" autoComplete="off" required placeholder="3 dígitos" value={card.cvv}
-                  aria-invalid={Boolean(errors.cvv)} aria-describedby={errors.cvv ? "demo-cvv-error" : undefined}
-                  onChange={(event) => updateCard("cvv", event.target.value)} />
-                {errors.cvv && <p id="demo-cvv-error" role="alert">{errors.cvv}</p>}</div>
+  return (
+    <main className="pagina comercio checkout-demo">
+      <div className="checkout-encabezado">
+        <div>
+          <h1>Pago del Plan Pro</h1>
+          <p className="checkout-subtitulo">
+            Completa tus datos para activar tu suscripción.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="checkout-volver"
+          onClick={leaveCheckout}
+        >
+          Volver a planes
+        </button>
+      </div>
+      {configError ? (
+        <div role="alert" className="comercio-aviso">
+          <p>No pudimos cargar la página de pago.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setConfigError(false);
+              setConfig(null);
+              setAttempt(attempt + 1);
+            }}
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : !config ? (
+        <p role="status">Cargando página de pago…</p>
+      ) : result ? (
+        result.outcome === "APPROVED" ? (
+          showSuccess(result)
+        ) : (
+          showDecline(result)
+        )
+      ) : (
+        <div className="checkout-layout">
+          <form
+            className="checkout-formulario"
+            onSubmit={submitPayment}
+            noValidate
+            autoComplete="off"
+            aria-busy={pending}
+          >
+            <fieldset disabled={pending}>
+              <legend>Datos de facturación</legend>
+              <label htmlFor="billing-name">Nombre o razón social</label>
+              <input
+                id="billing-name"
+                name="demo-billing-name"
+                autoComplete="off"
+                required
+                maxLength={120}
+                value={billing.name}
+                aria-invalid={Boolean(errors.name)}
+                aria-describedby={
+                  errors.name ? "billing-name-error" : undefined
+                }
+                onChange={(event) => {
+                  setBilling({ ...billing, name: event.target.value });
+                  setErrors({ ...errors, name: undefined, form: undefined });
+                }}
+              />
+              {errors.name && (
+                <p id="billing-name-error" role="alert">
+                  {errors.name}
+                </p>
+              )}
+              <label htmlFor="billing-email">Correo de facturación</label>
+              <input
+                id="billing-email"
+                name="demo-billing-email"
+                type="email"
+                autoComplete="off"
+                required
+                maxLength={254}
+                value={billing.email}
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={
+                  errors.email ? "billing-email-error" : undefined
+                }
+                onChange={(event) => {
+                  setBilling({ ...billing, email: event.target.value });
+                  setErrors({ ...errors, email: undefined, form: undefined });
+                }}
+              />
+              {errors.email && (
+                <p id="billing-email-error" role="alert">
+                  {errors.email}
+                </p>
+              )}
+            </fieldset>
+            <fieldset disabled={pending}>
+              <legend>Tarjeta de crédito o débito</legend>
+              <label htmlFor="demo-card-number">Número de tarjeta</label>
+              <input
+                id="demo-card-number"
+                name="demo-code"
+                autoComplete="off"
+                inputMode="numeric"
+                spellCheck={false}
+                required
+                className="checkout-codigo-input"
+                placeholder="1234 5678 9012 3456"
+                value={card.number}
+                aria-invalid={Boolean(errors.number)}
+                aria-describedby={
+                  errors.number ? "demo-number-error" : undefined
+                }
+                onChange={(event) => updateCard("number", event.target.value)}
+              />
+              {errors.number && (
+                <p id="demo-number-error" role="alert">
+                  {errors.number}
+                </p>
+              )}
+              <label htmlFor="demo-holder">Nombre del titular</label>
+              <input
+                id="demo-holder"
+                name="demo-holder"
+                autoComplete="off"
+                required
+                maxLength={120}
+                placeholder="Como aparece en la tarjeta"
+                value={card.holder}
+                aria-invalid={Boolean(errors.holder)}
+                aria-describedby={
+                  errors.holder ? "demo-holder-error" : undefined
+                }
+                onChange={(event) => updateCard("holder", event.target.value)}
+              />
+              {errors.holder && (
+                <p id="demo-holder-error" role="alert">
+                  {errors.holder}
+                </p>
+              )}
+              <div className="checkout-fecha-cvv">
+                <div>
+                  <label htmlFor="demo-expiry">Fecha de vencimiento</label>
+                  <input
+                    id="demo-expiry"
+                    name="demo-expiry"
+                    autoComplete="off"
+                    required
+                    placeholder="MM/AA"
+                    value={card.expiry}
+                    aria-invalid={Boolean(errors.expiry)}
+                    aria-describedby={
+                      errors.expiry ? "demo-expiry-error" : undefined
+                    }
+                    onChange={(event) =>
+                      updateCard("expiry", event.target.value)
+                    }
+                  />
+                  {errors.expiry && (
+                    <p id="demo-expiry-error" role="alert">
+                      {errors.expiry}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="demo-cvv">CVV</label>
+                  <input
+                    id="demo-cvv"
+                    name="demo-cvv"
+                    type="password"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    required
+                    placeholder="123"
+                    value={card.cvv}
+                    aria-invalid={Boolean(errors.cvv)}
+                    aria-describedby={
+                      errors.cvv ? "demo-cvv-error" : undefined
+                    }
+                    onChange={(event) => updateCard("cvv", event.target.value)}
+                  />
+                  {errors.cvv && (
+                    <p id="demo-cvv-error" role="alert">
+                      {errors.cvv}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </fieldset>
+            {errors.form && (
+              <p role="alert" className="checkout-error-formulario">
+                {errors.form}
+              </p>
+            )}
+            <div className="checkout-confirmacion">
+              <p className="comercio-ayuda">
+                🔒 Los datos de tu tarjeta no se guardan ni se envían a
+                nuestros servidores.
+              </p>
+              <button type="submit" disabled={pending}>
+                {pending ? "Procesando pago…" : "Pagar ahora"}
+              </button>
             </div>
-          </fieldset>
+            {pending && (
+              <p role="status" className="checkout-procesando">
+                <span aria-hidden="true" />
+                Procesando pago…
+              </p>
+            )}
+            {/* Permite mostrar el Escenario 2 de la US33 (pago rechazado). */}
+            <label htmlFor="demo-decline" className="checkout-opciones-demo">
+              <input
+                id="demo-decline"
+                name="demo-decline"
+                type="checkbox"
+                checked={simulateDecline}
+                disabled={pending}
+                onChange={(event) => setSimulateDecline(event.target.checked)}
+              />
+              Forzar pago rechazado
+            </label>
+          </form>
+          <aside
+            className="checkout-resumen"
+            aria-labelledby="order-summary-title"
+          >
+            <h2 id="order-summary-title">Resumen del pedido</h2>
+            <p className="checkout-resumen-plan">
+              <strong>Plan Pro</strong>
+              <span>30 días</span>
+            </p>
+            <ul>
+              {PRO_BENEFITS.map((benefit) => (
+                <li key={benefit}>{benefit}</li>
+              ))}
+            </ul>
+            <p className="comercio-ayuda">
+              Tu Plan Pro se activa en cuanto se apruebe el pago.
+            </p>
+          </aside>
         </div>
-        <div className="checkout-opciones-demo">
-          <label htmlFor="demo-decline"><input id="demo-decline" name="demo-decline" type="checkbox" checked={simulateDecline} disabled={pending}
-            aria-describedby="demo-decline-help" onChange={(event) => setSimulateDecline(event.target.checked)} />Simular rechazo (solo DEMO)</label>
-          <p id="demo-decline-help" className="comercio-ayuda">Opcional. El número de tarjeta no determina el resultado.</p>
-        </div>
-        {errors.form && <p role="alert" className="checkout-error-formulario">{errors.form}</p>}
-        <div className="checkout-confirmacion">
-          <p className="comercio-ayuda">Al confirmar se envía únicamente el escenario DEMO y la facturación ficticia. Los datos de tarjeta permanecen en este formulario.</p>
-          <button type="submit" disabled={pending}>{pending ? "Procesando pago…" : "Pagar (simulación)"}</button>
-        </div>
-        {pending && <p role="status" className="checkout-procesando"><span aria-hidden="true" />Procesando pago…</p>}
-      </form>
-    </>}
-  </main>;
+      )}
+    </main>
+  );
 }

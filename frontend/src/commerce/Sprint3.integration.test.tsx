@@ -65,10 +65,10 @@ async function fillDemoCheckout(cardNumber = "0000111122223333", decline = false
   await userEvent.type(screen.getByLabelText("Nombre o razón social"), "Prueba de integración");
   await userEvent.type(screen.getByLabelText("Correo de facturación"), "integracion@example.com");
   await userEvent.type(screen.getByLabelText("Nombre del titular"), "Titular ficticio");
-  await userEvent.type(screen.getByLabelText("Número de tarjeta de demostración"), cardNumber);
+  await userEvent.type(screen.getByLabelText("Número de tarjeta"), cardNumber);
   await userEvent.type(screen.getByLabelText("Fecha de vencimiento"), futureExpiry);
-  await userEvent.type(screen.getByLabelText("CVV ficticio"), "456");
-  if (decline) await userEvent.click(screen.getByRole("checkbox", { name: "Simular rechazo (solo DEMO)" }));
+  await userEvent.type(screen.getByLabelText("CVV"), "456");
+  if (decline) await userEvent.click(screen.getByRole("checkbox", { name: "Forzar pago rechazado" }));
 }
 
 describe("Sprint 3, frontend con Express y SQLite reales", () => {
@@ -89,9 +89,9 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     await userEvent.click(screen.getByRole("button", { name: "Continuar al checkout Pro" }));
     await screen.findByLabelText("Nombre o razón social");
     await fillDemoCheckout();
-    await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pagar ahora" }));
     expect(await screen.findByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).toBeInTheDocument();
-    expect(screen.getByText(/^DEMO-[A-Fa-f0-9]{24}$/)).toBeInTheDocument();
+    expect(screen.getByText(/^[A-F0-9]{24}$/)).toBeInTheDocument();
     const submitted = requests.filter((request) => request.path === "/api/checkout/simulate");
     expect(submitted).toEqual([{ path: "/api/checkout/simulate", body: {
       planId: "PRO", scenarioId: "DEMO_APPROVED", billing: { name: "Prueba de integración", email: "integracion@example.com" },
@@ -121,7 +121,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     connectAs("unrecognized-demo-visitor");
     await goToCheckout();
     await fillDemoCheckout();
-    await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pagar ahora" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Inicia sesión para suscribirte al Plan Pro.");
     expect(screen.queryByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Volver a planes" }));
@@ -135,12 +135,12 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     const requests = connectAs(tokens.declineThenApprove);
     await goToCheckout();
     await fillDemoCheckout(undefined, true);
-    await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pagar ahora" }));
     expect(await screen.findByRole("heading", { name: "No pudimos procesar tu pago" })).toBeInTheDocument();
-    expect(screen.getByText(/Fondos ficticios insuficientes\./)).toBeInTheDocument();
+    expect(screen.getByText(/Fondos insuficientes./)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Intentar nuevamente" }));
     await fillDemoCheckout();
-    await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pagar ahora" }));
     expect(await screen.findByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).toBeInTheDocument();
     expect(requests.filter((request) => request.path === "/api/checkout/simulate").map((request) => request.body)).toEqual([
       { planId: "PRO", scenarioId: "DEMO_DECLINED", billing: { name: "Prueba de integración", email: "integracion@example.com" } },
@@ -152,7 +152,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     connectAs(tokens.upgrade);
     await goToCheckout();
     await fillDemoCheckout();
-    await userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pagar ahora" }));
     expect(await screen.findByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Volver a la aplicación" }));
     expect(window.location.pathname).toBe("/");

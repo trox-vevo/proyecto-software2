@@ -16,12 +16,12 @@ const result = (outcome: "APPROVED" | "DECLINED" = "APPROVED") => ({
   plan: outcome === "APPROVED" ? "PRO" : "BASICO", planExpiresAt: outcome === "APPROVED" ? "2026-12-06T19:00:00.000Z" : null,
 });
 const successfulResponse = (outcome: "APPROVED" | "DECLINED" = "APPROVED") => new Response(JSON.stringify(result(outcome)));
-const labels = ["Nombre o razón social", "Correo de facturación", "Nombre del titular", "Número de tarjeta de demostración", "Fecha de vencimiento", "CVV ficticio"];
+const labels = ["Nombre o razón social", "Correo de facturación", "Nombre del titular", "Número de tarjeta", "Fecha de vencimiento", "CVV"];
 const futureExpiry = `12/${String(new Date().getFullYear() + 2).slice(-2)}`;
 function fill(number = "0000111122223333", decline = false) {
   const values = ["Persona de prueba", "FACTURA@example.com", "Titular solo local", number, futureExpiry, "123"];
   labels.forEach((label, index) => fireEvent.change(screen.getByLabelText(label), { target: { value: values[index] } }));
-  const checkbox = screen.getByRole("checkbox", { name: "Simular rechazo (solo DEMO)" });
+  const checkbox = screen.getByRole("checkbox", { name: "Forzar pago rechazado" });
   if ((checkbox as HTMLInputElement).checked !== decline) fireEvent.click(checkbox);
 }
 async function open(fetchMock = vi.fn().mockResolvedValue(configResponse()), onViewPlans = vi.fn(), onReturnToApp = vi.fn()) {
@@ -30,20 +30,19 @@ async function open(fetchMock = vi.fn().mockResolvedValue(configResponse()), onV
   await screen.findByLabelText("Nombre o razón social");
   return { ...view, fetchMock, onViewPlans, onReturnToApp };
 }
-const submit = () => userEvent.click(screen.getByRole("button", { name: "Pagar (simulación)" }));
+const submit = () => userEvent.click(screen.getByRole("button", { name: "Pagar ahora" }));
 const expectEmpty = () => {
   labels.forEach((label) => expect(screen.getByLabelText(label)).toHaveValue(""));
-  expect(screen.getByRole("checkbox", { name: "Simular rechazo (solo DEMO)" })).not.toBeChecked();
+  expect(screen.getByRole("checkbox", { name: "Forzar pago rechazado" })).not.toBeChecked();
 };
 
 describe("US32, checkout de simulación académica", () => {
-  it("muestra la guía DEMO y valida todos los campos requeridos sin enviar datos", async () => {
+  it("no muestra textos de simulación y valida todos los campos requeridos sin enviar datos", async () => {
     const { container, fetchMock } = await open();
-    expect(screen.getByText("DEMO · SIMULACIÓN ACADÉMICA")).toBeInTheDocument();
-    expect(screen.getByText("Simulación académica — No utilizar tarjetas reales")).toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: "Simular rechazo (solo DEMO)" })).not.toBeChecked();
+    expect(document.body.textContent).not.toMatch(/DEMO|fictici|académica|simulado|práctica/i);
+    expect(screen.getByRole("checkbox", { name: "Forzar pago rechazado" })).not.toBeChecked();
     expect(container.querySelectorAll("input")).toHaveLength(7);
-    expect(screen.getByLabelText("CVV ficticio")).toHaveAttribute("type", "password");
+    expect(screen.getByLabelText("CVV")).toHaveAttribute("type", "password");
     labels.forEach((label) => expect(screen.getByLabelText(label)).toHaveAttribute("autocomplete", "off"));
     await submit();
     labels.forEach((label) => expect(screen.getByLabelText(label)).toHaveAttribute("aria-invalid", "true"));
@@ -59,9 +58,10 @@ describe("US32, checkout de simulación académica", () => {
     fill();
     await submit();
     expect(await screen.findByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).toBeInTheDocument();
-    expect(screen.getByText(result().reference)).toBeInTheDocument();
+    expect(screen.getByText("0123456789ABCDEF01234567")).toBeInTheDocument();
     expect(screen.getByText("Pro", { selector: "dd" })).toBeInTheDocument();
-    expect(screen.getByText("DEMO · Transacción ficticia")).toBeInTheDocument();
+    expect(screen.getByText("Tarjeta de crédito o débito")).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/DEMO|fictici|académica|simulado|práctica/i);
     expect(screen.getByText(/Tu Plan Pro está activo hasta/)).toBeInTheDocument();
     expect(document.querySelector(`time[datetime="${result().occurredAt}"]`)).toBeInTheDocument();
     const [url, request] = fetchMock.mock.calls[1];
@@ -81,7 +81,8 @@ describe("US32, checkout de simulación académica", () => {
     fill(undefined, true);
     await submit();
     expect(await screen.findByRole("heading", { name: "No pudimos procesar tu pago" })).toBeInTheDocument();
-    expect(screen.getByText("Fondos ficticios insuficientes.")).toBeInTheDocument();
+    expect(screen.getByText(/Fondos insuficientes./)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/DEMO|fictici|académica|simulado|práctica/i);
     expect(JSON.parse(fetchMock.mock.calls[1][1].body).scenarioId).toBe("DEMO_DECLINED");
     await userEvent.click(screen.getByRole("button", { name: "Intentar nuevamente" }));
     expectEmpty();
@@ -91,15 +92,15 @@ describe("US32, checkout de simulación académica", () => {
     const { fetchMock } = await open();
     fill("000011112222");
     fireEvent.change(screen.getByLabelText("Fecha de vencimiento"), { target: { value: "13/99" } });
-    fireEvent.change(screen.getByLabelText("CVV ficticio"), { target: { value: "12" } });
+    fireEvent.change(screen.getByLabelText("CVV"), { target: { value: "12" } });
     await submit();
-    expect(screen.getByLabelText("Número de tarjeta de demostración")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("Número de tarjeta")).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByLabelText("Fecha de vencimiento")).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getByLabelText("CVV ficticio")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText("CVV")).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByLabelText("Nombre o razón social")).toHaveValue("Persona de prueba");
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    fireEvent.change(screen.getByLabelText("Número de tarjeta de demostración"), { target: { value: "0000111122223333" } });
-    expect(screen.getByLabelText("Número de tarjeta de demostración")).toHaveAttribute("aria-invalid", "false");
+    fireEvent.change(screen.getByLabelText("Número de tarjeta"), { target: { value: "0000111122223333" } });
+    expect(screen.getByLabelText("Número de tarjeta")).toHaveAttribute("aria-invalid", "false");
   });
 
   it.each([
@@ -118,7 +119,7 @@ describe("US32, checkout de simulación académica", () => {
   it("agrupa los dígitos al escribir y conserva el decimoséptimo para explicar el error", async () => {
     const { fetchMock } = await open();
     fill("");
-    const number = screen.getByLabelText("Número de tarjeta de demostración");
+    const number = screen.getByLabelText("Número de tarjeta");
     await userEvent.type(number, "0000111122223333");
     expect(number).toHaveValue("0000 1111 2222 3333");
     await userEvent.type(number, "4");
@@ -163,7 +164,7 @@ describe("US32, checkout de simulación académica", () => {
   it.each(["12", "ABC", "1234"])("no recorta ni procesa un CVV inválido %s", async (cvv) => {
     const { fetchMock } = await open();
     fill();
-    const input = screen.getByLabelText("CVV ficticio");
+    const input = screen.getByLabelText("CVV");
     await userEvent.clear(input);
     await userEvent.type(input, cvv);
     expect(input).toHaveValue(cvv);
@@ -196,12 +197,12 @@ describe("US32, checkout de simulación académica", () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(configResponse()).mockImplementationOnce(() => new Promise<Response>((resolve) => { finish = resolve; }));
     await open(fetchMock);
     fill();
-    await userEvent.dblClick(screen.getByRole("button", { name: "Pagar (simulación)" }));
+    await userEvent.dblClick(screen.getByRole("button", { name: "Pagar ahora" }));
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(screen.getByRole("button", { name: "Procesando pago…" })).toBeDisabled();
     expect(screen.getByRole("status")).toHaveTextContent("Procesando pago…");
     expect(screen.getByLabelText("Nombre del titular")).toBeDisabled();
-    expect(screen.getByRole("checkbox", { name: "Simular rechazo (solo DEMO)" })).toBeDisabled();
+    expect(screen.getByRole("checkbox", { name: "Forzar pago rechazado" })).toBeDisabled();
     await act(async () => finish(successfulResponse()));
     await screen.findByRole("heading", { name: "¡Bienvenido al Plan Pro!" });
   });
@@ -226,7 +227,7 @@ describe("US32, checkout de simulación académica", () => {
     await submit();
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo conectar");
     expectEmpty();
-    expect(screen.getByRole("button", { name: "Pagar (simulación)" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Pagar ahora" })).toBeEnabled();
   });
 
   it.each([
@@ -241,7 +242,7 @@ describe("US32, checkout de simulación académica", () => {
     await open(fetchMock);
     fill();
     await submit();
-    expect(await screen.findByRole("alert")).toHaveTextContent("respuesta DEMO incompatible");
+    expect(await screen.findByRole("alert")).toHaveTextContent("No pudimos confirmar tu pago");
     expectEmpty();
     expect(screen.queryByRole("heading", { name: /Bienvenido al Plan Pro|No pudimos procesar tu pago/ })).not.toBeInTheDocument();
   });
@@ -254,7 +255,7 @@ describe("US32, checkout de simulación académica", () => {
   ])("bloquea configuraciones ajenas a la demostración %j", async (value) => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(value))));
     render(<Checkout onViewPlans={vi.fn()} />);
-    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo cargar la configuración");
+    expect(await screen.findByRole("alert")).toHaveTextContent("No pudimos cargar la página de pago");
     expect(screen.queryByLabelText("Nombre o razón social")).not.toBeInTheDocument();
   });
 
@@ -360,7 +361,7 @@ describe("US33, procesamiento de pago y activación del Plan Pro", () => {
     fill(undefined, true);
     await submit();
     expect(await screen.findByRole("heading", { name: "No pudimos procesar tu pago" })).toBeInTheDocument();
-    expect(screen.getByText("Fondos ficticios insuficientes.")).toBeInTheDocument();
+    expect(screen.getByText(/Fondos insuficientes./)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Intentar nuevamente" })).toBeInTheDocument();
     expect(sessionStore.isPro()).toBe(false);
   });
