@@ -13,7 +13,7 @@ export class AuthController {
       }
 
       const session = await this.authService.login(email, password);
-      res.json({ session });
+      res.json({ session, plan: session.plan });
     } catch (error: unknown) {
       if (error instanceof InvalidCredentialsError) {
         res.status(401).json({ message: "Credenciales inválidas" });

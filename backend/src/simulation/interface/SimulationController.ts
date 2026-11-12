@@ -2,11 +2,13 @@ import Decimal from "decimal.js";
 import { Request, Response } from "express";
 import { FixedDepositSimulationService } from "../application/FixedDepositSimulationService";
 import { InvalidSimulationParametersError } from "../application/InvalidSimulationParametersError";
+import type { RiskRatingFilter } from "../application/RiskRatingFilter";
 import { PaymentMode } from "../domain/PaymentMode";
 import { SimulationResult } from "../domain/SimulationResult";
+import { validarCoberturaFSD } from "../../fsd/CoberturaFSD";
 
 // Monto en soles como string: no negativo y con máximo 2 decimales
-const AMOUNT_FORMAT = /^\d+(\.\d{1,2})?$/;
+export const AMOUNT_FORMAT = /^\d+(\.\d{1,2})?$/;
 
 const isPaymentMode = (value: unknown): value is PaymentMode =>
   Object.values(PaymentMode).includes(value as PaymentMode);
@@ -14,6 +16,8 @@ const isPaymentMode = (value: unknown): value is PaymentMode =>
 // Los Decimal viajan como string para no perder precisión ni los ceros finales
 const toResponse = (result: SimulationResult) => ({
   productId: result.productId,
+  minimumAmount: result.minimumAmount?.toFixed(2) ?? null,
+  coberturaFSD: validarCoberturaFSD(result.coberturaFSD),
   entityName: result.entityName,
   tea: result.tea.toString(),
   totalInterest: result.totalInterest.toFixed(2),
@@ -28,13 +32,18 @@ const toResponse = (result: SimulationResult) => ({
     hasDigitalBanking: result.digitalChannels.hasDigitalBanking,
     hasMobileApp: result.digitalChannels.hasMobileApp,
   },
+  // US27: null si el usuario no es Pro (lo borra RiskRatingFilter)
+  riskRating: result.riskRating,
 });
 
 // Traduce HTTP ↔ servicio para POST /api/simulations/fixed-deposits, sin lógica de negocio.
 // Revisa los tipos del body (400 si no cuadran), llama al servicio y devuelve los resultados
 // como JSON. Las reglas del negocio (plazo, monto mínimo) las valida el servicio.
 export class SimulationController {
-  constructor(private readonly simulationService: FixedDepositSimulationService) {}
+  constructor(
+    private readonly simulationService: FixedDepositSimulationService,
+    private readonly riskRatingFilter: RiskRatingFilter,
+  ) {}
 
   // Arrow function: conserva `this` al pasarse como handler de Express
   simulateFixedDeposit = async (req: Request, res: Response): Promise<void> => {
@@ -62,7 +71,9 @@ export class SimulationController {
         department,
         paymentMode,
       );
-      res.json(results.map(toResponse));
+      // El id sale de la sesión (US03), no del body: sin sesión = no Pro
+      const visibleResults = this.riskRatingFilter.apply(results, req.userId);
+      res.json(visibleResults.map(toResponse));
     } catch (error) {
       if (error instanceof InvalidSimulationParametersError) {
         res.status(400).json({ message: error.message });

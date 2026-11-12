@@ -2,11 +2,10 @@ import { describe, expect, it } from "vitest";
 import Decimal from "decimal.js";
 import { MonthlyPaymentCalculator } from "../../../src/simulation/domain/MonthlyPaymentCalculator";
 import { FinancialProduct } from "../../../src/simulation/domain/FinancialProduct";
-import { DigitalChannels } from "../../../src/simulation/domain/DigitalChannels";
 import { ServiceChannels } from "../../../src/simulation/domain/ServiceChannels";
 
 const productWithTea = (tea: string) =>
-  new FinancialProduct(1, "Banco de Prueba", new Decimal(tea), new Decimal("500"), new ServiceChannels(true, true), new DigitalChannels(true, true));
+  new FinancialProduct(1, "Banco de Prueba", new Decimal(tea), new Decimal("500"), new ServiceChannels(true, true));
 
 // US10 · Escenario 2 — Pago de intereses mensuales (sin capitalizar).
 // Valores esperados: tabla "Casos de prueba" de CLAUDE.md §6.
@@ -35,7 +34,7 @@ describe("MonthlyPaymentCalculator", () => {
 
   it("copia id, entidad, TEA y canales del producto al resultado", () => {
     const channels = new ServiceChannels(true, false);
-    const product = new FinancialProduct(7, "Caja Arequipa", new Decimal("0.05"), new Decimal("500"), channels, new DigitalChannels(true, true));
+    const product = new FinancialProduct(7, "Caja Arequipa", new Decimal("0.05"), new Decimal("500"), channels);
 
     const result = calculator.calculate(new Decimal("1000"), product, 180);
 

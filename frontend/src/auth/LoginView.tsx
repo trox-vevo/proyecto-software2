@@ -1,14 +1,10 @@
 import { useState, type FormEvent } from "react";
+import { type AuthSession } from "./session";
 import "./LoginView.css";
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
-export interface AuthSession {
-  id: string;
-  userId: string;
-  tokenJwt: string;
-  expiresAt: string;
-}
+export type { AuthSession } from "./session";
 
 interface Props {
   onLogin: (session: AuthSession) => void;
@@ -56,7 +52,9 @@ export function LoginView({ onLogin, onForgotPassword }: Props) {
         !("id" in cuerpo.session) ||
         typeof cuerpo.session.id !== "string" ||
         !("userId" in cuerpo.session) ||
-        typeof cuerpo.session.userId !== "string" ||
+        typeof cuerpo.session.userId !== "number" ||
+        !("plan" in cuerpo.session) ||
+        (cuerpo.session.plan !== "BASICO" && cuerpo.session.plan !== "PRO") ||
         !("expiresAt" in cuerpo.session) ||
         typeof cuerpo.session.expiresAt !== "string"
       ) {
@@ -68,6 +66,7 @@ export function LoginView({ onLogin, onForgotPassword }: Props) {
         userId: cuerpo.session.userId,
         tokenJwt: cuerpo.session.tokenJwt,
         expiresAt: cuerpo.session.expiresAt,
+        plan: cuerpo.session.plan,
       });
     } catch (cause: unknown) {
       setError(

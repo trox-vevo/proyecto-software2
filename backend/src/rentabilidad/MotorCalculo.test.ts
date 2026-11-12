@@ -11,9 +11,9 @@ import { DigitalChannels } from "../simulation/domain/DigitalChannels";
 import { ServiceChannels } from "../simulation/domain/ServiceChannels";
 
 // Tres cuentas de prueba, con saldos, tasas y fechas distintos
-const cuentaA = new CuentaAhorros("A", "Ana", 1000, 0.05, new Date("2023-01-10"), 0, new ServiceChannels(true, true), new DigitalChannels(true, true));
-const cuentaB = new CuentaAhorros("B", "Beto", 5000, 0.02, new Date("2022-06-01"), 5, new ServiceChannels(true, false), new DigitalChannels(true, true));
-const cuentaC = new CuentaAhorros("C", "Carla", 300, 0.1, new Date("2024-03-15"), 8.5, new ServiceChannels(false, true), new DigitalChannels(true, true));
+const cuentaA = new CuentaAhorros("A", "Ana", 1000, 0.05, new Date("2023-01-10"), 0, new ServiceChannels(true, true), undefined, new DigitalChannels(true, true));
+const cuentaB = new CuentaAhorros("B", "Beto", 5000, 0.02, new Date("2022-06-01"), 5, new ServiceChannels(true, false), undefined, new DigitalChannels(true, true));
+const cuentaC = new CuentaAhorros("C", "Carla", 300, 0.1, new Date("2024-03-15"), 8.5, new ServiceChannels(false, true), undefined, new DigitalChannels(true, true));
 const cuentas = [cuentaA, cuentaB, cuentaC];
 
 function crearMotor(filtro = new FiltroAhorros()) {
@@ -72,9 +72,9 @@ describe("MotorCalculoTest", () => {
 
   it("testOrden: ordena por el valor numérico, no por el texto", () => {
     const motor = crearMotor();
-    const a = new CuentaAhorros("X", "x", 900, 0, new Date("2024-01-01"), 0, new ServiceChannels(true, true), new DigitalChannels(true, true)); // saldo final 900
-    const b = new CuentaAhorros("Y", "y", 2000, 0, new Date("2024-01-01"), 0, new ServiceChannels(true, true), new DigitalChannels(true, true)); // saldo final 2000
-    const c = new CuentaAhorros("Z", "z", 1250.5, 0, new Date("2024-01-01"), 0, new ServiceChannels(true, true), new DigitalChannels(true, true)); // saldo final 1250.50
+    const a = new CuentaAhorros("X", "x", 900, 0, new Date("2024-01-01"), 0, new ServiceChannels(true, true), undefined, new DigitalChannels(true, true)); // saldo final 900
+    const b = new CuentaAhorros("Y", "y", 2000, 0, new Date("2024-01-01"), 0, new ServiceChannels(true, true), undefined, new DigitalChannels(true, true)); // saldo final 2000
+    const c = new CuentaAhorros("Z", "z", 1250.5, 0, new Date("2024-01-01"), 0, new ServiceChannels(true, true), undefined, new DigitalChannels(true, true)); // saldo final 1250.50
     expect(ids(motor.calcular([a, b, c], 30, CriterioOrden.SALDO))).toEqual(["Y", "Z", "X"]);
   });
 
@@ -83,6 +83,7 @@ describe("MotorCalculoTest", () => {
      expect(salida).toEqual([
       {
         cuentaId: "B",
+        coberturaFSD: { entidadFinanciera: null, estado: "NO_VERIFICADO", fechaVerificacion: null, vigenteHasta: null, fuente: null },
         capitalInicial: "5,000.00",
         interesGenerado: "100.00",
         saldoFinal: "5,100.00",

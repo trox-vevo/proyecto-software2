@@ -1,6 +1,8 @@
+import type { CoberturaFSD } from "../fsd/IndicadorFSD";
 /** Una fila de la tabla: coincide con lo que devuelve el backend, todo en texto ya formateado. */
 export interface FilaAhorro {
   cuentaId: string;
+  coberturaFSD?: CoberturaFSD;
   capitalInicial: string;
   interesGenerado: string;
   saldoFinal: string;
@@ -10,7 +12,7 @@ export interface FilaAhorro {
   /** US18: canales de atención física; lo usan los filtros, no se muestra como columna. */
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
   /** US19: banca digital y app móvil; se muestran como íconos en su propia columna. */
-  digitalChannels: { hasDigitalBanking: boolean; hasMobileApp: boolean };
+  digitalChannels?: { hasDigitalBanking: boolean; hasMobileApp: boolean };
 }
 
 /** Criterios de ordenamiento que entiende el backend (enum CriterioOrden). */
@@ -19,7 +21,7 @@ export type CriterioOrden = "RENTABILIDAD" | "SALDO" | "FECHA";
 /** Describe una columna de la tabla. */
 export interface ColumnaTabla {
   /** Nombre del campo de FilaAhorro que muestra esta columna (solo campos de texto). */
-  clave: Exclude<keyof FilaAhorro, "channels" | "digitalChannels"> | "riesgo";
+  clave: Exclude<keyof FilaAhorro, "channels" | "digitalChannels" | "coberturaFSD"> | "riesgo" | "coberturaFSD";
   mostrar?: (valor: string) => string;
   titulo: string;
   ordenable: boolean;

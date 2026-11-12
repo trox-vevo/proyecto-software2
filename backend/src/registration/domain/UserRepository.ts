@@ -1,8 +1,13 @@
-import type { User } from "./User";
+import type { NewUser, User } from "./User";
+
+export type { NewUser } from "./User";
 
 export interface UserRepository {
   findByEmail(email: string): User | null;
-  create(user: User): User;
+  findById(id: number): User | null;
+  create(user: NewUser): User;
+  // US33 (TS-101): plan PRO y vencimiento en una sola escritura atómica.
+  activatePro(id: number, expiresAt: string): void;
 }
 
 export class DuplicateEmailError extends Error {

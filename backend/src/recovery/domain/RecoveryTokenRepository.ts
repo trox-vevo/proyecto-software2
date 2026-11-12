@@ -1,11 +1,11 @@
 export interface NewRecoveryToken {
-  userId: string;
+  userId: number;
   tokenHash: string;
   expiresAt: string;
 }
 
 export interface RecoveryTokenRepository {
-  invalidateRecoveryTokens(userId: string, exceptId?: number): void;
+  invalidateRecoveryTokens(userId: number, exceptId?: number): void;
   createRecoveryToken(token: NewRecoveryToken): number;
   deleteRecoveryToken(id: number): void;
   hasValidRecoveryToken(tokenHash: string, now: string): boolean;

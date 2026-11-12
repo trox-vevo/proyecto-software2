@@ -19,6 +19,10 @@ import { createUserRouter } from "./registration/interface/userRoutes";
 import { AuthService } from "./auth/application/AuthService";
 import { AuthController } from "./auth/interface/AuthController";
 import { createAuthRouter } from "./auth/interface/authRoutes";
+import { optionalAuthMiddleware } from "./auth/interface/optionalAuthMiddleware";
+import { ProAccessService } from "./auth/application/ProAccessService";
+import { ProAccessMiddleware } from "./auth/interface/ProAccessMiddleware";
+import { RiskRatingFilter } from "./simulation/application/RiskRatingFilter";
 import type { RecoveryTokenRepository } from "./recovery/domain/RecoveryTokenRepository";
 import {
   PasswordRecoveryService,
@@ -29,31 +33,65 @@ import { createPasswordRecoveryRouter } from "./recovery/interface/passwordRecov
 import { PasswordResetService } from "./recovery/application/PasswordResetService";
 import { PasswordResetController } from "./recovery/interface/PasswordResetController";
 
+import { PLAN_FEATURES, PLANS } from "./plans/Plan";
+import { createCheckoutRouter } from "./checkout/checkoutRoutes";
+import { SolvencyReportService } from "./reports/application/SolvencyReportService";
+import { PdfKitGenerator } from "./reports/infrastructure/PdfKitGenerator";
+import { ReportController } from "./reports/interface/ReportController";
+import { CheckoutController } from "./checkout/CheckoutController";
+import { MockPaymentService } from "./checkout/MockPaymentService";
+import { PaymentProcessingService } from "./checkout/PaymentProcessingService";
+import { createFavoriteRouter } from "./favorites/interface/favoriteRoutes";
+import type { FavoriteService } from "./favorites/application/FavoriteService";
+import type { ResolveUser } from "./favorites/domain/Favorite";
+
+export interface Sprint3Dependencies {
+  resolveUser?: ResolveUser;
+  favoriteService?: FavoriteService;
+}
+
+
 const PERFIL_DEMO_ID = "usuario-demo";
 
 export function createApp(
   productRepository: FinancialProductRepository,
-  userOrProfileRepository?: UserRepository | RepositorioPerfiles,
+  userOrProfileRepository?: UserRepository | RepositorioPerfiles | Sprint3Dependencies,
   recoveryTokenRepository?: RecoveryTokenRepository,
   recoveryEmailService?: RecoveryEmailService,
   profileRepository: RepositorioPerfiles = new RepositorioPerfilesJson(),
+  sprint3Dependencies: Sprint3Dependencies = {},
 ) {
   const isUserRepository = (
-    repository: UserRepository | RepositorioPerfiles,
+    repository: UserRepository | RepositorioPerfiles | Sprint3Dependencies,
   ): repository is UserRepository => "findByEmail" in repository;
   const userRepository =
     userOrProfileRepository && isUserRepository(userOrProfileRepository)
       ? userOrProfileRepository
       : undefined;
+  const isProfileRepository = (
+    repository: UserRepository | RepositorioPerfiles | Sprint3Dependencies,
+  ): repository is RepositorioPerfiles => "buscarPorId" in repository;
   const selectedProfileRepository =
-    userOrProfileRepository && !isUserRepository(userOrProfileRepository)
+    userOrProfileRepository && isProfileRepository(userOrProfileRepository)
       ? userOrProfileRepository
       : profileRepository;
+  const dependencies = userOrProfileRepository && !isUserRepository(userOrProfileRepository) && !isProfileRepository(userOrProfileRepository)
+    ? userOrProfileRepository
+    : sprint3Dependencies;
 
   const app = express();
   app.use(cors());
   app.use(express.json());
+  app.use("/api", optionalAuthMiddleware);
   app.use("/api/ahorros", ahorrosRouter);
+  app.get("/api/plans", (_req, res) => res.json({ plans: PLANS, features: PLAN_FEATURES }));
+  // US33: sin repositorio de usuarios (algunas pruebas), nadie puede pagar (401).
+  const checkoutController = new CheckoutController(new PaymentProcessingService(
+    new MockPaymentService(),
+    userRepository ?? { findById: () => null, activatePro: () => {} },
+  ));
+  app.use("/api/checkout", createCheckoutRouter(checkoutController));
+  app.use("/api/favorites", createFavoriteRouter(dependencies.resolveUser ?? (async () => null), dependencies.favoriteService));
   const profileService = new ServicioPerfiles(selectedProfileRepository);
 
   app.get("/api/perfil", (_req, res) => {
@@ -68,8 +106,23 @@ export function createApp(
     res.json({ status: "ok" });
   });
 
+  // US27: una sola regla de acceso Pro para el informe (403) y la simulación (oculta la calificación).
+  // Sin repositorio de usuarios (algunas pruebas), nadie es Pro.
+  const proAccessService = new ProAccessService(userRepository ?? { findById: () => null });
+  const proAccessMiddleware = new ProAccessMiddleware(proAccessService);
+  app.use("/api/risk-reports", proAccessMiddleware.handle); // protege la ruta de la US26
+
+  // US30: Reporte de Solvencia en PDF, solo Pro (401/403 con la misma regla de la US27).
+  app.use("/api/reports", proAccessMiddleware.handle);
+  const reportController = new ReportController(new SolvencyReportService(
+    new FixedDepositSimulationService(productRepository),
+    new PdfKitGenerator(),
+  ));
+  app.post("/api/reports/solvency", reportController.downloadSolvencyReport);
+
   const simulationController = new SimulationController(
     new FixedDepositSimulationService(productRepository),
+    new RiskRatingFilter(proAccessService),
   );
   app.post(
     "/api/simulations/fixed-deposits",

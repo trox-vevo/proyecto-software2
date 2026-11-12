@@ -78,7 +78,7 @@ describe("Filtros de resultados en la tabla de ahorros (US17/US18)", () => {
     await userEvent.click(screen.getByLabelText("Sin costo de mantenimiento"));
 
     expect(screen.getByText("Mostrando 0 de 1 opciones")).toBeInTheDocument();
-    expect(screen.getByText("No hay cuentas que mostrar.")).toBeInTheDocument();
+    expect(screen.getByText("Sin resultados")).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 

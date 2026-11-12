@@ -7,12 +7,13 @@ import { createApp } from "../../../src/app";
 import { FinancialProduct } from "../../../src/simulation/domain/FinancialProduct";
 import { DigitalChannels } from "../../../src/simulation/domain/DigitalChannels";
 import { ServiceChannels } from "../../../src/simulation/domain/ServiceChannels";
+import { crearCoberturaNoVerificada } from "../../../src/fsd/CoberturaFSD";
 
 // Prueba de integración: app real en un puerto libre, con datos propios (no los de demostración).
 const products = [
-  new FinancialProduct(1, "Entidad 1", new Decimal("0.055"), new Decimal("500"), new ServiceChannels(true, true), new DigitalChannels(true, true)),
-  new FinancialProduct(2, "Entidad 2", new Decimal("0.0575"), new Decimal("1000"), new ServiceChannels(true, false), new DigitalChannels(true, false)),
-  new FinancialProduct(3, "Entidad 3", new Decimal("0.042"), new Decimal("500"), new ServiceChannels(false, true), new DigitalChannels(false, true)),
+  new FinancialProduct(1, "Entidad 1", new Decimal("0.055"), new Decimal("500"), new ServiceChannels(true, true), undefined, new DigitalChannels(true, true)),
+  new FinancialProduct(2, "Entidad 2", new Decimal("0.0575"), new Decimal("1000"), new ServiceChannels(true, false), undefined, new DigitalChannels(true, false)),
+  new FinancialProduct(3, "Entidad 3", new Decimal("0.042"), new Decimal("500"), new ServiceChannels(false, true), undefined, new DigitalChannels(false, true)),
 ];
 const app = createApp({
   findFixedDepositsByDepartment: async (department) => (department === "Lima" ? products : []),
@@ -54,30 +55,39 @@ describe("POST /api/simulations/fixed-deposits", () => {
     expect(await response.json()).toEqual([
       {
         productId: 2,
+        minimumAmount: "1000.00",
+        coberturaFSD: crearCoberturaNoVerificada(),
         entityName: "Entidad 2",
         tea: "0.0575",
         totalInterest: "57.50",
         monthlyInterest: null,
         channels: { hasPhysicalBranches: true, hasAtms: false },
         digitalChannels: { hasDigitalBanking: true, hasMobileApp: false },
+        riskRating: null,
       },
       {
         productId: 1,
+        minimumAmount: "500.00",
+        coberturaFSD: crearCoberturaNoVerificada(),
         entityName: "Entidad 1",
         tea: "0.055",
         totalInterest: "55.00",
         monthlyInterest: null,
         channels: { hasPhysicalBranches: true, hasAtms: true },
         digitalChannels: { hasDigitalBanking: true, hasMobileApp: true },
+        riskRating: null,
       },
       {
         productId: 3,
+        minimumAmount: "500.00",
+        coberturaFSD: crearCoberturaNoVerificada(),
         entityName: "Entidad 3",
         tea: "0.042",
         totalInterest: "42.00",
         monthlyInterest: null,
         channels: { hasPhysicalBranches: false, hasAtms: true },
         digitalChannels: { hasDigitalBanking: false, hasMobileApp: true },
+        riskRating: null,
       },
     ]);
   });
@@ -92,11 +102,12 @@ describe("POST /api/simulations/fixed-deposits", () => {
 
   it("200: en MONTHLY devuelve monthlyInterest con 2 decimales", async () => {
     const response = await post({ ...validRequest, paymentMode: "MONTHLY" });
-    const results: { monthlyInterest: string }[] = await response.json();
+    const results: { monthlyInterest: string; minimumAmount: string }[] = await response.json();
 
     expect(response.status).toBe(200);
     expect(results).toHaveLength(3);
     for (const result of results) {
+      expect(result.minimumAmount).toMatch(/^\d+\.\d{2}$/);
       expect(result.monthlyInterest).toMatch(/^\d+\.\d{2}$/);
     }
   });

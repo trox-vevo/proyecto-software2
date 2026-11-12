@@ -12,7 +12,8 @@ interface CuentaJson {
   fechaApertura: string;
   monthlyMaintenanceFee: string;
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
-  digitalChannels: { hasDigitalBanking: boolean; hasMobileApp: boolean };
+  coberturaFSD?: unknown;
+  digitalChannels?: { hasDigitalBanking: boolean; hasMobileApp: boolean };
 }
 
 /**
@@ -45,7 +46,8 @@ export class RepositorioCuentas {
         fecha,
         c.monthlyMaintenanceFee,
         new ServiceChannels(c.channels.hasPhysicalBranches, c.channels.hasAtms),
-        new DigitalChannels(c.digitalChannels.hasDigitalBanking, c.digitalChannels.hasMobileApp),
+        c.coberturaFSD,
+        new DigitalChannels(c.digitalChannels?.hasDigitalBanking ?? false, c.digitalChannels?.hasMobileApp ?? false),
       );
     });
   }

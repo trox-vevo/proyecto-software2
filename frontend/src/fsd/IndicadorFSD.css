@@ -1,0 +1,6 @@
+.fsd-indicador { min-width: 12rem; color: var(--text-h); }
+.fsd-indicador small, .fsd-indicador a { display: block; font-size: .78rem; line-height: 1.45; margin-top: .3rem; }
+.fsd-indicador a { color: var(--accent); }
+.fsd-cubierto { border-left: 3px solid #308756; padding-left: .5rem; }
+.fsd-no_cubierto { border-left: 3px solid #c33737; padding-left: .5rem; }
+.fsd-no_verificado { border-left: 3px solid var(--border); padding-left: .5rem; }

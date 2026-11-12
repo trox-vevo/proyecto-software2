@@ -5,7 +5,7 @@ import { RegistrationForm } from "./RegistrationForm";
 import { RegistrationRoute } from "./RegistrationRoute";
 import App from "../App";
 
-afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, "", "/"); });
+afterEach(() => { vi.unstubAllGlobals(); localStorage.clear(); window.history.replaceState(null, "", "/"); });
 async function complete(email = "estudiante@example.com") {
   await userEvent.type(screen.getByLabelText("Nombre de usuario"), "Estudiante");
   await userEvent.type(screen.getByLabelText("Correo electrónico"), email);
@@ -28,7 +28,7 @@ describe("Formulario de registro", () => {
     expect(screen.getByText("Las contraseñas no coinciden.")).toBeInTheDocument();
   });
   it("envía el contrato esperado y redirige a /login después de un 201", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 201 })); vi.stubGlobal("fetch", fetchMock);
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ user: { id: 1 } }), { status: 201 })); vi.stubGlobal("fetch", fetchMock);
     window.history.replaceState(null, "", "/registro");
     render(<RegistrationRoute><p>Inicio</p></RegistrationRoute>); await complete("ESTUDIANTE@example.com");
     await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
@@ -50,7 +50,7 @@ describe("Formulario de registro", () => {
     expect(screen.getByRole("button", { name: "Crear cuenta" })).toBeEnabled();
   });
   it("permite reintentar después de una caída de red", async () => {
-    const fetchMock = vi.fn().mockRejectedValueOnce(new TypeError("network")).mockResolvedValueOnce(new Response("{}", { status: 201 }));
+    const fetchMock = vi.fn().mockRejectedValueOnce(new TypeError("network")).mockResolvedValueOnce(new Response(JSON.stringify({ user: { id: 1 } }), { status: 201 }));
     vi.stubGlobal("fetch", fetchMock);
     const success = vi.fn(); render(<RegistrationForm onRegistered={success} />); await complete();
     await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
@@ -82,13 +82,13 @@ describe("Formulario de registro", () => {
     const fetchMock = vi.fn(async (url: string, options?: RequestInit) => {
       if (url.includes("/api/users/register")) {
         expect(options?.method).toBe("POST");
-        return new Response("{}", { status: 201 });
+        return new Response(JSON.stringify({ user: { id: 1 } }), { status: 201 });
       }
       return new Response(JSON.stringify({ resultados: [] }));
     });
     vi.stubGlobal("fetch", fetchMock);
     render(<App />);
-    await screen.findByText("No hay cuentas que mostrar.");
+    await screen.findByText("Sin resultados");
     await userEvent.click(screen.getByRole("link", { name: "Crear cuenta" }));
     await complete();
     await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
@@ -106,6 +106,52 @@ describe("Formulario de registro", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo crear tu cuenta");
     expect(success).not.toHaveBeenCalled();
   });
+  it.each(["uuid-anterior", "1", 0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, null])("rechaza una respuesta 201 con id incompatible %s", async (id) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ user: { id } }), { status: 201 })));
+    const success = vi.fn();
+    render(<RegistrationForm onRegistered={success} />);
+    await complete();
+    await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("identificador de usuario válido");
+    expect(success).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Crear cuenta" })).toBeEnabled();
+  });
+  it("requiere un usuario con id numérico en la respuesta de alta", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 201 })));
+    const success = vi.fn();
+    render(<RegistrationForm onRegistered={success} />);
+    await complete();
+    await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("identificador de usuario válido");
+    expect(success).not.toHaveBeenCalled();
+  });
+  it("guarda la sesión del login y la restaura al volver a cargar la ruta", async () => {
+    const session = {
+      id: "session-id",
+      userId: 42,
+      tokenJwt: "token-valido",
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      plan: "PRO",
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ session, plan: "PRO" }), { status: 200 }),
+    ));
+    window.history.replaceState(null, "", "/login");
+    const firstRender = render(<RegistrationRoute><p>Inicio</p></RegistrationRoute>);
+    await userEvent.type(screen.getByLabelText("Correo electrónico"), "pro@example.com");
+    await userEvent.type(screen.getByLabelText("Contraseña"), "Clave-segura-123");
+    await userEvent.click(screen.getByRole("button", { name: "Ingresar" }));
+    expect(await screen.findByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem("yupay.auth.session")!)).toEqual(session);
+    expect(screen.getByText("Plan: PRO")).toBeInTheDocument();
+
+    firstRender.unmount();
+    window.history.replaceState(null, "", "/");
+    render(<RegistrationRoute><p>Inicio</p></RegistrationRoute>);
+    expect(screen.getByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
+    expect(localStorage.getItem("yupay.auth.session")).toBeNull();
+  });
   it("abandonar el formulario cancela la espera y evita una redirección tardía", async () => {
     let resolve!: (response: Response) => void;
     let signal: AbortSignal | null | undefined;
@@ -119,7 +165,7 @@ describe("Formulario de registro", () => {
     await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
     await userEvent.click(screen.getByRole("link", { name: "Volver al inicio" }));
     expect(signal?.aborted).toBe(true);
-    await act(async () => { resolve(new Response("{}", { status: 201 })); });
+    await act(async () => { resolve(new Response(JSON.stringify({ user: { id: 1 } }), { status: 201 })); });
     expect(window.location.pathname).toBe("/");
     expect(screen.getByText("Simulador")).toBeInTheDocument();
     expect(screen.queryByText("Cuenta creada correctamente.")).not.toBeInTheDocument();

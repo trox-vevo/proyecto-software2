@@ -2,7 +2,7 @@ import type { DigitalChannelsDto } from "./resultFilters";
 import "./DigitalChannelIcons.css";
 
 interface Props {
-  channels: DigitalChannelsDto;
+  channels?: DigitalChannelsDto;
 }
 
 // Dibujos simples en SVG, sin dependencias: una computadora y un celular
@@ -24,24 +24,26 @@ const siNo = (valor: boolean) => (valor ? "sí" : "no");
 
 /** US19 (TS-57): en cada fila, un ícono por canal digital. En gris si la entidad no lo tiene. */
 export function DigitalChannelIcons({ channels }: Props) {
+  // Si el dato no llega, se toma como que la entidad no tiene el canal
+  const { hasDigitalBanking = false, hasMobileApp = false } = channels ?? {};
   // Texto que leen los lectores de pantalla, porque los íconos solos no se entienden
   function getAccessibleLabel() {
-    return `Banca digital: ${siNo(channels.hasDigitalBanking)}. App móvil: ${siNo(channels.hasMobileApp)}.`;
+    return `Banca digital: ${siNo(hasDigitalBanking)}. App móvil: ${siNo(hasMobileApp)}.`;
   }
 
   function renderIcons() {
     return (
       <span className="canales-digitales" role="img" aria-label={getAccessibleLabel()}>
         <span
-          className={channels.hasDigitalBanking ? "canal canal-si" : "canal canal-no"}
-          title={`Banca digital: ${siNo(channels.hasDigitalBanking)}`}
+          className={hasDigitalBanking ? "canal canal-si" : "canal canal-no"}
+          title={`Banca digital: ${siNo(hasDigitalBanking)}`}
           aria-hidden="true"
         >
           {ICONO_BANCA}
         </span>
         <span
-          className={channels.hasMobileApp ? "canal canal-si" : "canal canal-no"}
-          title={`App móvil: ${siNo(channels.hasMobileApp)}`}
+          className={hasMobileApp ? "canal canal-si" : "canal canal-no"}
+          title={`App móvil: ${siNo(hasMobileApp)}`}
           aria-hidden="true"
         >
           {ICONO_APP}

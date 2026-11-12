@@ -22,6 +22,7 @@ const product = (
     new Decimal(tea),
     new Decimal(minimumAmount),
     new ServiceChannels(hasPhysicalBranches, hasAtms),
+    undefined,
     new DigitalChannels(hasDigitalBanking, hasMobileApp),
   );
 

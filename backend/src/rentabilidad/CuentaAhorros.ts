@@ -1,6 +1,7 @@
 import { Decimal } from "decimal.js";
 import { DigitalChannels } from "../simulation/domain/DigitalChannels";
 import { ServiceChannels } from "../simulation/domain/ServiceChannels";
+import { validarCoberturaFSD, type CoberturaFSD } from "../fsd/CoberturaFSD";
 
 /** Cuenta de ahorros del cliente. Solo guarda datos, sin lógica. */
 export class CuentaAhorros {
@@ -14,6 +15,7 @@ export class CuentaAhorros {
   readonly monthlyMaintenanceFee: Decimal;
   /** US18: canales de atención física de la entidad. */
   readonly channels: ServiceChannels;
+  readonly coberturaFSD: CoberturaFSD;
   /** US19: banca digital y app móvil de la entidad. */
   readonly digitalChannels: DigitalChannels;
 
@@ -25,7 +27,8 @@ export class CuentaAhorros {
     fechaApertura: Date,
     monthlyMaintenanceFee: Decimal.Value,
     channels: ServiceChannels,
-    digitalChannels: DigitalChannels,
+    coberturaFSD?: unknown,
+    digitalChannels: DigitalChannels = new DigitalChannels(false, false),
   ) {
     this.id = id;
     this.titular = titular;
@@ -34,6 +37,7 @@ export class CuentaAhorros {
     this.fechaApertura = fechaApertura;
     this.monthlyMaintenanceFee = new Decimal(monthlyMaintenanceFee);
     this.channels = channels;
+    this.coberturaFSD = validarCoberturaFSD(coberturaFSD);
     this.digitalChannels = digitalChannels;
   }
 }

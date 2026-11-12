@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { VistaObservable } from "../monitor/tipos";
 import { aplicarRiesgoMock } from "../semaforo/riesgoMock";
 import type { FilaConRiesgo } from "../semaforo/tipos";
+import { fetchWithAuth } from "../auth/session";
 import type { ColumnaTabla, CriterioOrden, EstadoTabla, FilaAhorro } from "./tipos";
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -37,7 +38,7 @@ export function useTablaAhorrosController() {
     const parametros = new URLSearchParams({ dias: String(DIAS), criterio: consulta.criterio });
     marcas.current = { inicioCargaMs: performance.now(), finCargaMs: null, renderListoMs: null };
 
-    fetch(`${API_URL}/api/ahorros/rentabilidad?${parametros}`, { signal: controlador.signal })
+    fetchWithAuth(`${API_URL}/api/ahorros/rentabilidad?${parametros}`, { signal: controlador.signal })
       .then(async (respuesta) => {
         if (!respuesta.ok) {
           const cuerpo = await respuesta.json().catch(() => null);
@@ -103,6 +104,7 @@ export function useTablaAhorrosController() {
     filas: carga?.filas ?? [],
     mensajeError: carga?.error,
     criterioActivo: consulta.criterio,
+    dias: DIAS,
     vista,
     onOrdenar,
     reintentar,
