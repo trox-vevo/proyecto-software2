@@ -8,7 +8,7 @@ import { SimulationResult } from "../domain/SimulationResult";
 import { validarCoberturaFSD } from "../../fsd/CoberturaFSD";
 
 // Monto en soles como string: no negativo y con máximo 2 decimales
-const AMOUNT_FORMAT = /^\d+(\.\d{1,2})?$/;
+export const AMOUNT_FORMAT = /^\d+(\.\d{1,2})?$/;
 
 const isPaymentMode = (value: unknown): value is PaymentMode =>
   Object.values(PaymentMode).includes(value as PaymentMode);
