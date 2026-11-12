@@ -14,6 +14,8 @@ export default defineConfig({
         "src/auth/**/ProAccess*.ts": { lines: 80, functions: 80, branches: 80, statements: 80 },
         // US33
         "src/checkout/**": { lines: 80, functions: 80, branches: 80, statements: 80 },
+        // US30
+        "src/reports/**": { lines: 80, functions: 80, branches: 80, statements: 80 },
       },
     },
   },
