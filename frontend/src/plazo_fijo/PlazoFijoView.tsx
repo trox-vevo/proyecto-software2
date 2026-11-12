@@ -1,3 +1,4 @@
+import { DownloadReportButton } from "./DownloadReportButton";
 import { FormularioPlazoFijo } from "./FormularioPlazoFijo";
 import { TablaResultadosPlazoFijo } from "./TablaResultadosPlazoFijo";
 import { usePlazoFijoController } from "./usePlazoFijoController";
@@ -16,6 +17,10 @@ export function PlazoFijoView({ onViewPlans }: { onViewPlans?: () => void }) {
       {flujo.simulacion && (
         <TablaResultadosPlazoFijo resultados={flujo.simulacion.resultados}
           modalidad={flujo.simulacion.parametros.paymentMode} onViewPlans={onViewPlans} />
+      )}
+      {/* US30: exportar los resultados a PDF (el botón se oculta solo si el usuario no es Pro) */}
+      {flujo.simulacion && flujo.simulacion.resultados.length > 0 && (
+        <DownloadReportButton parametros={flujo.simulacion.parametros} />
       )}
     </section>
   );
