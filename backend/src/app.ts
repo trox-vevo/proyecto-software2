@@ -35,6 +35,9 @@ import { PasswordResetController } from "./recovery/interface/PasswordResetContr
 
 import { PLAN_FEATURES, PLANS } from "./plans/Plan";
 import { createCheckoutRouter } from "./checkout/checkoutRoutes";
+import { SolvencyReportService } from "./reports/application/SolvencyReportService";
+import { PdfKitGenerator } from "./reports/infrastructure/PdfKitGenerator";
+import { ReportController } from "./reports/interface/ReportController";
 import { CheckoutController } from "./checkout/CheckoutController";
 import { MockPaymentService } from "./checkout/MockPaymentService";
 import { PaymentProcessingService } from "./checkout/PaymentProcessingService";
@@ -108,6 +111,14 @@ export function createApp(
   const proAccessService = new ProAccessService(userRepository ?? { findById: () => null });
   const proAccessMiddleware = new ProAccessMiddleware(proAccessService);
   app.use("/api/risk-reports", proAccessMiddleware.handle); // protege la ruta de la US26
+
+  // US30: Reporte de Solvencia en PDF, solo Pro (401/403 con la misma regla de la US27).
+  app.use("/api/reports", proAccessMiddleware.handle);
+  const reportController = new ReportController(new SolvencyReportService(
+    new FixedDepositSimulationService(productRepository),
+    new PdfKitGenerator(),
+  ));
+  app.post("/api/reports/solvency", reportController.downloadSolvencyReport);
 
   const simulationController = new SimulationController(
     new FixedDepositSimulationService(productRepository),

@@ -24,7 +24,8 @@
 }
 
 .plazo-formulario button,
-.instrumentos button {
+.instrumentos button,
+.reporte-pdf button {
   padding: 0.65rem 1rem;
   border: 1px solid var(--accent-border);
   border-radius: 6px;
@@ -34,7 +35,8 @@
   cursor: pointer;
 }
 
-.plazo-formulario button:disabled { opacity: 0.65; cursor: wait; }
+.plazo-formulario button:disabled,
+.reporte-pdf button:disabled { opacity: 0.65; cursor: wait; }
 /* US07: aviso en rojo debajo del monto */
 .plazo-formulario .plazo-error { margin: 0.35rem 0 0; color: #e5484d; font-weight: 600; }
 .plazo-formulario input[aria-invalid="true"] { border-color: #e5484d; }
