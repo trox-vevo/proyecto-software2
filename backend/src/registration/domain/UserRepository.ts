@@ -8,6 +8,7 @@ export interface UserRepository {
   create(user: NewUser): User;
   // US33 (TS-101): plan PRO y vencimiento en una sola escritura atómica.
   activatePro(id: number, expiresAt: string): void;
+  requestProCancellation(id: number): void;
 }
 
 export class DuplicateEmailError extends Error {

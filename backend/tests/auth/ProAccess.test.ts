@@ -19,12 +19,16 @@ const user = (id: number, plan: UserPlan): User => ({
   passwordHash: "scrypt$00$00",
   plan,
   createdAt: "2026-11-08T00:00:00.000Z",
+  planExpiresAt: null,
 });
 const users = [user(1, "BASICO"), user(2, "PRO")];
 const repository: UserRepository = {
   findByEmail: (email) => users.find((u) => u.email === email) ?? null,
   findById: (id) => users.find((u) => u.id === id) ?? null,
   create: () => {
+    throw new Error("no se usa en estas pruebas");
+  },
+  requestProCancellation: () => {
     throw new Error("no se usa en estas pruebas");
   },
 };
@@ -34,6 +38,8 @@ describe("hasProAccess (regla del dominio)", () => {
   it("solo el plan PRO tiene acceso", () => {
     expect(hasProAccess(user(1, "PRO"))).toBe(true);
     expect(hasProAccess(user(1, "BASICO"))).toBe(false);
+    expect(hasProAccess({ ...user(1, "PRO"), planExpiresAt: new Date(Date.now() - 1).toISOString() })).toBe(false);
+    expect(hasProAccess({ ...user(1, "PRO"), planExpiresAt: new Date(Date.now() + 1_000).toISOString() })).toBe(true);
   });
 });
 

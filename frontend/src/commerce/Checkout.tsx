@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { API_URL } from "./types";
-import { fetchWithAuth } from "../auth/session";
+import { fetchWithAuth, getStoredSession } from "../auth/session";
 import { sessionStore } from "../pro_access/SessionStore";
 import { formatDemoCardNumber, validateDemoCard } from "./demoCards";
 import type { DemoCardInput, DemoScenarioId } from "./demoCards";
@@ -29,6 +29,14 @@ interface DemoResult {
   declineReason: string | null;
   plan: "BASICO" | "PRO"; // US33: plan del usuario tras el pago
   planExpiresAt: string | null;
+}
+
+interface CancellationResult {
+  status: "CANCELLATION_SCHEDULED";
+  plan: "PRO";
+  planExpiresAt: string;
+  planCancellationRequested: true;
+  message: string;
 }
 
 type CheckoutErrors = Partial<
@@ -127,6 +135,19 @@ function isDemoResult(
         (data.planExpiresAt === null || isIsoDate(data.planExpiresAt));
 }
 
+function isCancellationResult(value: unknown): value is CancellationResult {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const data = value as Record<string, unknown>;
+  return (
+    data.status === "CANCELLATION_SCHEDULED" &&
+    data.plan === "PRO" &&
+    isIsoDate(data.planExpiresAt) &&
+    data.planCancellationRequested === true &&
+    typeof data.message === "string" &&
+    Boolean(data.message.trim())
+  );
+}
+
 export function Checkout({
   onViewPlans,
   onReturnToApp = onViewPlans,
@@ -143,6 +164,10 @@ export function Checkout({
   const [errors, setErrors] = useState<CheckoutErrors>({});
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<DemoResult | null>(null);
+  const [cancelConfirmationOpen, setCancelConfirmationOpen] = useState(false);
+  const [cancelPending, setCancelPending] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelSuccess, setCancelSuccess] = useState<string | null>(null);
   const request = useRef<AbortController | null>(null);
   useEffect(() => {
     // pagehide también cubre la salida hacia BFCache, que puede conservar React montado.
@@ -203,6 +228,35 @@ export function Checkout({
     setErrors({ ...errors, [field]: undefined, form: undefined });
   }
 
+  async function cancelSubscription(): Promise<void> {
+    if (cancelPending) return;
+    setCancelPending(true);
+    setCancelError(null);
+    try {
+      const response = await fetchWithAuth(`${API_URL}/api/subscription/cancel`, { method: "POST" });
+      if (!response.ok) {
+        setCancelError(response.status === 401
+          ? "Inicia sesión para cancelar tu suscripción."
+          : response.status === 409
+            ? "No tienes una suscripción Pro activa."
+            : "No pudimos cancelar tu suscripción. Inténtalo nuevamente.");
+        return;
+      }
+      const data: unknown = await response.json();
+      if (!isCancellationResult(data)) {
+        setCancelError("No pudimos confirmar la cancelación. Inténtalo nuevamente.");
+        return;
+      }
+      sessionStore.scheduleCancellation(data.planExpiresAt);
+      setCancelSuccess(data.message);
+      setCancelConfirmationOpen(false);
+    } catch {
+      setCancelError("No se pudo conectar con el servicio. Inténtalo nuevamente.");
+    } finally {
+      setCancelPending(false);
+    }
+  }
+
   async function submitPayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (request.current || !config) return;
@@ -260,7 +314,9 @@ export function Checkout({
         return;
       }
       // Desbloqueo en tiempo real: RiskBadge y el resto de la app leen este plan.
-      if (data.outcome === "APPROVED") sessionStore.setPlan("PRO");
+      if (data.outcome === "APPROVED") {
+        sessionStore.setPlan("PRO", { planExpiresAt: data.planExpiresAt, planCancellationRequested: false });
+      }
       setResult(data);
     } catch {
       if (!controller.signal.aborted)
@@ -400,6 +456,42 @@ export function Checkout({
           Volver a planes
         </button>
       </div>
+      {sessionStore.isPro() && (
+        <section className="checkout-suscripcion" aria-labelledby="checkout-suscripcion-title">
+          <h2 id="checkout-suscripcion-title">Tu suscripción Pro</h2>
+          {getStoredSession()?.planCancellationRequested ? (
+            <p role="status">
+              {cancelSuccess ?? "La cancelación está programada para el final de tu período Pro."} Mantendrás el acceso Pro hasta{" "}
+              <strong>
+                {isIsoDate(getStoredSession()?.planExpiresAt)
+                  ? new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(new Date(getStoredSession()!.planExpiresAt!))
+                  : "el final del período actual"}
+              </strong>.
+            </p>
+          ) : (
+            <>
+              <p>Puedes cancelar ahora y conservarás los beneficios Pro hasta el final del período pagado.</p>
+              {cancelSuccess && <p role="status">{cancelSuccess}</p>}
+              {cancelError && <p role="alert">{cancelError}</p>}
+              {cancelConfirmationOpen ? (
+                <div className="checkout-cancelacion-confirmacion">
+                  <p>¿Confirmas que quieres programar la cancelación de tu suscripción Pro?</p>
+                  <button type="button" disabled={cancelPending} onClick={() => void cancelSubscription()}>
+                    {cancelPending ? "Procesando…" : "Confirmar cancelación"}
+                  </button>
+                  <button type="button" disabled={cancelPending} onClick={() => setCancelConfirmationOpen(false)}>
+                    Mantener mi suscripción
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => { setCancelError(null); setCancelConfirmationOpen(true); }}>
+                  Cancelar suscripción
+                </button>
+              )}
+            </>
+          )}
+        </section>
+      )}
       {configError ? (
         <div role="alert" className="comercio-aviso">
           <p>No pudimos cargar la página de pago.</p>

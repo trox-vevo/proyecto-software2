@@ -32,6 +32,18 @@ en `backend/.env` y `FRONTEND_URL=http://localhost:5173`. El backend imprimirá
 el enlace de recuperación en su terminal. Este modo se rechaza si
 `NODE_ENV=production`; no debe habilitarse en despliegues reales.
 
+## Suscripciones Pro
+
+El backend degrada las suscripciones vencidas desde el job de mantenimiento y
+registra el motivo y la fecha en el historial consultable por el usuario en
+`GET /api/subscription/history`. Un fallo definitivo de renovación se recibe en
+`POST /api/subscription/renewal-payment-failure`, autenticado mediante el
+encabezado `X-Subscription-Webhook-Secret`. Configura
+`SUBSCRIPTION_WEBHOOK_SECRET` con un secreto aleatorio del entorno; el cuerpo
+incluye `eventId`, `userId`, `periodExpiresAt` y `occurredAt`. Los eventos
+duplicados se procesan una sola vez. Un rechazo de checkout de compra inicial
+no se considera por sí solo un fallo de renovación.
+
 ## Perfil de usuario
 
 El perfil de demostración se sirve mediante `GET /api/perfil` y se actualiza con

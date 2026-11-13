@@ -16,6 +16,13 @@ const result = (outcome: "APPROVED" | "DECLINED" = "APPROVED") => ({
   plan: outcome === "APPROVED" ? "PRO" : "BASICO", planExpiresAt: outcome === "APPROVED" ? "2026-12-06T19:00:00.000Z" : null,
 });
 const successfulResponse = (outcome: "APPROVED" | "DECLINED" = "APPROVED") => new Response(JSON.stringify(result(outcome)));
+const cancellationResponse = (planExpiresAt: string) => new Response(JSON.stringify({
+  status: "CANCELLATION_SCHEDULED",
+  plan: "PRO",
+  planExpiresAt,
+  planCancellationRequested: true,
+  message: "Tu suscripción Pro se cancelará al finalizar el período actual.",
+}));
 const labels = ["Nombre o razón social", "Correo de facturación", "Nombre del titular", "Número de tarjeta", "Fecha de vencimiento", "CVV"];
 const futureExpiry = `12/${String(new Date().getFullYear() + 2).slice(-2)}`;
 function fill(number = "0000111122223333", decline = false) {
@@ -375,5 +382,56 @@ describe("US33, procesamiento de pago y activación del Plan Pro", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Inicia sesión para suscribirte al Plan Pro.");
     expect(alert).not.toHaveTextContent("AUTHENTICATION_REQUIRED");
+  });
+});
+
+describe("TS-128/TS-130, cancelación de la suscripción Pro", () => {
+  const proSession = () => saveAuthSession({
+    id: "s1",
+    userId: 7,
+    tokenJwt: "token-pro",
+    expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    plan: "PRO",
+    planExpiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+    planCancellationRequested: false,
+  });
+  afterEach(() => clearAuthSession());
+
+  it("pide confirmación, permite desistir y no llama al endpoint", async () => {
+    proSession();
+    const fetchMock = vi.fn().mockResolvedValueOnce(configResponse());
+    await open(fetchMock);
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar suscripción" }));
+    expect(screen.getByText(/¿Confirmas que quieres programar la cancelación/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Mantener mi suscripción" }));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(sessionStore.isPro()).toBe(true);
+    expect(screen.getByRole("button", { name: "Cancelar suscripción" })).toBeInTheDocument();
+  });
+
+  it("confirma la cancelación al final del período y mantiene Pro hasta esa fecha", async () => {
+    proSession();
+    const expiresAt = new Date(Date.now() + 86_400_000).toISOString();
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(configResponse())
+      .mockResolvedValueOnce(cancellationResponse(expiresAt));
+    await open(fetchMock);
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar suscripción" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar cancelación" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent("Tu suscripción Pro se cancelará al finalizar el período actual.");
+    expect(sessionStore.isPro()).toBe(true);
+    expect(JSON.parse(localStorage.getItem("yupay.auth.session") ?? "{}")).toMatchObject({
+      plan: "PRO",
+      planExpiresAt: expiresAt,
+      planCancellationRequested: true,
+    });
+    const [url, request] = fetchMock.mock.calls[1];
+    expect(url).toContain("/api/subscription/cancel");
+    expect(request.method).toBe("POST");
+    expect(new Headers(request.headers).get("Authorization")).toBe("Bearer token-pro");
   });
 });

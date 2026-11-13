@@ -4,12 +4,28 @@ import { getStoredSession, saveAuthSession, type UserPlan } from "../auth/sessio
 // No crea otro almacenamiento: lee y actualiza la sesión que guarda el login (auth/session.ts).
 export class SessionStore {
   isPro(): boolean {
-    return getStoredSession()?.plan === "PRO"; // sin sesión = no Pro
+    const session = getStoredSession();
+    if (session?.plan !== "PRO") return false;
+    return session.planExpiresAt == null || Date.parse(session.planExpiresAt) > Date.now();
   }
 
-  setPlan(plan: UserPlan): void {
+  setPlan(
+    plan: UserPlan,
+    details?: { planExpiresAt: string | null; planCancellationRequested: boolean },
+  ): void {
     const session = getStoredSession();
-    if (session) saveAuthSession({ ...session, plan });
+    if (!session) return;
+    saveAuthSession({
+      ...session,
+      plan,
+      ...(details ?? (plan === "BASICO"
+        ? { planExpiresAt: null, planCancellationRequested: false }
+        : {})),
+    });
+  }
+
+  scheduleCancellation(planExpiresAt: string): void {
+    this.setPlan("PRO", { planExpiresAt, planCancellationRequested: true });
   }
 }
 

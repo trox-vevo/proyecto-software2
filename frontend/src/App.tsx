@@ -15,6 +15,7 @@ import { ProfileEditor } from "./profile/ProfileEditor";
 import { RegistrationRoute } from "./registration/RegistrationRoute";
 import { PlanComparison } from "./commerce/PlanComparison";
 import { Checkout } from "./commerce/Checkout";
+import { SubscriptionStatusBanner } from "./commerce/SubscriptionStatusBanner";
 import "./commerce/commerce.css";
 import { GlosarioFinanciero } from "./glosario/GlosarioFinanciero";
 
@@ -40,6 +41,7 @@ function CommerceApp() {
       <a href="/" aria-current={path === "/" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/"); }}>Inicio</a>
       <a href="/planes" aria-current={path === "/planes" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/planes"); }}>Planes</a>
     </nav>
+    <SubscriptionStatusBanner />
     {path === "/planes" ? <PlanComparison onCheckout={() => navigate("/checkout")} />
       : path === "/checkout" ? <Checkout onViewPlans={() => navigate("/planes")} onReturnToApp={() => navigate("/")} />
         : <FinanceApp onViewPlans={() => navigate("/planes")} />}
