@@ -23,6 +23,8 @@ import { optionalAuthMiddleware } from "./auth/interface/optionalAuthMiddleware"
 import { ProAccessService } from "./auth/application/ProAccessService";
 import { ProAccessMiddleware } from "./auth/interface/ProAccessMiddleware";
 import { RiskRatingFilter } from "./simulation/application/RiskRatingFilter";
+import { RiskEvaluationService } from "./risk/application/RiskEvaluationService";
+import { JsonSbsRiskRepository } from "./risk/infrastructure/JsonSbsRiskRepository";
 import type { RecoveryTokenRepository } from "./recovery/domain/RecoveryTokenRepository";
 import {
   PasswordRecoveryService,
@@ -112,16 +114,20 @@ export function createApp(
   const proAccessMiddleware = new ProAccessMiddleware(proAccessService);
   app.use("/api/risk-reports", proAccessMiddleware.handle); // protege la ruta de la US26
 
+  // US25: calificación de riesgo de la SBS para cada resultado de plazo fijo
+  const sbsRiskRepository = new JsonSbsRiskRepository();
+  const riskEvaluationService = new RiskEvaluationService(sbsRiskRepository);
+
   // US30: Reporte de Solvencia en PDF, solo Pro (401/403 con la misma regla de la US27).
   app.use("/api/reports", proAccessMiddleware.handle);
   const reportController = new ReportController(new SolvencyReportService(
-    new FixedDepositSimulationService(productRepository),
+    new FixedDepositSimulationService(productRepository, riskEvaluationService),
     new PdfKitGenerator(),
   ));
   app.post("/api/reports/solvency", reportController.downloadSolvencyReport);
 
   const simulationController = new SimulationController(
-    new FixedDepositSimulationService(productRepository),
+    new FixedDepositSimulationService(productRepository, riskEvaluationService),
     new RiskRatingFilter(proAccessService),
   );
   app.post(
