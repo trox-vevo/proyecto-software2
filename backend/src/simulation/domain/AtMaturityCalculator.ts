@@ -29,6 +29,7 @@ export class AtMaturityCalculator implements InterestCalculator {
       product.channels,
       product.coberturaFSD,
       product.minimumAmount,
+      product.digitalChannels,
     );
   }
 }

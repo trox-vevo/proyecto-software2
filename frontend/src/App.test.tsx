@@ -13,6 +13,7 @@ const fila = (cuentaId: string, monthlyMaintenanceFee: string, hasPhysicalBranch
   fechaApertura: "10/01/2023",
   monthlyMaintenanceFee,
   channels: { hasPhysicalBranches, hasAtms },
+  digitalChannels: { hasDigitalBanking: true, hasMobileApp: true }, // US19: no influye en estos casos
 });
 const LIMA = [
   fila("A", "0.00", true, true),

@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { DigitalChannelIcons } from "../filters/DigitalChannelIcons";
 import type { ColumnaTabla, CriterioOrden, EstadoTabla } from "./tipos";
 import type { FilaConRiesgo } from "../semaforo/tipos";
 import { SemaforoRiesgo } from "../semaforo/SemaforoRiesgo";
@@ -92,6 +93,7 @@ export function TablaAhorrosView({
                 </th>
               );
             })}
+            <th scope="col">Canales digitales</th>
             {favoritos && <th scope="col">Favoritos Pro</th>}
           </tr>
         </thead>
@@ -121,11 +123,15 @@ export function TablaAhorrosView({
                       )}
                     </td>
                   ))}
+                  {/* US19: íconos de banca digital y app móvil */}
+                  <td>
+                    <DigitalChannelIcons channels={fila.digitalChannels} />
+                  </td>
                   {favoritos && <td><FavoriteButton accountId={fila.cuentaId} days={favoritos.days} onViewPlans={favoritos.onViewPlans} /></td>}
                 </tr>
                 {abierta && (
                   <tr className="fila-panel-riesgo">
-                    <td colSpan={columnas.length + (favoritos ? 1 : 0)}>
+                    <td colSpan={columnas.length + 1 + (favoritos ? 1 : 0)}>
                       <PanelDescripcionRiesgo
                         id={panelId}
                         riesgo={fila.riesgo}

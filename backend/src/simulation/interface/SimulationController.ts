@@ -27,6 +27,11 @@ const toResponse = (result: SimulationResult) => ({
     hasPhysicalBranches: result.channels.hasPhysicalBranches,
     hasAtms: result.channels.hasAtms,
   },
+  // US19
+  digitalChannels: {
+    hasDigitalBanking: result.digitalChannels.hasDigitalBanking,
+    hasMobileApp: result.digitalChannels.hasMobileApp,
+  },
   // US27: null si el usuario no es Pro (lo borra RiskRatingFilter)
   riskRating: result.riskRating,
 });

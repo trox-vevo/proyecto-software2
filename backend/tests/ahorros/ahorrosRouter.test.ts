@@ -35,4 +35,16 @@ describe("GET /api/ahorros/rentabilidad", () => {
       });
     }
   });
+
+  it("US19: cada resultado trae digitalChannels con booleanos", async () => {
+    const { resultados } = await (await fetch(endpoint)).json();
+
+    expect(resultados.length).toBeGreaterThan(0);
+    for (const resultado of resultados) {
+      expect(resultado.digitalChannels).toEqual({
+        hasDigitalBanking: expect.any(Boolean),
+        hasMobileApp: expect.any(Boolean),
+      });
+    }
+  });
 });

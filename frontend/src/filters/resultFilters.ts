@@ -10,6 +10,14 @@ export interface SimulationResultDto {
   monthlyMaintenanceFee?: string;
   /** Misma forma en los dos endpoints (US18). */
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
+  /** Misma forma en los dos endpoints (US19). */
+  digitalChannels?: DigitalChannelsDto;
+}
+
+/** US19: si la entidad tiene banca por internet y app móvil. */
+export interface DigitalChannelsDto {
+  hasDigitalBanking: boolean;
+  hasMobileApp: boolean;
 }
 
 // Interfaz común: acordarla con el responsable de US20
@@ -43,8 +51,29 @@ export const hasAtmsFilter: ResultFilter = {
   apply: (r) => r.channels.hasAtms,
 };
 
+// US19: filtros de accesibilidad digital, mismo patrón que los de acceso físico
+export const hasDigitalBankingFilter: ResultFilter = {
+  id: "has-digital-banking",
+  label: "Solo con banca digital",
+  appliesTo: ["SAVINGS", "FIXED_DEPOSIT"],
+  apply: (r) => r.digitalChannels?.hasDigitalBanking ?? false,
+};
+
+export const hasMobileAppFilter: ResultFilter = {
+  id: "has-mobile-app",
+  label: "Con app móvil",
+  appliesTo: ["SAVINGS", "FIXED_DEPOSIT"],
+  apply: (r) => r.digitalChannels?.hasMobileApp ?? false,
+};
+
 /** En el orden en que se muestran las casillas. */
-export const ALL_FILTERS = [noMaintenanceFeeFilter, hasPhysicalBranchesFilter, hasAtmsFilter];
+export const ALL_FILTERS = [
+  noMaintenanceFeeFilter,
+  hasPhysicalBranchesFilter,
+  hasAtmsFilter,
+  hasDigitalBankingFilter,
+  hasMobileAppFilter,
+];
 
 /** Combinación mínima (AND). Genérica para conservar el tipo de fila de cada tabla. */
 export const applyFilters = <T extends SimulationResultDto>(results: T[], active: ResultFilter[]): T[] =>

@@ -33,6 +33,7 @@ export class MonthlyPaymentCalculator implements InterestCalculator {
       product.channels,
       product.coberturaFSD,
       product.minimumAmount,
+      product.digitalChannels,
     );
   }
 }

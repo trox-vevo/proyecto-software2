@@ -1,4 +1,5 @@
 import Decimal from "decimal.js";
+import { DigitalChannels } from "./DigitalChannels";
 import { ServiceChannels } from "./ServiceChannels";
 import { crearCoberturaNoVerificada, type CoberturaFSD } from "../../fsd/CoberturaFSD";
 
@@ -15,6 +16,8 @@ export class SimulationResult {
     readonly channels: ServiceChannels,
     readonly coberturaFSD: CoberturaFSD = crearCoberturaNoVerificada(),
     readonly minimumAmount: Decimal | null = null,
+    // US19: banca digital y app móvil de la entidad
+    readonly digitalChannels: DigitalChannels = new DigitalChannels(false, false),
   ) {}
 
   // US25 lo llena; US27 lo borra para usuarios no Pro

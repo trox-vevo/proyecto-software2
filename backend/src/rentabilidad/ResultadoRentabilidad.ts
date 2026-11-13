@@ -1,4 +1,5 @@
 import { Decimal } from "decimal.js";
+import { DigitalChannels } from "../simulation/domain/DigitalChannels";
 import { ServiceChannels } from "../simulation/domain/ServiceChannels";
 import { crearCoberturaNoVerificada, type CoberturaFSD } from "../fsd/CoberturaFSD";
 
@@ -11,6 +12,7 @@ export interface DatosResultado {
   monthlyMaintenanceFee: Decimal;
   channels: ServiceChannels;
   coberturaFSD: CoberturaFSD;
+  digitalChannels: DigitalChannels;
 }
 
 /** Resultado del cálculo de rentabilidad de una cuenta. */
@@ -22,6 +24,7 @@ export class ResultadoRentabilidad {
   private readonly fechaApertura: Date;
   private readonly monthlyMaintenanceFee: Decimal;
   private readonly channels: ServiceChannels;
+  private readonly digitalChannels: DigitalChannels;
 
   constructor(
     cuentaId: string,
@@ -32,6 +35,7 @@ export class ResultadoRentabilidad {
     monthlyMaintenanceFee: Decimal,
     channels: ServiceChannels,
     readonly coberturaFSD: CoberturaFSD = crearCoberturaNoVerificada(),
+    digitalChannels: DigitalChannels = new DigitalChannels(false, false),
   ) {
     this.cuentaId = cuentaId;
     this.capitalInicial = capitalInicial;
@@ -40,6 +44,7 @@ export class ResultadoRentabilidad {
     this.fechaApertura = fechaApertura;
     this.monthlyMaintenanceFee = monthlyMaintenanceFee;
     this.channels = channels;
+    this.digitalChannels = digitalChannels;
   }
 
   getCuentaId(): string {
@@ -69,6 +74,7 @@ export class ResultadoRentabilidad {
       monthlyMaintenanceFee: this.monthlyMaintenanceFee,
       channels: this.channels,
       coberturaFSD: this.coberturaFSD,
+      digitalChannels: this.digitalChannels,
     };
   }
 }

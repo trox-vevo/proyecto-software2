@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { CuentaAhorros } from "../rentabilidad/CuentaAhorros";
+import { DigitalChannels } from "../simulation/domain/DigitalChannels";
 import { ServiceChannels } from "../simulation/domain/ServiceChannels";
 
 interface CuentaJson {
@@ -12,6 +13,7 @@ interface CuentaJson {
   monthlyMaintenanceFee: string;
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
   coberturaFSD?: unknown;
+  digitalChannels?: { hasDigitalBanking: boolean; hasMobileApp: boolean };
 }
 
 /**
@@ -45,6 +47,7 @@ export class RepositorioCuentas {
         c.monthlyMaintenanceFee,
         new ServiceChannels(c.channels.hasPhysicalBranches, c.channels.hasAtms),
         c.coberturaFSD,
+        new DigitalChannels(c.digitalChannels?.hasDigitalBanking ?? false, c.digitalChannels?.hasMobileApp ?? false),
       );
     });
   }

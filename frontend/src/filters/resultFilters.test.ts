@@ -12,6 +12,7 @@ const result = (id: string, monthlyMaintenanceFee: string | undefined, hasPhysic
   id,
   monthlyMaintenanceFee,
   channels: { hasPhysicalBranches, hasAtms },
+  digitalChannels: { hasDigitalBanking: true, hasMobileApp: true }, // US19: no influye en estos casos
 });
 const A = result("A", "0.00", true, true);
 const B = result("B", "0.00", true, false);
@@ -76,7 +77,10 @@ describe("noMaintenanceFeeFilter (US17)", () => {
   });
 
   it("un resultado sin monthlyMaintenanceFee (plazo fijo) no pasa", () => {
-    const fixedDeposit: SimulationResultDto = { channels: { hasPhysicalBranches: true, hasAtms: true } };
+    const fixedDeposit: SimulationResultDto = {
+      channels: { hasPhysicalBranches: true, hasAtms: true },
+      digitalChannels: { hasDigitalBanking: true, hasMobileApp: true },
+    };
     expect(noMaintenanceFeeFilter.apply(fixedDeposit)).toBe(false);
   });
 

@@ -1,18 +1,36 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { hasAtmsFilter, hasPhysicalBranchesFilter, noMaintenanceFeeFilter, type InstrumentType } from "./resultFilters";
+import {
+  hasAtmsFilter,
+  hasDigitalBankingFilter,
+  hasMobileAppFilter,
+  hasPhysicalBranchesFilter,
+  noMaintenanceFeeFilter,
+  type InstrumentType,
+} from "./resultFilters";
 import { useResultFilters } from "./useResultFilters";
 
 const renderFilters = (instrument: InstrumentType) =>
   renderHook(({ instrument }) => useResultFilters(instrument), { initialProps: { instrument } });
 
 describe("useResultFilters", () => {
-  it("en ahorros ofrece los 3 filtros; en plazo fijo, solo los de acceso físico", () => {
+  it("en ahorros ofrece todos los filtros; en plazo fijo, todos menos 'Sin costo' (US17–US19)", () => {
     const { result, rerender } = renderFilters("SAVINGS");
-    expect(result.current.available).toEqual([noMaintenanceFeeFilter, hasPhysicalBranchesFilter, hasAtmsFilter]);
+    expect(result.current.available).toEqual([
+      noMaintenanceFeeFilter,
+      hasPhysicalBranchesFilter,
+      hasAtmsFilter,
+      hasDigitalBankingFilter,
+      hasMobileAppFilter,
+    ]);
 
     rerender({ instrument: "FIXED_DEPOSIT" });
-    expect(result.current.available).toEqual([hasPhysicalBranchesFilter, hasAtmsFilter]);
+    expect(result.current.available).toEqual([
+      hasPhysicalBranchesFilter,
+      hasAtmsFilter,
+      hasDigitalBankingFilter,
+      hasMobileAppFilter,
+    ]);
   });
 
   it("toggle activa y desactiva un filtro", () => {

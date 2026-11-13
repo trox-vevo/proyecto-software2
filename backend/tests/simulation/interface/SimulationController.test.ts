@@ -5,14 +5,15 @@ import Decimal from "decimal.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../../../src/app";
 import { FinancialProduct } from "../../../src/simulation/domain/FinancialProduct";
+import { DigitalChannels } from "../../../src/simulation/domain/DigitalChannels";
 import { ServiceChannels } from "../../../src/simulation/domain/ServiceChannels";
 import { crearCoberturaNoVerificada } from "../../../src/fsd/CoberturaFSD";
 
 // Prueba de integración: app real en un puerto libre, con datos propios (no los de demostración).
 const products = [
-  new FinancialProduct(1, "Entidad 1", new Decimal("0.055"), new Decimal("500"), new ServiceChannels(true, true)),
-  new FinancialProduct(2, "Entidad 2", new Decimal("0.0575"), new Decimal("1000"), new ServiceChannels(true, false)),
-  new FinancialProduct(3, "Entidad 3", new Decimal("0.042"), new Decimal("500"), new ServiceChannels(false, true)),
+  new FinancialProduct(1, "Entidad 1", new Decimal("0.055"), new Decimal("500"), new ServiceChannels(true, true), undefined, new DigitalChannels(true, true)),
+  new FinancialProduct(2, "Entidad 2", new Decimal("0.0575"), new Decimal("1000"), new ServiceChannels(true, false), undefined, new DigitalChannels(true, false)),
+  new FinancialProduct(3, "Entidad 3", new Decimal("0.042"), new Decimal("500"), new ServiceChannels(false, true), undefined, new DigitalChannels(false, true)),
 ];
 const app = createApp({
   findFixedDepositsByDepartment: async (department) => (department === "Lima" ? products : []),
@@ -47,7 +48,7 @@ const validRequest = {
 };
 
 describe("POST /api/simulations/fixed-deposits", () => {
-  it("200: devuelve los productos ordenados, con decimales como string y canales (US18)", async () => {
+  it("200: devuelve los productos ordenados, con decimales como string y canales (US18 y US19)", async () => {
     const response = await post(validRequest);
 
     expect(response.status).toBe(200);
@@ -61,6 +62,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
         totalInterest: "57.50",
         monthlyInterest: null,
         channels: { hasPhysicalBranches: true, hasAtms: false },
+        digitalChannels: { hasDigitalBanking: true, hasMobileApp: false },
         riskRating: null,
       },
       {
@@ -72,6 +74,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
         totalInterest: "55.00",
         monthlyInterest: null,
         channels: { hasPhysicalBranches: true, hasAtms: true },
+        digitalChannels: { hasDigitalBanking: true, hasMobileApp: true },
         riskRating: null,
       },
       {
@@ -83,6 +86,7 @@ describe("POST /api/simulations/fixed-deposits", () => {
         totalInterest: "42.00",
         monthlyInterest: null,
         channels: { hasPhysicalBranches: false, hasAtms: true },
+        digitalChannels: { hasDigitalBanking: false, hasMobileApp: true },
         riskRating: null,
       },
     ]);

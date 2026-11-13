@@ -46,6 +46,7 @@ export class MotorCalculo {
           cuenta.monthlyMaintenanceFee,
           cuenta.channels,
           cuenta.coberturaFSD,
+          cuenta.digitalChannels,
         ),
       );
     }
