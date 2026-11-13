@@ -6,9 +6,12 @@ export interface AuthSession {
   tokenJwt: string;
   expiresAt: string;
   plan: UserPlan;
+  planExpiresAt?: string | null;
+  planCancellationRequested?: boolean;
 }
 
 const SESSION_STORAGE_KEY = "yupay.auth.session";
+export const AUTH_SESSION_CHANGED_EVENT = "yupay:auth-session-changed";
 
 function isAuthSession(value: unknown): value is AuthSession {
   if (typeof value !== "object" || value === null) return false;
@@ -20,7 +23,9 @@ function isAuthSession(value: unknown): value is AuthSession {
     session.userId > 0 &&
     typeof session.tokenJwt === "string" &&
     typeof session.expiresAt === "string" &&
-    (session.plan === "BASICO" || session.plan === "PRO")
+    (session.plan === "BASICO" || session.plan === "PRO") &&
+    (session.planExpiresAt === undefined || session.planExpiresAt === null || typeof session.planExpiresAt === "string") &&
+    (session.planCancellationRequested === undefined || typeof session.planCancellationRequested === "boolean")
   );
 }
 
@@ -43,10 +48,12 @@ export function getStoredSession(): AuthSession | null {
 
 export function saveAuthSession(session: AuthSession): void {
   window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+  window.dispatchEvent(new Event(AUTH_SESSION_CHANGED_EVENT));
 }
 
 export function clearAuthSession(): void {
   window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  window.dispatchEvent(new Event(AUTH_SESSION_CHANGED_EVENT));
 }
 
 export function fetchWithAuth(

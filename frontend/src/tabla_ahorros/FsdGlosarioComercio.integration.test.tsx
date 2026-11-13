@@ -18,6 +18,12 @@ it("combina FSD, consulta contextual, semáforo y favoritos con el acceso a plan
       capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024",
       monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true } }] });
     if (url.endsWith("/api/favorites")) return Response.json({ code: "PRO_REQUIRED" }, { status: 403 });
+    if (url.endsWith("/api/subscription/history")) return Response.json({
+      plan: "BASICO",
+      planExpiresAt: null,
+      planCancellationRequested: false,
+      history: [],
+    });
     if (url.endsWith("/api/plans")) return Response.json({
       plans: [{ id: "PRO", name: "Pro", price: null, features: { favorites: true } }],
       features: [{ id: "favorites", label: "Guardar simulaciones favoritas" }],

@@ -22,6 +22,7 @@ const repository: UserRepository = {
   findById: (id) => users.find((u) => u.id === id) ?? null,
   create: () => { throw new Error("no se usa en estas pruebas"); },
   activatePro: () => { throw new Error("no se usa en estas pruebas"); },
+  requestProCancellation: () => { throw new Error("no se usa en estas pruebas"); },
 };
 const products = [new FinancialProduct(1, "Entidad de prueba", new Decimal("0.05"), new Decimal("500"), new ServiceChannels(true, false))];
 const valid = { amount: "1000", termDays: 360, department: "Lima", paymentMode: "AT_MATURITY" };

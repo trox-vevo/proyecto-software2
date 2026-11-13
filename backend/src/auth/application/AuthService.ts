@@ -57,6 +57,8 @@ export class AuthService {
       tokenJwt: token,
       expiresAt: new Date(Date.now() + expiresInSec * 1000).toISOString(),
       plan: user.plan,
+      planExpiresAt: user.planExpiresAt,
+      planCancellationRequested: user.planCancellationRequested ?? false,
     };
 
     this.sessionRepository.create(session);

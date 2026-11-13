@@ -41,6 +41,10 @@ import { ReportController } from "./reports/interface/ReportController";
 import { CheckoutController } from "./checkout/CheckoutController";
 import { MockPaymentService } from "./checkout/MockPaymentService";
 import { PaymentProcessingService } from "./checkout/PaymentProcessingService";
+import { SubscriptionService } from "./subscription/application/SubscriptionService";
+import { SubscriptionController } from "./subscription/interface/SubscriptionController";
+import { createSubscriptionRouter } from "./subscription/interface/subscriptionRoutes";
+import type { SubscriptionMaintenanceRepository } from "./subscription/domain/SubscriptionMaintenanceRepository";
 import { createFavoriteRouter } from "./favorites/interface/favoriteRoutes";
 import type { FavoriteService } from "./favorites/application/FavoriteService";
 import type { ResolveUser } from "./favorites/domain/Favorite";
@@ -52,6 +56,18 @@ export interface Sprint3Dependencies {
 
 
 const PERFIL_DEMO_ID = "usuario-demo";
+
+function supportsSubscriptionMaintenance(
+  repository: UserRepository,
+): repository is UserRepository & Pick<
+  SubscriptionMaintenanceRepository,
+  "recordRenewalPaymentFailure" | "findPlanChangeHistory"
+> {
+  return "recordRenewalPaymentFailure" in repository &&
+    typeof repository.recordRenewalPaymentFailure === "function" &&
+    "findPlanChangeHistory" in repository &&
+    typeof repository.findPlanChangeHistory === "function";
+}
 
 export function createApp(
   productRepository: FinancialProductRepository,
@@ -91,7 +107,21 @@ export function createApp(
     userRepository ?? { findById: () => null, activatePro: () => {} },
   ));
   app.use("/api/checkout", createCheckoutRouter(checkoutController));
-  app.use("/api/favorites", createFavoriteRouter(dependencies.resolveUser ?? (async () => null), dependencies.favoriteService));
+  // US27: los privilegios se consultan en el repositorio, incluido el vencimiento del período.
+  const proAccessService = new ProAccessService(userRepository ?? { findById: () => null });
+  const subscriptionService = new SubscriptionService(
+    userRepository ?? { findById: () => null, requestProCancellation: () => {} },
+    () => new Date(),
+    userRepository && supportsSubscriptionMaintenance(userRepository) ? userRepository : undefined,
+  );
+  app.use("/api/subscription", createSubscriptionRouter(
+    new SubscriptionController(subscriptionService, process.env.SUBSCRIPTION_WEBHOOK_SECRET),
+  ));
+  app.use("/api/favorites", createFavoriteRouter(
+    dependencies.resolveUser ?? (async () => null),
+    dependencies.favoriteService,
+    userRepository ? proAccessService : undefined,
+  ));
   const profileService = new ServicioPerfiles(selectedProfileRepository);
 
   app.get("/api/perfil", (_req, res) => {
@@ -108,7 +138,6 @@ export function createApp(
 
   // US27: una sola regla de acceso Pro para el informe (403) y la simulación (oculta la calificación).
   // Sin repositorio de usuarios (algunas pruebas), nadie es Pro.
-  const proAccessService = new ProAccessService(userRepository ?? { findById: () => null });
   const proAccessMiddleware = new ProAccessMiddleware(proAccessService);
   app.use("/api/risk-reports", proAccessMiddleware.handle); // protege la ruta de la US26
 

@@ -7,6 +7,7 @@
 }
 
 .comercio-nav a { color: var(--accent); }
+.suscripcion-banner { margin: 1rem; padding: 1rem; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--accent-bg); color: var(--text-h); }
 .comercio p { margin: 1rem 0; }
 .comercio button, .favorito-accion button {
   padding: .6rem .9rem;
@@ -45,6 +46,11 @@
 .checkout-resumen h2 { margin: 0 0 1rem; font-size: 1.15rem; }
 .checkout-demo .checkout-resumen-plan { display: flex; justify-content: space-between; margin: 0; padding-bottom: .75rem; border-bottom: 1px solid var(--border); color: var(--text-h); }
 .checkout-resumen ul { margin: 1rem 0; padding-left: 1.2rem; display: grid; gap: .4rem; }
+.checkout-suscripcion { margin-top: 1.25rem; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; }
+.checkout-suscripcion h2 { margin-top: 0; }
+.checkout-suscripcion p { margin: .5rem 0 1rem; }
+.checkout-cancelacion-confirmacion { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.checkout-cancelacion-confirmacion p { flex-basis: 100%; }
 .checkout-demo .checkout-opciones-demo { display: flex; align-items: center; gap: .5rem; font-size: .8rem; font-weight: 400; opacity: .75; }
 .checkout-demo .checkout-opciones-demo input { width: .95rem; height: .95rem; padding: 0; margin: 0; flex-shrink: 0; accent-color: var(--accent); }
 .checkout-resultado-acciones { display: flex; flex-wrap: wrap; gap: .75rem; }

@@ -6,6 +6,8 @@ export interface Session {
   tokenJwt: string;
   expiresAt: string;
   plan: UserPlan;
+  planExpiresAt: string | null;
+  planCancellationRequested: boolean;
 }
 
 export type PublicSession = Omit<Session, "tokenJwt">;
