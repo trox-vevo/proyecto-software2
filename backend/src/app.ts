@@ -25,6 +25,9 @@ import { ProAccessMiddleware } from "./auth/interface/ProAccessMiddleware";
 import { RiskRatingFilter } from "./simulation/application/RiskRatingFilter";
 import { RiskEvaluationService } from "./risk/application/RiskEvaluationService";
 import { JsonSbsRiskRepository } from "./risk/infrastructure/JsonSbsRiskRepository";
+import { EconomistReportService } from "./risk/application/EconomistReportService";
+import { JsonEconomistReportRepository } from "./risk/infrastructure/JsonEconomistReportRepository";
+import { EconomistReportController } from "./risk/interface/EconomistReportController";
 import type { RecoveryTokenRepository } from "./recovery/domain/RecoveryTokenRepository";
 import {
   PasswordRecoveryService,
@@ -117,6 +120,12 @@ export function createApp(
   // US25: calificación de riesgo de la SBS para cada resultado de plazo fijo
   const sbsRiskRepository = new JsonSbsRiskRepository();
   const riskEvaluationService = new RiskEvaluationService(sbsRiskRepository);
+
+  // US26: informe del economista; ProAccessMiddleware (arriba) ya dejó pasar solo a usuarios Pro
+  const economistReportController = new EconomistReportController(
+    new EconomistReportService(new JsonEconomistReportRepository(), sbsRiskRepository),
+  );
+  app.get("/api/risk-reports/:entityId", economistReportController.getReport);
 
   // US30: Reporte de Solvencia en PDF, solo Pro (401/403 con la misma regla de la US27).
   app.use("/api/reports", proAccessMiddleware.handle);
