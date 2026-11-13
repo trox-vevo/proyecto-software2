@@ -1,0 +1,51 @@
+/* US25: panel de indicadores de la SBS. Los colores salen de semaforo/semaforo.css (US22) */
+.indicadores-sbs {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+
+.indicadores-sbs-calificacion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.indicadores-sbs-luz {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.indicadores-sbs-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.indicadores-sbs-lista div {
+  padding: 8px 10px;
+  border: 1px solid var(--border, #e5e4e7);
+  border-radius: 6px;
+}
+
+.indicadores-sbs-lista dt {
+  font-size: 0.85rem;
+  color: var(--text, #6b6375);
+}
+
+.indicadores-sbs-lista dd {
+  margin: 4px 0 0;
+  font-weight: 600;
+  color: var(--text-h, inherit);
+}
+
+.indicadores-sbs-fuente {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text, #6b6375);
+}
