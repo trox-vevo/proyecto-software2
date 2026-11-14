@@ -11,3 +11,18 @@ export interface SbsRiskProfile {
   reportDate: string;
   sourceUrl: string;
 }
+
+/** US26: lo que devuelve GET /api/risk-reports/:entityId */
+export interface EconomistReport {
+  entityId: number;
+  entityName: string;
+  summary: string;
+  strengths: string[];
+  risks: string[];
+  recommendation: string;
+  author: string;
+  /** "2026-10-15" */
+  publishedAt: string;
+  /** null si la entidad no tiene datos de la SBS */
+  sbsProfile: SbsRiskProfile | null;
+}

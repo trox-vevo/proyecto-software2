@@ -1,0 +1,62 @@
+[
+  {
+    "entityId": 1,
+    "entityName": "Entidad A",
+    "summary": "Entidad con una posición financiera muy sólida. Su capital supera con holgura el mínimo exigido y su cartera presenta baja morosidad.",
+    "strengths": ["Ratio de capital global por encima del promedio del sistema", "Morosidad baja y estable en los últimos trimestres", "Buena liquidez para atender retiros"],
+    "risks": ["Alta competencia en tasas puede reducir su margen"],
+    "recommendation": "Opción de bajo riesgo para depósitos a plazo fijo.",
+    "author": "Área de Estudios Económicos (demostración)",
+    "publishedAt": "2026-10-15"
+  },
+  {
+    "entityId": 2,
+    "entityName": "Entidad B",
+    "summary": "Entidad sólida, con indicadores saludables y una tasa atractiva. Exige un monto mínimo de apertura mayor que el resto.",
+    "strengths": ["Capital suficiente para crecer", "Morosidad controlada", "Ofrece la tasa más alta de Lima"],
+    "risks": ["Su crecimiento rápido de colocaciones requiere seguimiento"],
+    "recommendation": "Buena alternativa si se cuenta con el monto mínimo de S/ 1,000.",
+    "author": "Área de Estudios Económicos (demostración)",
+    "publishedAt": "2026-10-15"
+  },
+  {
+    "entityId": 3,
+    "entityName": "Entidad C",
+    "summary": "Entidad con indicadores aceptables. Su morosidad está algo por encima del promedio, aunque mantiene capital y liquidez adecuados.",
+    "strengths": ["Capital dentro de lo recomendado", "Tasa competitiva"],
+    "risks": ["Morosidad por encima del promedio del sistema", "Liquidez más ajustada que la de entidades similares"],
+    "recommendation": "Riesgo moderado: conviene no concentrar todo el ahorro en esta entidad.",
+    "author": "Área de Estudios Económicos (demostración)",
+    "publishedAt": "2026-10-15"
+  },
+  {
+    "entityId": 4,
+    "entityName": "Entidad D",
+    "summary": "Entidad con debilidades financieras. Su capital está cerca del mínimo y la morosidad viene subiendo.",
+    "strengths": ["Mantiene el capital mínimo exigido"],
+    "risks": ["Morosidad alta y en aumento", "Liquidez baja", "Ofrece la tasa más baja del grupo"],
+    "recommendation": "Riesgo alto: revisar con cuidado antes de depositar.",
+    "author": "Área de Estudios Económicos (demostración)",
+    "publishedAt": "2026-10-15"
+  },
+  {
+    "entityId": 5,
+    "entityName": "Entidad E",
+    "summary": "Entidad con buena solidez. Sus indicadores son estables aunque algo menores que los de las entidades mejor calificadas.",
+    "strengths": ["Capital y liquidez estables", "Morosidad moderada"],
+    "risks": ["Rentabilidad menor que la de otras entidades"],
+    "recommendation": "Opción segura con riesgo bajo a medio.",
+    "author": "Área de Estudios Económicos (demostración)",
+    "publishedAt": "2026-10-15"
+  },
+  {
+    "entityId": 6,
+    "entityName": "Entidad F",
+    "summary": "Entidad regional con indicadores aceptables y la tasa más alta de Cusco.",
+    "strengths": ["Tasa alta para depósitos", "Capital adecuado"],
+    "risks": ["Morosidad algo elevada", "Depende de una sola región"],
+    "recommendation": "Riesgo moderado: buena tasa, pero conviene diversificar.",
+    "author": "Área de Estudios Económicos (demostración)",
+    "publishedAt": "2026-10-15"
+  }
+]
