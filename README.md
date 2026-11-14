@@ -44,6 +44,13 @@ incluye `eventId`, `userId`, `periodExpiresAt` y `occurredAt`. Los eventos
 duplicados se procesan una sola vez. Un rechazo de checkout de compra inicial
 no se considera por sí solo un fallo de renovación.
 
+El historial de facturación de la US34 se consulta en
+`GET /api/checkout/history`; los comprobantes PDF de cada operación están en
+`GET /api/checkout/history/:reference/receipt`. Ambos endpoints requieren la
+sesión del usuario y solo exponen sus propias operaciones. El checkout vigente
+es una simulación académica: no realiza cobros y el precio de Pro sigue sin
+definirse, por lo que el historial no atribuye montos ficticios.
+
 ## Perfil de usuario
 
 El perfil de demostración se sirve mediante `GET /api/perfil` y se actualiza con

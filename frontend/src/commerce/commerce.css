@@ -73,6 +73,17 @@
 .checkout-demo label { color: var(--text-h); font-size: .9rem; font-weight: 600; }
 .checkout-demo fieldset > p.comercio-ayuda { margin: .15rem 0 .5rem; }
 .checkout-demo [role="alert"] { color: var(--text-h); font-size: .9rem; }
+.historial-facturacion { min-width: 0; }
+.historial-facturacion-encabezado { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.historial-facturacion-encabezado h1 { margin-top: 0; }
+.historial-facturacion-aviso { padding: .85rem 1rem; border: 1px solid var(--border); border-radius: 8px; }
+.historial-facturacion-tabla { max-width: 100%; overflow-x: auto; margin-top: 1rem; }
+.historial-facturacion table { width: 100%; border-collapse: collapse; }
+.historial-facturacion caption { padding: .75rem; text-align: left; color: var(--text-h); }
+.historial-facturacion th, .historial-facturacion td { padding: .75rem; border: 1px solid var(--border); text-align: left; vertical-align: middle; }
+.historial-facturacion th { color: var(--text-h); background: var(--social-bg); }
+.historial-facturacion td { white-space: nowrap; }
+.historial-facturacion td:nth-child(2) { white-space: normal; }
 .checkout-demo .checkout-codigo-input { font-family: var(--mono); font-size: .95rem; }
 .checkout-fecha-cvv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
 .checkout-fecha-cvv > div { display: grid; align-content: start; gap: .6rem; min-width: 0; }

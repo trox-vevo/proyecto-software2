@@ -1,4 +1,8 @@
 import type { UserRepository } from "../registration/domain/UserRepository";
+import {
+  CheckoutHistoryUnavailableError,
+  type CheckoutPaymentHistoryRepository,
+} from "./CheckoutPaymentHistory";
 import type { PaymentGateway, PaymentResult } from "./PaymentGateway";
 
 const PRO_PERIOD_DAYS = 30;
@@ -14,22 +18,37 @@ export class AuthenticationRequiredError extends Error {
 export class PaymentProcessingService {
   constructor(
     private readonly paymentGateway: PaymentGateway,
-    private readonly userRepository: Pick<UserRepository, "findById" | "activatePro">,
+    private readonly userRepository: Pick<UserRepository, "findById">,
     private readonly now: () => Date = () => new Date(), // inyectable para probar la fecha
+    private readonly paymentHistoryRepository?: Pick<
+      CheckoutPaymentHistoryRepository,
+      "recordCheckoutAttempt" | "recordApprovedCheckout"
+    >,
   ) {}
 
   processPayment(userId: number | undefined, paymentRequest: unknown) {
     // Primero quién paga: nunca se cobra a un usuario que no existe.
     const user = userId === undefined ? null : this.userRepository.findById(userId);
     if (!user) throw new AuthenticationRequiredError();
+    if (!this.paymentHistoryRepository) throw new CheckoutHistoryUnavailableError();
 
     // La respuesta conserva todos los campos de la pasarela (MockPaymentResult) más plan y vencimiento.
     const result: PaymentResult = this.paymentGateway.simulate(paymentRequest);
+    const payment = {
+      reference: result.reference,
+      outcome: result.outcome,
+      occurredAt: result.occurredAt,
+      planId: "PRO" as const,
+      amount: null,
+      currency: "PEN" as const,
+      receiptStatus: "AVAILABLE" as const,
+    };
     if (result.outcome !== "APPROVED") {
+      this.paymentHistoryRepository.recordCheckoutAttempt(user.id, payment);
       return { ...result, plan: user.plan, planExpiresAt: user.planExpiresAt }; // Escenario 2: nada cambia
     }
     const expiresAt = this.calculateExpiration();
-    this.userRepository.activatePro(user.id, expiresAt); // Escenario 1
+    this.paymentHistoryRepository.recordApprovedCheckout(user.id, expiresAt, payment);
     return { ...result, plan: "PRO" as const, planExpiresAt: expiresAt };
   }
 

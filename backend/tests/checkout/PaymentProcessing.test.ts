@@ -29,31 +29,48 @@ const gatewayReturning = (outcome: PaymentResult["outcome"]): PaymentGateway => 
     declineReason: outcome === "APPROVED" ? null : "Fondos ficticios insuficientes.",
   })),
 });
-const repositoryWith = (user: User | null) => ({ findById: vi.fn(() => user), activatePro: vi.fn() });
+const repositoryWith = (user: User | null) => ({ findById: vi.fn(() => user) });
+const paymentHistoryWith = () => ({
+  recordCheckoutAttempt: vi.fn(),
+  recordApprovedCheckout: vi.fn(),
+});
 
 describe("US33, PaymentProcessingService", () => {
   it("Escenario 1: un pago aprobado activa PRO por 30 días", () => {
     const users = repositoryWith(basicUser);
-    const service = new PaymentProcessingService(gatewayReturning("APPROVED"), users, () => new Date(NOW));
+    const history = paymentHistoryWith();
+    const service = new PaymentProcessingService(gatewayReturning("APPROVED"), users, () => new Date(NOW), history);
     const result = service.processPayment(7, request);
-    expect(users.activatePro).toHaveBeenCalledOnce();
-    expect(users.activatePro).toHaveBeenCalledWith(7, IN_30_DAYS);
+    expect(history.recordApprovedCheckout).toHaveBeenCalledOnce();
+    expect(history.recordApprovedCheckout).toHaveBeenCalledWith(7, IN_30_DAYS, expect.objectContaining({
+      reference: "DEMO-0123456789abcdef01234567",
+      outcome: "APPROVED",
+    }));
     expect(result).toMatchObject({ outcome: "APPROVED", plan: "PRO", planExpiresAt: IN_30_DAYS });
   });
 
   it("Escenario 2: un pago rechazado no cambia el plan ni la fecha", () => {
     const users = repositoryWith(basicUser);
-    const result = new PaymentProcessingService(gatewayReturning("DECLINED"), users).processPayment(7, request);
-    expect(users.activatePro).not.toHaveBeenCalled();
+    const history = paymentHistoryWith();
+    const result = new PaymentProcessingService(gatewayReturning("DECLINED"), users, undefined, history).processPayment(7, request);
+    expect(history.recordCheckoutAttempt).toHaveBeenCalledWith(7, expect.objectContaining({ outcome: "DECLINED" }));
     expect(result).toMatchObject({ outcome: "DECLINED", plan: "BASICO", planExpiresAt: null, declineReason: "Fondos ficticios insuficientes." });
   });
 
   it.each([[undefined], [99]])("sin un usuario válido (%s) no llama a la pasarela", (userId) => {
     const gateway = gatewayReturning("APPROVED");
     const users = repositoryWith(null);
-    expect(() => new PaymentProcessingService(gateway, users).processPayment(userId, request)).toThrow(AuthenticationRequiredError);
+    const history = paymentHistoryWith();
+    expect(() => new PaymentProcessingService(gateway, users, undefined, history).processPayment(userId, request)).toThrow(AuthenticationRequiredError);
     expect(gateway.simulate).not.toHaveBeenCalled();
-    expect(users.activatePro).not.toHaveBeenCalled();
+    expect(history.recordApprovedCheckout).not.toHaveBeenCalled();
+  });
+
+  it("sin persistencia de historial no invoca la pasarela", () => {
+    const gateway = gatewayReturning("APPROVED");
+    const service = new PaymentProcessingService(gateway, repositoryWith(basicUser));
+    expect(() => service.processPayment(7, request)).toThrow("El historial de facturación no está disponible");
+    expect(gateway.simulate).not.toHaveBeenCalled();
   });
 });
 
@@ -81,6 +98,44 @@ describe("US33, SqliteUserRepository.activatePro", () => {
       expect(users.findById(1)).toMatchObject({ plan: "BASICO", planExpiresAt: null });
       users.close();
     } finally { rmSync(directory, { recursive: true, force: true }); }
+  });
+});
+
+describe("US34, historial persistente de facturación", () => {
+  it("persiste operaciones entre instancias y revierte la activación si falla el registro", () => {
+    const directory = mkdtempSync(join(tmpdir(), "yupay-us34-"));
+    const file = join(directory, "users.sqlite");
+    const payment = {
+      reference: "DEMO-0123456789abcdef01234567",
+      outcome: "APPROVED" as const,
+      occurredAt: NOW.toISOString(),
+      planId: "PRO" as const,
+      amount: null,
+      currency: "PEN" as const,
+      receiptStatus: "AVAILABLE" as const,
+    };
+    try {
+      const users = new SqliteUserRepository(file);
+      const user = users.create({ username: "u", email: "u@prueba.com", passwordHash: "h", plan: "BASICO", createdAt: NOW.toISOString() });
+      users.recordApprovedCheckout(user.id, IN_30_DAYS, payment);
+      const earlierPayment = {
+        ...payment,
+        reference: "DEMO-abcdef0123456789abcdef01",
+        outcome: "DECLINED" as const,
+        occurredAt: "2026-11-09T12:00:00.000Z",
+      };
+      users.recordCheckoutAttempt(user.id, earlierPayment);
+      expect(users.findById(user.id)?.plan).toBe("PRO");
+      expect(() => users.recordApprovedCheckout(user.id, "2027-01-01T00:00:00.000Z", payment)).toThrow();
+      expect(users.findById(user.id)?.planExpiresAt).toBe(IN_30_DAYS);
+      users.close();
+
+      const reopened = new SqliteUserRepository(file);
+      expect(reopened.findCheckoutHistory(user.id)).toEqual([payment, earlierPayment]);
+      reopened.close();
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
   });
 });
 
@@ -131,5 +186,43 @@ describe("US33, POST /api/checkout/simulate con la app real", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ outcome: "DECLINED", plan: "BASICO", planExpiresAt: null });
     expect(users.findById(id)).toMatchObject({ plan: "BASICO", planExpiresAt: null });
+  });
+
+  it("lista solo las operaciones de la cuenta autenticada y descarga su comprobante PDF", async () => {
+    const id = newBasic("historial@prueba.com");
+    const otherId = newBasic("otro-historial@prueba.com");
+    const approvedResponse = await pay("DEMO_APPROVED", tokenFor(id));
+    const approved = await approvedResponse.json();
+    const declinedResponse = await pay("DEMO_DECLINED", tokenFor(id));
+    const declined = await declinedResponse.json();
+
+    expect((await fetch(`${baseUrl}/api/checkout/history`)).status).toBe(401);
+    const historyResponse = await fetch(`${baseUrl}/api/checkout/history`, {
+      headers: { Authorization: `Bearer ${tokenFor(id)}` },
+    });
+    expect(historyResponse.status).toBe(200);
+    const history = await historyResponse.json();
+    expect(history.transactions).toHaveLength(2);
+    expect(history.transactions.map((transaction: { reference: string }) => transaction.reference))
+      .toContain(approved.reference);
+    expect(history.transactions.map((transaction: { reference: string }) => transaction.reference))
+      .toContain(declined.reference);
+    expect(history.transactions.every((transaction: { amount: number | null }) => transaction.amount === null)).toBe(true);
+    const otherHistory = await fetch(`${baseUrl}/api/checkout/history`, {
+      headers: { Authorization: `Bearer ${tokenFor(otherId)}` },
+    });
+    expect((await otherHistory.json()).transactions).toEqual([]);
+
+    const ownReceipt = await fetch(`${baseUrl}/api/checkout/history/${approved.reference}/receipt`, {
+      headers: { Authorization: `Bearer ${tokenFor(id)}` },
+    });
+    expect(ownReceipt.status).toBe(200);
+    expect(ownReceipt.headers.get("content-type")).toBe("application/pdf");
+    expect(Buffer.from(await ownReceipt.arrayBuffer()).subarray(0, 4).toString()).toBe("%PDF");
+
+    const otherReceipt = await fetch(`${baseUrl}/api/checkout/history/${approved.reference}/receipt`, {
+      headers: { Authorization: `Bearer ${tokenFor(otherId)}` },
+    });
+    expect(otherReceipt.status).toBe(404);
   });
 });

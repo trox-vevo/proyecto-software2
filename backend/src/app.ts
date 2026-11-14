@@ -46,6 +46,9 @@ import { ReportController } from "./reports/interface/ReportController";
 import { CheckoutController } from "./checkout/CheckoutController";
 import { MockPaymentService } from "./checkout/MockPaymentService";
 import { PaymentProcessingService } from "./checkout/PaymentProcessingService";
+import { CheckoutHistoryService } from "./checkout/CheckoutHistoryService";
+import { PaymentReceiptGenerator } from "./checkout/PaymentReceiptGenerator";
+import type { CheckoutPaymentHistoryRepository } from "./checkout/CheckoutPaymentHistory";
 import { SubscriptionService } from "./subscription/application/SubscriptionService";
 import { SubscriptionController } from "./subscription/interface/SubscriptionController";
 import { createSubscriptionRouter } from "./subscription/interface/subscriptionRoutes";
@@ -72,6 +75,19 @@ function supportsSubscriptionMaintenance(
     typeof repository.recordRenewalPaymentFailure === "function" &&
     "findPlanChangeHistory" in repository &&
     typeof repository.findPlanChangeHistory === "function";
+}
+
+function supportsCheckoutPaymentHistory(
+  repository: UserRepository,
+): repository is UserRepository & CheckoutPaymentHistoryRepository {
+  return "recordCheckoutAttempt" in repository &&
+    typeof repository.recordCheckoutAttempt === "function" &&
+    "recordApprovedCheckout" in repository &&
+    typeof repository.recordApprovedCheckout === "function" &&
+    "findCheckoutHistory" in repository &&
+    typeof repository.findCheckoutHistory === "function" &&
+    "findCheckoutReceipt" in repository &&
+    typeof repository.findCheckoutReceipt === "function";
 }
 
 export function createApp(
@@ -107,10 +123,15 @@ export function createApp(
   app.use("/api/ahorros", ahorrosRouter);
   app.get("/api/plans", (_req, res) => res.json({ plans: PLANS, features: PLAN_FEATURES }));
   // US33: sin repositorio de usuarios (algunas pruebas), nadie puede pagar (401).
+  const paymentHistoryRepository = userRepository && supportsCheckoutPaymentHistory(userRepository)
+    ? userRepository
+    : undefined;
   const checkoutController = new CheckoutController(new PaymentProcessingService(
     new MockPaymentService(),
-    userRepository ?? { findById: () => null, activatePro: () => {} },
-  ));
+    userRepository ?? { findById: () => null },
+    () => new Date(),
+    paymentHistoryRepository,
+  ), new CheckoutHistoryService(paymentHistoryRepository), new PaymentReceiptGenerator());
   app.use("/api/checkout", createCheckoutRouter(checkoutController));
   // US27: los privilegios se consultan en el repositorio, incluido el vencimiento del período.
   const proAccessService = new ProAccessService(userRepository ?? { findById: () => null });

@@ -34,7 +34,7 @@ async function leerMensajeError(response: Response): Promise<string> {
   return `El servidor respondió con el código ${response.status}.`;
 }
 
-export function ProfileEditor() {
+export function ProfileEditor({ onViewBillingHistory }: { onViewBillingHistory?: () => void }) {
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -126,6 +126,11 @@ export function ProfileEditor() {
           </button>
           {confirmacion && <p className="mensaje-perfil" role="status">{confirmacion}</p>}
         </form>
+      )}
+      {onViewBillingHistory && (
+        <button type="button" onClick={onViewBillingHistory}>
+          Historial de facturación
+        </button>
       )}
     </section>
   );
