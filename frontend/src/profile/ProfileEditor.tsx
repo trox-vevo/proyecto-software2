@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { fetchWithAuth } from "../auth/session";
+import { fetchWithAuth, getStoredSession } from "../auth/session";
 import "./ProfileEditor.css";
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -35,6 +35,7 @@ async function leerMensajeError(response: Response): Promise<string> {
 }
 
 export function ProfileEditor() {
+  const [sesionActiva] = useState(() => getStoredSession() !== null);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -42,6 +43,7 @@ export function ProfileEditor() {
   const [confirmacion, setConfirmacion] = useState("");
 
   useEffect(() => {
+    if (!sesionActiva) return;
     const controlador = new AbortController();
     fetchWithAuth(`${API_URL}/api/perfil`, { signal: controlador.signal })
       .then(async (response) => {
@@ -60,7 +62,7 @@ export function ProfileEditor() {
       });
 
     return () => controlador.abort();
-  }, []);
+  }, [sesionActiva]);
 
   async function guardar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -87,6 +89,8 @@ export function ProfileEditor() {
       setGuardando(false);
     }
   }
+
+  if (!sesionActiva) return null;
 
   return (
     <section className="editor-perfil" aria-labelledby="titulo-perfil">

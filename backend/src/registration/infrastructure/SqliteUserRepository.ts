@@ -131,6 +131,22 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
     }
   }
 
+  updateProfile(id: number, username: string, email: string): User | null {
+    try {
+      const result = this.database
+        .prepare("UPDATE users SET username = ?, email = ? WHERE id = ?")
+        .run(username, email, numericIdentifier(id));
+      return result.changes === 1 ? this.findById(id) : null;
+    } catch (error: unknown) {
+      const sqlError = error as { code?: unknown; errcode?: unknown; message?: unknown } | null;
+      if (sqlError?.errcode === 2067 || (sqlError?.code === "ERR_SQLITE_ERROR" &&
+          typeof sqlError.message === "string" && sqlError.message.includes("UNIQUE constraint failed: users.email"))) {
+        throw new DuplicateEmailError();
+      }
+      throw error;
+    }
+  }
+
   activatePro(id: number, expiresAt: string): void {
     // Un solo UPDATE: plan y vencimiento cambian juntos o no cambian.
     const result = this.database

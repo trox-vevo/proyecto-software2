@@ -27,6 +27,9 @@ const repository: UserRepository = {
   create: () => {
     throw new Error("no se usa en estas pruebas");
   },
+  updateProfile: () => {
+    throw new Error("no se usa en estas pruebas");
+  },
 };
 const service = new ProAccessService(repository);
 

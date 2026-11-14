@@ -15,6 +15,10 @@ function savingsResponse(filas: unknown[]) {
 
 describe("Integración de FSD y glosario en resultados", () => {
   it("muestra el estado seguro de datos anteriores y abre la definición desde la cabecera", async () => {
+    localStorage.setItem("yupay.auth.session", JSON.stringify({
+      id: "sesion-prueba", userId: 7, tokenJwt: "token-prueba",
+      plan: "BASICO", expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    }));
     const fetchMock = savingsResponse([{ cuentaId: "A", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024", monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true } }]);
     vi.stubGlobal("fetch", fetchMock); render(<App />);
     await screen.findByRole("table");
@@ -26,6 +30,7 @@ describe("Integración de FSD y glosario en resultados", () => {
     await userEvent.click(screen.getByRole("button", { name: "Consultar Interés" }));
     expect(within(screen.getByRole("dialog")).getByRole("heading", { name: "Interés" })).toBeInTheDocument();
     expect(fetchMock.mock.calls.filter(([url]) => String(url).includes("/api/ahorros/"))).toHaveLength(1);
+    await userEvent.click(screen.getByRole("button", { name: "Mi perfil" }));
     expect(fetchMock.mock.calls.filter(([url]) => String(url).includes("/api/perfil"))).toHaveLength(1);
     expect(screen.getByLabelText("Nombre de usuario")).toHaveValue(perfil.nombre);
   });

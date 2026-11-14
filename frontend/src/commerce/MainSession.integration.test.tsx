@@ -37,7 +37,10 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
   await userEvent.type(screen.getByLabelText("Contraseña"), "Clave-segura-123");
   await userEvent.click(screen.getByRole("button", { name: "Ingresar" }));
   await screen.findByRole("table");
+  await userEvent.click(screen.getByRole("button", { name: "Mi perfil" }));
   expect(await screen.findByLabelText("Nombre de usuario")).toHaveValue("Perfil demo");
+  await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
+  await screen.findByRole("table");
   await userEvent.click(screen.getByRole("button", { name: "Guardar favorito de A" }));
   expect(await screen.findByText("Simulación guardada como favorita.")).toBeInTheDocument();
   const request = fetchMock.mock.calls.find(([url]) => String(url).endsWith("/api/favorites"));

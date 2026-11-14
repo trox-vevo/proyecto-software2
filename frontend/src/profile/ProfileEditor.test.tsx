@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProfileEditor } from "./ProfileEditor";
+import { saveAuthSession } from "../auth/session";
 
 const perfilInicial = {
   id: "usuario-demo",
@@ -11,10 +12,31 @@ const perfilInicial = {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  localStorage.clear();
 });
 
+function iniciarSesion() {
+  saveAuthSession({
+    id: "sesion-prueba",
+    userId: 1,
+    tokenJwt: "token-prueba",
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    plan: "BASICO",
+  });
+}
+
 describe("ProfileEditor", () => {
+  it("no muestra ni consulta el perfil sin sesión", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const { container } = render(<ProfileEditor />);
+
+    expect(container).toBeEmptyDOMElement();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("carga y actualiza el perfil y confirma el resultado del servidor", async () => {
+    iniciarSesion();
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       if (init?.method === "PUT") {
         return new Response(JSON.stringify({
@@ -47,6 +69,7 @@ describe("ProfileEditor", () => {
   });
 
   it("muestra el error de duplicidad que devuelve el backend", async () => {
+    iniciarSesion();
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       if (init?.method === "PUT") {
         return new Response(JSON.stringify({ message: "Ese correo ya está asociado a otro usuario." }), {

@@ -31,7 +31,7 @@ it("integra JWT de main, plan persistido, favoritos idempotentes, recuperación 
   const products = new InMemoryProductRepository();
   const accounts = new RepositorioCuentas();
   const sendRecoveryLink = vi.fn(async (_destination: string, _link: string) => true);
-  const server = createApp(products, users, users, { sendRecoveryLink }, undefined, {
+  const server = createApp(products, users, users, { sendRecoveryLink }, {
     resolveUser: createFavoriteUserResolver(users),
     favoriteService: new FavoriteService(favorites, accounts, new FixedDepositSimulationService(products)),
   }).listen(0);
@@ -98,7 +98,15 @@ it("integra JWT de main, plan persistido, favoritos idempotentes, recuperación 
     expect(recovered.userId).toBe(pro.id);
     expect((await post("/favorites", parameters, recovered.tokenJwt)).status).toBe(200);
     expect((await post("/auth/reset-password", { token, newPassword: "Otra-clave-789" })).status).toBe(400);
-    expect((await fetch(base + "/perfil")).status).toBe(200);
+    const profileResponse = await fetch(base + "/perfil", {
+      headers: { Authorization: `Bearer ${basicSession.tokenJwt}` },
+    });
+    expect(profileResponse.status).toBe(200);
+    expect(await profileResponse.json()).toMatchObject({
+      id: String(basic.id),
+      nombre: input.username,
+      correo: input.email,
+    });
     expect((await fetch(base + "/plans")).status).toBe(200);
     assertNumericDatabase(file);
   } finally {

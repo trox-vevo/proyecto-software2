@@ -12,6 +12,7 @@ import { TablaAhorrosView } from "./tabla_ahorros/TablaAhorrosView";
 import { useTablaAhorrosController } from "./tabla_ahorros/useTablaAhorrosController";
 import "./App.css";
 import { ProfileEditor } from "./profile/ProfileEditor";
+import { getStoredSession } from "./auth/session";
 import { RegistrationRoute } from "./registration/RegistrationRoute";
 import { PlanComparison } from "./commerce/PlanComparison";
 import { Checkout } from "./commerce/Checkout";
@@ -39,8 +40,16 @@ function CommerceApp() {
     <nav className="comercio-nav" aria-label="Navegación principal">
       <a href="/" aria-current={path === "/" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/"); }}>Inicio</a>
       <a href="/planes" aria-current={path === "/planes" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/planes"); }}>Planes</a>
+      {getStoredSession() && (
+        <button type="button" aria-current={path === "/perfil" ? "page" : undefined} onClick={() => navigate("/perfil")}>Mi perfil</button>
+      )}
     </nav>
-    {path === "/planes" ? <PlanComparison onCheckout={() => navigate("/checkout")} />
+    {path === "/perfil" ? (
+      <main className="pagina">
+        <h1>Yupay Finance</h1>
+        <ProfileEditor />
+      </main>
+    ) : path === "/planes" ? <PlanComparison onCheckout={() => navigate("/checkout")} />
       : path === "/checkout" ? <Checkout onViewPlans={() => navigate("/planes")} onReturnToApp={() => navigate("/")} />
         : <FinanceApp onViewPlans={() => navigate("/planes")} />}
   </>;
@@ -63,7 +72,6 @@ function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
   return (
     <main className="pagina">
       <h1>Yupay Finance</h1>
-      <ProfileEditor />
       <div className="glosario-enlaces">
         <button className="glosario-enlace" type="button" onClick={() => setGlosario({ termino: null })}>Glosario financiero</button>
         <span>Consulta:</span>

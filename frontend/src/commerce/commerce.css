@@ -7,6 +7,19 @@
 }
 
 .comercio-nav a { color: var(--accent); }
+.comercio-nav button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.comercio-nav button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
 .comercio p { margin: 1rem 0; }
 .comercio button, .favorito-accion button {
   padding: .6rem .9rem;

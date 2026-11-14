@@ -10,8 +10,6 @@ import {
   DatosPerfilInvalidosError,
   PerfilNoEncontradoError,
 } from "./profile/application/ErroresPerfil";
-import { RepositorioPerfilesJson } from "./profile/infrastructure/RepositorioPerfilesJson";
-import type { RepositorioPerfiles } from "./profile/domain/RepositorioPerfiles";
 import { RegistrationService } from "./registration/application/RegistrationService";
 import type { UserRepository } from "./registration/domain/UserRepository";
 import { UserController } from "./registration/interface/UserController";
@@ -51,32 +49,22 @@ export interface Sprint3Dependencies {
 }
 
 
-const PERFIL_DEMO_ID = "usuario-demo";
-
 export function createApp(
   productRepository: FinancialProductRepository,
-  userOrProfileRepository?: UserRepository | RepositorioPerfiles | Sprint3Dependencies,
+  userOrDependencies?: UserRepository | Sprint3Dependencies,
   recoveryTokenRepository?: RecoveryTokenRepository,
   recoveryEmailService?: RecoveryEmailService,
-  profileRepository: RepositorioPerfiles = new RepositorioPerfilesJson(),
   sprint3Dependencies: Sprint3Dependencies = {},
 ) {
   const isUserRepository = (
-    repository: UserRepository | RepositorioPerfiles | Sprint3Dependencies,
+    repository: UserRepository | Sprint3Dependencies,
   ): repository is UserRepository => "findByEmail" in repository;
   const userRepository =
-    userOrProfileRepository && isUserRepository(userOrProfileRepository)
-      ? userOrProfileRepository
+    userOrDependencies && isUserRepository(userOrDependencies)
+      ? userOrDependencies
       : undefined;
-  const isProfileRepository = (
-    repository: UserRepository | RepositorioPerfiles | Sprint3Dependencies,
-  ): repository is RepositorioPerfiles => "buscarPorId" in repository;
-  const selectedProfileRepository =
-    userOrProfileRepository && isProfileRepository(userOrProfileRepository)
-      ? userOrProfileRepository
-      : profileRepository;
-  const dependencies = userOrProfileRepository && !isUserRepository(userOrProfileRepository) && !isProfileRepository(userOrProfileRepository)
-    ? userOrProfileRepository
+  const dependencies = userOrDependencies && !isUserRepository(userOrDependencies)
+    ? userOrDependencies
     : sprint3Dependencies;
 
   const app = express();
@@ -92,14 +80,22 @@ export function createApp(
   ));
   app.use("/api/checkout", createCheckoutRouter(checkoutController));
   app.use("/api/favorites", createFavoriteRouter(dependencies.resolveUser ?? (async () => null), dependencies.favoriteService));
-  const profileService = new ServicioPerfiles(selectedProfileRepository);
+  const profileService = userRepository ? new ServicioPerfiles(userRepository) : undefined;
 
-  app.get("/api/perfil", (_req, res) => {
-    res.json(profileService.obtener(PERFIL_DEMO_ID));
+  app.get("/api/perfil", (req, res) => {
+    if (req.userId === undefined || profileService === undefined) {
+      res.status(401).json({ message: "Debes iniciar sesión para consultar tu perfil." });
+      return;
+    }
+    res.json(profileService.obtener(req.userId));
   });
 
   app.put("/api/perfil", (req, res) => {
-    res.json(profileService.actualizar(PERFIL_DEMO_ID, req.body));
+    if (req.userId === undefined || profileService === undefined) {
+      res.status(401).json({ message: "Debes iniciar sesión para actualizar tu perfil." });
+      return;
+    }
+    res.json(profileService.actualizar(req.userId, req.body));
   });
 
   app.get("/api/health", (_req, res) => {

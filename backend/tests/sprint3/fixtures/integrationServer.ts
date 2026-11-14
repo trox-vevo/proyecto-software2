@@ -31,7 +31,7 @@ const tokens = {
 };
 const favorites = new SqliteFavoriteRepository(file);
 const products = new InMemoryProductRepository();
-const server = createApp(products, users, undefined, undefined, undefined, {
+const server = createApp(products, users, undefined, undefined, {
   favoriteService: new FavoriteService(favorites, new RepositorioCuentas(), new FixedDepositSimulationService(products)),
   resolveUser: createFavoriteUserResolver(users),
 }).listen(0, "127.0.0.1", () => {

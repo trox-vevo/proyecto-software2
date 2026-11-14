@@ -16,7 +16,7 @@ assertNumericDatabase(file);
 const products = new InMemoryProductRepository();
 const users = new SqliteUserRepository(file);
 const favorites = new SqliteFavoriteRepository(file);
-const server = createApp(products, users, users, new SmtpRecoveryEmailService(), undefined, {
+const server = createApp(products, users, users, new SmtpRecoveryEmailService(), {
   favoriteService: new FavoriteService(favorites, new RepositorioCuentas(), new FixedDepositSimulationService(products)),
   resolveUser: createFavoriteUserResolver(users),
 }).listen(PORT, () => {
