@@ -9,7 +9,7 @@
 .comercio-nav a { color: var(--accent); }
 .suscripcion-banner { margin: 1rem; padding: 1rem; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--accent-bg); color: var(--text-h); }
 .comercio p { margin: 1rem 0; }
-.comercio button, .favorito-accion button {
+.comercio button, .favorito-accion button, .simulaciones-guardadas button {
   padding: .6rem .9rem;
   border: 1px solid var(--accent-border);
   border-radius: 6px;
@@ -18,8 +18,8 @@
   font: inherit;
   cursor: pointer;
 }
-.comercio button:disabled, .favorito-accion button:disabled { opacity: .65; cursor: default; }
-.comercio button:focus-visible, .favorito-accion button:focus-visible, .comercio input:focus-visible {
+.comercio button:disabled, .favorito-accion button:disabled, .simulaciones-guardadas button:disabled { opacity: .65; cursor: default; }
+.comercio button:focus-visible, .favorito-accion button:focus-visible, .simulaciones-guardadas button:focus-visible, .comercio input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
@@ -29,6 +29,20 @@
 .comercio-aviso { padding: 1rem; border: 1px solid var(--border); border-radius: 8px; }
 .favorito-accion { min-width: 11rem; }
 .favorito-accion p { margin: .5rem 0; font-size: .85rem; }
+.simulaciones-guardadas { margin: 0 0 2rem; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; }
+.simulaciones-guardadas h2 { margin-top: 0; }
+.simulaciones-guardadas-lista { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: 1rem; }
+.simulacion-guardada { min-width: 0; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); }
+.simulacion-guardada h3 { margin: 0; overflow-wrap: anywhere; color: var(--text-h); }
+.simulacion-guardada p { margin: .5rem 0; }
+.simulacion-guardada dl { display: grid; gap: .6rem; }
+.simulacion-guardada dl > div { display: flex; justify-content: space-between; gap: .75rem; }
+.simulacion-guardada dt { color: var(--text-h); }
+.simulacion-guardada dd { margin: 0; text-align: right; }
+.simulacion-guardada-acciones { display: flex; flex-wrap: wrap; gap: .6rem; }
+.simulacion-guardada--saliendo { animation: simulacion-salir .22s ease-in forwards; }
+@keyframes simulacion-salir { to { opacity: 0; transform: translateX(1rem); } }
+@media (prefers-reduced-motion: reduce) { .simulacion-guardada--saliendo { animation: none; } }
 .checkout-formulario { display: grid; gap: 1.25rem; max-width: 38rem; margin-top: 1.5rem; }
 .checkout-formulario fieldset { display: grid; gap: .5rem; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; }
 .checkout-formulario input { box-sizing: border-box; width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: .65rem; font: inherit; background: var(--bg); color: var(--text-h); }

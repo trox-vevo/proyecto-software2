@@ -58,6 +58,27 @@ export class SqliteFavoriteRepository implements FavoriteRepository {
     }
   }
 
+  listByUser(userId: number): Favorite[] {
+    if (this.schemaIssue) throw this.schemaIssue;
+    if (!isEntityId(userId)) throw new FavoriteError(401, "AUTHENTICATION_REQUIRED", "La identidad del usuario debe contener un identificador numérico válido.");
+    const statement = this.database.prepare(`
+      SELECT id, user_id, fingerprint, parameters_json, snapshot_json, created_at
+      FROM favorite_simulations WHERE user_id = ? ORDER BY created_at DESC, id DESC
+    `);
+    statement.setReadBigInts(true);
+    return statement.all(userId).map((row) => this.readFavorite(row as Record<string, unknown>));
+  }
+
+  deleteByUser(userId: number, favoriteId: number): boolean {
+    if (this.schemaIssue) throw this.schemaIssue;
+    if (!isEntityId(userId)) throw new FavoriteError(401, "AUTHENTICATION_REQUIRED", "La identidad del usuario debe contener un identificador numérico válido.");
+    if (!isEntityId(favoriteId)) throw new FavoriteError(400, "INVALID_FAVORITE_ID", "El identificador del favorito no es válido.");
+    const result = this.database.prepare(
+      "DELETE FROM favorite_simulations WHERE id = ? AND user_id = ?",
+    ).run(favoriteId, userId);
+    return result.changes === 1 || result.changes === 1n;
+  }
+
   private hasCompatibleSchema(): boolean {
     const users = this.database.prepare("PRAGMA table_info(users)").all() as unknown as ColumnInfo[];
     const favorites = this.database.prepare("PRAGMA table_info(favorite_simulations)").all() as unknown as ColumnInfo[];

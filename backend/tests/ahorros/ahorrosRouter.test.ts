@@ -47,4 +47,15 @@ describe("GET /api/ahorros/rentabilidad", () => {
       });
     }
   });
+
+  it("permite re-simular únicamente la cuenta seleccionada", async () => {
+    const all = await (await fetch(endpoint)).json();
+    const accountId = all.resultados[0].cuentaId;
+    const response = await fetch(`${endpoint}?dias=180&accountId=${encodeURIComponent(accountId)}`);
+    const { resultados } = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(resultados).toHaveLength(1);
+    expect(resultados[0].cuentaId).toBe(accountId);
+  });
 });

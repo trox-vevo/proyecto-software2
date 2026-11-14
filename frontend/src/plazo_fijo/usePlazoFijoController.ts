@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { simularPlazoFijo } from "./api";
 import type { ParametrosPlazoFijo, ResultadoPlazoFijo } from "./tipos";
 import { validarParametros } from "./validacion";
@@ -21,7 +21,7 @@ export function usePlazoFijoController() {
 
   useEffect(() => () => solicitud.current?.abort(), []);
 
-  function cambiarParametros(nuevos: ParametrosPlazoFijo) {
+  const cambiarParametros = useCallback((nuevos: ParametrosPlazoFijo) => {
     solicitud.current?.abort();
     solicitud.current = null;
     setParametros(nuevos);
@@ -29,11 +29,11 @@ export function usePlazoFijoController() {
     setError(null);
     setErrores([]);
     setCargando(false);
-  }
+  }, []);
 
-  async function simular() {
+  const ejecutarSimulacion = useCallback(async (parametrosSimulacion: ParametrosPlazoFijo) => {
     // US07: si el monto es menor a 500, mostramos el aviso y no llamamos al backend.
-    const encontrados = validarParametros(parametros);
+    const encontrados = validarParametros(parametrosSimulacion);
     setErrores(encontrados);
     if (encontrados.length > 0) return;
 
@@ -44,8 +44,8 @@ export function usePlazoFijoController() {
     setError(null);
     setSimulacion(null);
     try {
-      const resultados = await simularPlazoFijo(parametros, controlador.signal);
-      if (!controlador.signal.aborted) setSimulacion({ parametros, resultados });
+      const resultados = await simularPlazoFijo(parametrosSimulacion, controlador.signal);
+      if (!controlador.signal.aborted) setSimulacion({ parametros: parametrosSimulacion, resultados });
     } catch (causa) {
       if (!controlador.signal.aborted) {
         setError(causa instanceof TypeError ? "No se pudo conectar con el servidor. Inténtalo de nuevo."
@@ -57,7 +57,18 @@ export function usePlazoFijoController() {
         solicitud.current = null;
       }
     }
-  }
+  }, []);
 
-  return { parametros, cambiarParametros, simular, simulacion, cargando, error, errores };
+  const simular = useCallback(() => ejecutarSimulacion(parametros), [ejecutarSimulacion, parametros]);
+  const volverASimular = useCallback((nuevosParametros: ParametrosPlazoFijo) => {
+    solicitud.current?.abort();
+    solicitud.current = null;
+    setParametros(nuevosParametros);
+    setSimulacion(null);
+    setError(null);
+    setErrores([]);
+    return ejecutarSimulacion(nuevosParametros);
+  }, [ejecutarSimulacion]);
+
+  return { parametros, cambiarParametros, simular, volverASimular, simulacion, cargando, error, errores };
 }

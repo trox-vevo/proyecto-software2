@@ -162,8 +162,33 @@ describe("US28, validación y reutilización de simuladores", () => {
       expect(duplicateGroups).toEqual([]);
     } finally { database.close(); }
   });
-  it("mantiene la gestión de favoritos reservada a US29", async () => {
-    expect((await fetch(endpoint)).status).toBe(404);
-    expect((await fetch(endpoint + "/otro", { method: "DELETE" })).status).toBe(404);
+  it("lista favoritos propios y elimina solo los que pertenecen al usuario", async () => {
+    const first = await (await post({ ...savings, days: 240 }, "Bearer test-pro-a")).json();
+    const other = await (await post({ ...savings, days: 240 }, "Bearer test-pro-b")).json();
+    const listing = await fetch(endpoint, { headers: { Authorization: "Bearer test-pro-a" } });
+    expect(listing.status).toBe(200);
+    const favorites = (await listing.json()).favorites;
+    expect(favorites.map((favorite: { id: number }) => favorite.id)).toContain(first.favorite.id);
+    expect(favorites.map((favorite: { id: number }) => favorite.id)).not.toContain(other.favorite.id);
+
+    const forbiddenDelete = await fetch(`${endpoint}/${other.favorite.id}`, {
+      method: "DELETE", headers: { Authorization: "Bearer test-pro-a" },
+    });
+    expect(forbiddenDelete.status).toBe(404);
+    const deleted = await fetch(`${endpoint}/${first.favorite.id}`, {
+      method: "DELETE", headers: { Authorization: "Bearer test-pro-a" },
+    });
+    expect(deleted.status).toBe(200);
+    expect(await deleted.json()).toMatchObject({ deleted: true });
+    const remaining = await (await fetch(endpoint, { headers: { Authorization: "Bearer test-pro-a" } })).json();
+    expect(remaining.favorites).not.toEqual(expect.arrayContaining([expect.objectContaining({ id: first.favorite.id })]));
+  });
+
+  it("requiere autenticación y plan Pro para listar y eliminar", async () => {
+    expect((await fetch(endpoint)).status).toBe(401);
+    expect((await fetch(endpoint, { headers: { Authorization: "Bearer test-basic" } })).status).toBe(403);
+    expect((await fetch(`${endpoint}/1`, { method: "DELETE" })).status).toBe(401);
+    expect((await fetch(`${endpoint}/1`, { method: "DELETE", headers: { Authorization: "Bearer test-basic" } })).status).toBe(403);
+    expect((await fetch(`${endpoint}/0`, { method: "DELETE", headers: { Authorization: "Bearer test-pro-a" } })).status).toBe(400);
   });
 });

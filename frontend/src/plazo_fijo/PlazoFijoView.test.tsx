@@ -18,6 +18,24 @@ function completar() {
 }
 
 describe("Integración US06 + US12 | Flujo de simulación", () => {
+  it("reinyecta parámetros guardados de plazo fijo y ejecuta la simulación", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json([fila]));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<PlazoFijoView replay={{
+      id: 1,
+      parameters: { amount: "1250.00", department: "Cusco", paymentMode: "MONTHLY", termDays: 180 },
+    }} />);
+
+    expect(await screen.findByText("Entidad de prueba")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Monto de inversión/)).toHaveValue("1250.00");
+    expect(screen.getByLabelText("Departamento")).toHaveValue("Cusco");
+    expect(screen.getByLabelText(/Modalidad/)).toHaveValue("MONTHLY");
+    expect(screen.getByLabelText("Plazo en días")).toHaveValue("180");
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({
+      amount: "1250.00", department: "Cusco", paymentMode: "MONTHLY", termDays: 180,
+    });
+  });
+
   it("envía los cuatro parámetros al endpoint existente y muestra su respuesta", async () => {
     const fetchMock = vi.fn().mockResolvedValue(json([fila]));
     vi.stubGlobal("fetch", fetchMock);
