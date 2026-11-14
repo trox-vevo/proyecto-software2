@@ -3,7 +3,10 @@ import type { ProAccessService } from "../application/ProAccessService";
 
 // US27 (TS-85): solo traduce HTTP. req.userId lo deja optionalAuthMiddleware (US03).
 export class ProAccessMiddleware {
-  constructor(private readonly proAccessService: ProAccessService) {}
+  constructor(
+    private readonly proAccessService: ProAccessService,
+    private readonly accessDeniedMessage = "Exclusivo Plan Pro",
+  ) {}
 
   handle = (req: Request, res: Response, next: NextFunction): void => {
     if (req.userId === undefined) {
@@ -11,7 +14,7 @@ export class ProAccessMiddleware {
       return;
     }
     if (!this.proAccessService.hasProAccess(req.userId)) {
-      res.status(403).json({ message: "Exclusivo Plan Pro" });
+      res.status(403).json({ message: this.accessDeniedMessage });
       return;
     }
     next();

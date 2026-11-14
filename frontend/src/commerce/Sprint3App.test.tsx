@@ -59,6 +59,8 @@ describe("Sprint 3 desde la navegación normal", () => {
   it("abre el historial de facturación desde los ajustes de la cuenta", async () => {
     const fetchMock = setup();
     await screen.findByRole("table");
+    await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
+    await screen.findByRole("heading", { name: "Mi perfil" });
     await userEvent.click(screen.getByRole("button", { name: "Historial de facturación" }));
     expect(await screen.findByRole("heading", { name: "Historial de facturación" })).toBeInTheDocument();
     expect(window.location.pathname).toBe("/facturacion");

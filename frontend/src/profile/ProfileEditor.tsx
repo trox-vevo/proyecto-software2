@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { fetchWithAuth } from "../auth/session";
+import { NotificationPreferences } from "./NotificationPreferences";
 import "./ProfileEditor.css";
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -90,7 +91,7 @@ export function ProfileEditor({ onViewBillingHistory }: { onViewBillingHistory?:
 
   return (
     <section className="editor-perfil" aria-labelledby="titulo-perfil">
-      <h2 id="titulo-perfil">Mi perfil</h2>
+      <h1 id="titulo-perfil">Mi perfil</h1>
       {cargando && <p role="status">Cargando perfil…</p>}
       {error && <p className="mensaje-perfil error" role="alert">{error}</p>}
       {!cargando && perfil !== null && (
@@ -132,6 +133,7 @@ export function ProfileEditor({ onViewBillingHistory }: { onViewBillingHistory?:
           Historial de facturación
         </button>
       )}
+      <NotificationPreferences />
     </section>
   );
 }

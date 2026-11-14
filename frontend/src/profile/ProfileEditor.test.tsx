@@ -36,7 +36,7 @@ describe("ProfileEditor", () => {
     await userEvent.type(correo, "ana@ejemplo.com");
     await userEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
-    expect(await screen.findByRole("status")).toHaveTextContent("Perfil actualizado correctamente.");
+    expect(await screen.findByText("Perfil actualizado correctamente.")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining("/api/perfil"),
       expect.objectContaining({

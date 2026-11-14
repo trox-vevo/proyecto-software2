@@ -35,8 +35,11 @@ it("combina FSD, consulta contextual, semáforo y favoritos con el acceso a plan
   });
   vi.stubGlobal("fetch", fetchMock);
   render(<App />);
-  const table = await screen.findByRole("table");
+  await screen.findByRole("table");
+  await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
   expect(await screen.findByLabelText("Nombre de usuario")).toHaveValue("Perfil demo");
+  await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
+  const table = await screen.findByRole("table");
   expect(within(table).getByRole("columnheader", { name: "Favoritos Pro" })).toBeInTheDocument();
   expect(within(table).getByText("Cobertura FSD no verificada")).toBeInTheDocument();
   const queryFsd = within(table).getByRole("button", { name: "Consultar FSD" });

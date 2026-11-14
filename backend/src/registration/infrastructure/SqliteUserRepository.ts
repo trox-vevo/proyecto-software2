@@ -12,6 +12,11 @@ import type {
   RenewalPaymentFailureEvent,
   SubscriptionMaintenanceRepository,
 } from "../../subscription/domain/SubscriptionMaintenanceRepository";
+import {
+  isNotificationPreferences,
+  type NotificationPreferences,
+  type NotificationPreferencesRepository,
+} from "../../notifications/NotificationPreferences";
 
 export class UserSchemaMigrationRequiredError extends Error {
   constructor() {
@@ -42,7 +47,7 @@ interface CheckoutPaymentRow {
 }
 
 // US02: email es unico a nivel de base de datos, no solo en el frontend.
-export class SqliteUserRepository implements UserRepository, RecoveryTokenRepository, SubscriptionMaintenanceRepository, CheckoutPaymentHistoryRepository {
+export class SqliteUserRepository implements UserRepository, RecoveryTokenRepository, SubscriptionMaintenanceRepository, CheckoutPaymentHistoryRepository, NotificationPreferencesRepository {
   private readonly database: DatabaseSync;
 
   constructor(filePath = "data/usuarios.sqlite") {
@@ -145,6 +150,13 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
           amount REAL,
           currency TEXT NOT NULL CHECK(currency = 'PEN'),
           receipt_status TEXT NOT NULL CHECK(receipt_status IN ('AVAILABLE', 'NOT_APPLICABLE'))
+        )
+      `);
+      this.database.exec(`
+        CREATE TABLE IF NOT EXISTS notification_preferences (
+          user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+          alert_types TEXT NOT NULL,
+          frequency TEXT NOT NULL CHECK(frequency IN ('INMEDIATA', 'RESUMEN_DIARIO'))
         )
       `);
     } catch (error) {
@@ -297,6 +309,57 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
       .prepare("UPDATE users SET plan_cancel_at_period_end = 1 WHERE id = ? AND plan = 'PRO' AND plan_cancel_at_period_end = 0")
       .run(numericIdentifier(id));
     if (result.changes !== 1) throw new Error("No se pudo programar la cancelación del Plan Pro.");
+  }
+
+  findNotificationPreferences(userId: number): NotificationPreferences | undefined {
+    if (!Number.isSafeInteger(userId) || userId <= 0) {
+      throw new RangeError("El usuario de las preferencias no es válido.");
+    }
+    const row = this.database.prepare(
+      "SELECT alert_types, frequency FROM notification_preferences WHERE user_id = ?",
+    ).get(numericIdentifier(userId)) as {
+      alert_types: string;
+      frequency: string;
+    } | undefined;
+    if (row === undefined) return undefined;
+
+    let alertTypes: unknown;
+    try {
+      alertTypes = JSON.parse(row.alert_types) as unknown;
+    } catch (error: unknown) {
+      if (error instanceof SyntaxError) {
+        throw new Error(
+          "Las preferencias de notificación guardadas contienen datos inválidos.",
+          { cause: error },
+        );
+      }
+      throw error;
+    }
+    const value: unknown = {
+      alertTypes,
+      frequency: row.frequency,
+    };
+    if (!isNotificationPreferences(value)) {
+      throw new Error("Las preferencias de notificación guardadas son inválidas.");
+    }
+    return value;
+  }
+
+  saveNotificationPreferences(userId: number, preferences: NotificationPreferences): void {
+    if (!Number.isSafeInteger(userId) || userId <= 0) {
+      throw new RangeError("El usuario de las preferencias no es válido.");
+    }
+    this.database.prepare(`
+      INSERT INTO notification_preferences (user_id, alert_types, frequency)
+      VALUES (?, ?, ?)
+      ON CONFLICT(user_id) DO UPDATE SET
+        alert_types = excluded.alert_types,
+        frequency = excluded.frequency
+    `).run(
+      numericIdentifier(userId),
+      JSON.stringify(preferences.alertTypes),
+      preferences.frequency,
+    );
   }
 
   processDueProDowngrades(now: string): void {

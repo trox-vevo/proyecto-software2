@@ -37,11 +37,18 @@ it("mantiene edición de perfil, FSD, glosario contextual y zero-state al filtra
   render(<App />);
   await screen.findByRole("table");
   expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Mi perfil" }));
+  expect(window.location.pathname).toBe("/perfil");
+  expect(screen.getByRole("heading", { name: "Preferencias de notificaciones" })).toBeInTheDocument();
   const nombre = await screen.findByLabelText("Nombre de usuario");
   await userEvent.clear(nombre);
   await userEvent.type(nombre, "Nombre actualizado");
   await userEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
   expect(await screen.findByText("Perfil actualizado correctamente.")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
+  await screen.findByRole("table");
+  const savingsRequestsBeforeFiltering = fetchMock.mock.calls
+    .filter(([url]) => String(url).includes("/api/ahorros/")).length;
   const contextual = screen.getByRole("button", { name: "Consultar FSD" });
   await userEvent.click(contextual);
   expect(within(screen.getByRole("dialog")).getByRole("heading", { name: "FSD" })).toBeInTheDocument();
@@ -59,7 +66,8 @@ it("mantiene edición de perfil, FSD, glosario contextual y zero-state al filtra
   await userEvent.click(screen.getByLabelText("Sin costo de mantenimiento"));
   expect(screen.getByRole("table")).toBeInTheDocument();
   expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
-  expect(fetchMock.mock.calls.filter(([url]) => String(url).includes("/api/ahorros/"))).toHaveLength(1);
+  expect(fetchMock.mock.calls.filter(([url]) => String(url).includes("/api/ahorros/")))
+    .toHaveLength(savingsRequestsBeforeFiltering);
   expect(fetchMock.mock.calls.find(([url, init]) => String(url).endsWith("/api/perfil") && init?.method === "PUT")?.[1]?.body)
     .toBe(JSON.stringify({ nombre: "Nombre actualizado", correo: "demo@example.com" }));
 });
@@ -82,6 +90,8 @@ it("navega registro → login → finanzas y conserva perfil, glosario y bearer 
   await userEvent.click(screen.getByRole("button", { name: "Ingresar" }));
   await screen.findByRole("table");
   expect(window.location.pathname).toBe("/");
+  expect(screen.queryByLabelText("Nombre de usuario")).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
   expect(await screen.findByLabelText("Nombre de usuario")).toHaveValue("Usuario demo");
   expect(screen.getByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
   expect(JSON.parse(localStorage.getItem("yupay.auth.session")!).userId).toBe(7);
@@ -89,6 +99,8 @@ it("navega registro → login → finanzas y conserva perfil, glosario y bearer 
     const request = fetchMock.mock.calls.find(([url]) => String(url).includes(endpoint));
     expect(new Headers(request?.[1]?.headers).get("Authorization")).toBe("Bearer signed-test-token");
   }
+  await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
+  await screen.findByRole("table");
   await userEvent.click(screen.getByRole("button", { name: "Glosario financiero" }));
   expect(screen.getByRole("dialog")).toBeInTheDocument();
   await userEvent.keyboard("{Escape}");
@@ -98,6 +110,6 @@ it("navega registro → login → finanzas y conserva perfil, glosario y bearer 
   expect(screen.getByRole("heading", { name: "Iniciar sesión" })).toBeInTheDocument();
   await userEvent.click(screen.getByRole("link", { name: "Volver al inicio" }));
   await screen.findByRole("table");
-  expect(screen.getByRole("heading", { name: "Mi perfil" })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Mi perfil" })).toBeInTheDocument();
   expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
 });
