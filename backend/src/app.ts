@@ -56,10 +56,17 @@ import type { SubscriptionMaintenanceRepository } from "./subscription/domain/Su
 import { createFavoriteRouter } from "./favorites/interface/favoriteRoutes";
 import type { FavoriteService } from "./favorites/application/FavoriteService";
 import type { ResolveUser } from "./favorites/domain/Favorite";
+import { NotificationPreferencesController } from "./notifications/NotificationPreferencesController";
+import {
+  type NotificationPreferencesRepository,
+} from "./notifications/NotificationPreferences";
+import { NotificationPreferencesService } from "./notifications/NotificationPreferencesService";
+import { createNotificationPreferencesRouter } from "./notifications/notificationPreferencesRoutes";
 
 export interface Sprint3Dependencies {
   resolveUser?: ResolveUser;
   favoriteService?: FavoriteService;
+  notificationPreferencesRepository?: NotificationPreferencesRepository;
 }
 
 
@@ -148,6 +155,22 @@ export function createApp(
     dependencies.favoriteService,
     userRepository ? proAccessService : undefined,
   ));
+  const notificationPreferencesRepository =
+    dependencies.notificationPreferencesRepository ??
+    (userRepository && supportsNotificationPreferences(userRepository) ? userRepository : undefined);
+  const notificationPreferencesController = new NotificationPreferencesController(
+    notificationPreferencesRepository
+      ? new NotificationPreferencesService(notificationPreferencesRepository)
+      : undefined,
+  );
+  app.use(
+    "/api/notifications",
+    new ProAccessMiddleware(
+      proAccessService,
+      "Esta función está disponible solo para usuarios Pro. Actualiza tu plan para personalizar tus alertas.",
+    ).handle,
+    createNotificationPreferencesRouter(notificationPreferencesController),
+  );
   const profileService = new ServicioPerfiles(selectedProfileRepository);
 
   app.get("/api/perfil", (_req, res) => {
@@ -218,6 +241,7 @@ export function createApp(
         ),
       );
     }
+
   }
 
   app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
@@ -247,4 +271,13 @@ export function createApp(
   });
 
   return app;
+}
+
+function supportsNotificationPreferences(
+  repository: UserRepository,
+): repository is UserRepository & NotificationPreferencesRepository {
+  return "findNotificationPreferences" in repository &&
+    typeof repository.findNotificationPreferences === "function" &&
+    "saveNotificationPreferences" in repository &&
+    typeof repository.saveNotificationPreferences === "function";
 }

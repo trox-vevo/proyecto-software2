@@ -56,6 +56,15 @@ definirse, por lo que el historial no atribuye montos ficticios.
 El perfil de demostración se sirve mediante `GET /api/perfil` y se actualiza con
 `PUT /api/perfil`, enviando `nombre` y `correo` como JSON. Los datos se guardan en
 `backend/data/perfiles.json`; los correos deben ser únicos entre los perfiles.
+En la interfaz, el botón **Mi perfil** abre la página `/perfil`, donde se agrupan
+la edición del perfil y las preferencias de notificación.
+
+La US37 ofrece preferencias de notificación a usuarios Pro en
+`GET /api/notifications/preferences` y `PUT /api/notifications/preferences`.
+El cuerpo admite `alertTypes` (`CAMBIO_TASA` y/o `CAMBIO_RIESGO`) y `frequency`
+(`INMEDIATA` o `RESUMEN_DIARIO`). Las preferencias se guardan por usuario en
+SQLite; las cuentas Básicas reciben un `403` con la indicación para actualizar
+su plan.
 
 ## SQLite e integraci?n del Sprint 1
 

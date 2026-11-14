@@ -56,6 +56,7 @@ function CommerceApp() {
       <a href="/planes" aria-current={path === "/planes" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/planes"); }}>Planes</a>
       <a href="/favoritos" aria-current={path === "/favoritos" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/favoritos"); }}>Mis favoritos</a>
       <a href="/facturacion" aria-current={path === "/facturacion" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/facturacion"); }}>Facturación</a>
+      <a href="/perfil" aria-current={path === "/perfil" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/perfil"); }}>Mi perfil</a>
     </nav>
     <SubscriptionStatusBanner />
     {path === "/planes" ? <PlanComparison onCheckout={() => navigate("/checkout")} />
@@ -65,17 +66,21 @@ function CommerceApp() {
         <SavedSimulations onReplay={volverASimular} onViewPlans={() => navigate("/planes")} />
       </main>
       : path === "/facturacion" ? <main className="pagina"><BillingHistory onReturn={() => navigate("/")} /></main>
-      : <FinanceApp onViewPlans={() => navigate("/planes")} onViewBillingHistory={() => navigate("/facturacion")} replay={replayRequest} />}
+      : path === "/perfil" ? <main className="pagina">
+        <button type="button" onClick={() => navigate("/")}>Volver al inicio</button>
+        <ProfileEditor onViewBillingHistory={() => navigate("/facturacion")} />
+      </main>
+      : <FinanceApp onViewPlans={() => navigate("/planes")} onViewProfile={() => navigate("/perfil")} replay={replayRequest} />}
   </>;
 }
 
 function FinanceApp({
   onViewPlans,
-  onViewBillingHistory,
+  onViewProfile,
   replay,
 }: {
   onViewPlans: () => void;
-  onViewBillingHistory: () => void;
+  onViewProfile: () => void;
   replay?: { id: number; parameters: FavoriteParameters };
 }) {
   const [glosario, setGlosario] = useState<{ termino: string | null } | null>(null);
@@ -109,7 +114,7 @@ function FinanceApp({
   return (
     <main className="pagina">
       <h1>Yupay Finance</h1>
-      <ProfileEditor onViewBillingHistory={onViewBillingHistory} />
+      <button className="boton-mi-perfil" type="button" onClick={onViewProfile}>Mi perfil</button>
       <div className="glosario-enlaces">
         <button className="glosario-enlace" type="button" onClick={() => setGlosario({ termino: null })}>Glosario financiero</button>
         <span>Consulta:</span>

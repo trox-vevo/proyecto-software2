@@ -26,6 +26,8 @@ describe("Integración de FSD y glosario en resultados", () => {
     await userEvent.click(screen.getByRole("button", { name: "Consultar Interés" }));
     expect(within(screen.getByRole("dialog")).getByRole("heading", { name: "Interés" })).toBeInTheDocument();
     expect(fetchMock.mock.calls.filter(([url]) => String(url).includes("/api/ahorros/"))).toHaveLength(1);
+    await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
+    await screen.findByLabelText("Nombre de usuario");
     expect(fetchMock.mock.calls.filter(([url]) => String(url).includes("/api/perfil"))).toHaveLength(1);
     expect(screen.getByLabelText("Nombre de usuario")).toHaveValue(perfil.nombre);
   });
