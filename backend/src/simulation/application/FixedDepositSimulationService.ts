@@ -6,6 +6,7 @@ import { MonthlyPaymentCalculator } from "../domain/MonthlyPaymentCalculator";
 import { PaymentMode } from "../domain/PaymentMode";
 import { SimulationResult } from "../domain/SimulationResult";
 import { InvalidSimulationParametersError } from "./InvalidSimulationParametersError";
+import type { RiskEvaluationService } from "../../risk/application/RiskEvaluationService";
 
 const ALLOWED_TERM_DAYS = [180, 360, 540, 720, 900, 1080];
 const MINIMUM_OPENING_AMOUNT = new Decimal("500");
@@ -20,7 +21,11 @@ export class FixedDepositSimulationService {
     [PaymentMode.MONTHLY]: new MonthlyPaymentCalculator(),
   };
 
-  constructor(private readonly repository: FinancialProductRepository) {}
+  // US25: riskEvaluationService es opcional; sin él los resultados salen sin calificación
+  constructor(
+    private readonly repository: FinancialProductRepository,
+    private readonly riskEvaluationService?: RiskEvaluationService,
+  ) {}
 
   async simulate(
     amount: Decimal,
@@ -44,11 +49,12 @@ export class FixedDepositSimulationService {
     ).filter((product) => product.minimumAmount.lte(amount));
     const calculator = this.getCalculator(paymentMode);
 
-    return this.sortByTotalInterest(
+    const results = this.sortByTotalInterest(
       products.map((product) =>
         calculator.calculate(amount, product, termDays),
       ),
     );
+    return this.riskEvaluationService?.assignRiskRatings(results) ?? results;
   }
 
   private validateTerm(termDays: number): boolean {

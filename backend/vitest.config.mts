@@ -16,6 +16,8 @@ export default defineConfig({
         "src/checkout/**": { lines: 80, functions: 80, branches: 80, statements: 80 },
         // US30
         "src/reports/**": { lines: 80, functions: 80, branches: 80, statements: 80 },
+        // US25 (risk/domain tiene además los tipos de la US22, sin lógica)
+        "src/risk/{application,infrastructure}/**": { lines: 80, functions: 80, branches: 80, statements: 80 },
       },
     },
   },

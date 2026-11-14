@@ -26,4 +26,9 @@ export class SimulationResult {
   hideRiskRating(): void {
     this.riskRating = null;
   }
+
+  // US25: calificación de la SBS que pone RiskEvaluationService
+  assignRiskRating(riskRating: string): void {
+    this.riskRating = riskRating;
+  }
 }

@@ -1,0 +1,8 @@
+[
+  { "entityId": 1, "entityName": "Entidad A", "riskRating": "A+", "capitalAdequacyRatio": "0.1620", "delinquencyRate": "0.0210", "liquidityRatio": "0.3150", "reportDate": "2026-09-30", "sourceUrl": "https://www.sbs.gob.pe/" },
+  { "entityId": 2, "entityName": "Entidad B", "riskRating": "A", "capitalAdequacyRatio": "0.1480", "delinquencyRate": "0.0290", "liquidityRatio": "0.2840", "reportDate": "2026-09-30", "sourceUrl": "https://www.sbs.gob.pe/" },
+  { "entityId": 3, "entityName": "Entidad C", "riskRating": "B+", "capitalAdequacyRatio": "0.1310", "delinquencyRate": "0.0460", "liquidityRatio": "0.2210", "reportDate": "2026-09-30", "sourceUrl": "https://www.sbs.gob.pe/" },
+  { "entityId": 4, "entityName": "Entidad D", "riskRating": "C", "capitalAdequacyRatio": "0.1070", "delinquencyRate": "0.0890", "liquidityRatio": "0.1520", "reportDate": "2026-09-30", "sourceUrl": "https://www.sbs.gob.pe/" },
+  { "entityId": 5, "entityName": "Entidad E", "riskRating": "A-", "capitalAdequacyRatio": "0.1390", "delinquencyRate": "0.0350", "liquidityRatio": "0.2630", "reportDate": "2026-09-30", "sourceUrl": "https://www.sbs.gob.pe/" },
+  { "entityId": 6, "entityName": "Entidad F", "riskRating": "B", "capitalAdequacyRatio": "0.1240", "delinquencyRate": "0.0520", "liquidityRatio": "0.2050", "reportDate": "2026-09-30", "sourceUrl": "https://www.sbs.gob.pe/" }
+]
