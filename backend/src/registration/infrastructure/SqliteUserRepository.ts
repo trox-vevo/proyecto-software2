@@ -5,6 +5,7 @@ import type { NewUser, User } from "../domain/User";
 import { DuplicateEmailError, type UserRepository } from "../domain/UserRepository";
 import type { NewRecoveryToken, RecoveryTokenRepository } from "../../recovery/domain/RecoveryTokenRepository";
 import { numericIdentifier } from "../domain/NumericIdentifier";
+import type { CheckoutPayment, CheckoutPaymentHistoryRepository } from "../../checkout/CheckoutPaymentHistory";
 import type {
   PlanChangeHistoryEntry,
   PendingPlanChangeNotification,
@@ -30,8 +31,18 @@ interface UserRow {
   plan_cancel_at_period_end: bigint;
 }
 
+interface CheckoutPaymentRow {
+  reference: string;
+  outcome: CheckoutPayment["outcome"];
+  occurred_at: string;
+  plan_id: "PRO";
+  amount: number | null;
+  currency: "PEN";
+  receipt_status: CheckoutPayment["receiptStatus"];
+}
+
 // US02: email es unico a nivel de base de datos, no solo en el frontend.
-export class SqliteUserRepository implements UserRepository, RecoveryTokenRepository, SubscriptionMaintenanceRepository {
+export class SqliteUserRepository implements UserRepository, RecoveryTokenRepository, SubscriptionMaintenanceRepository, CheckoutPaymentHistoryRepository {
   private readonly database: DatabaseSync;
 
   constructor(filePath = "data/usuarios.sqlite") {
@@ -123,6 +134,19 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
           occurred_at TEXT NOT NULL
         )
       `);
+      this.database.exec(`
+        CREATE TABLE IF NOT EXISTS checkout_payment_history (
+          id INTEGER PRIMARY KEY AUTOINCREMENT CHECK(id BETWEEN 1 AND 9007199254740991),
+          user_id INTEGER NOT NULL REFERENCES users(id),
+          reference TEXT NOT NULL UNIQUE,
+          outcome TEXT NOT NULL CHECK(outcome IN ('APPROVED', 'DECLINED')),
+          occurred_at TEXT NOT NULL,
+          plan_id TEXT NOT NULL CHECK(plan_id = 'PRO'),
+          amount REAL,
+          currency TEXT NOT NULL CHECK(currency = 'PEN'),
+          receipt_status TEXT NOT NULL CHECK(receipt_status IN ('AVAILABLE', 'NOT_APPLICABLE'))
+        )
+      `);
     } catch (error) {
       this.database.close();
       throw error;
@@ -197,6 +221,75 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
       .prepare("UPDATE users SET plan = 'PRO', plan_expires_at = ?, plan_cancel_at_period_end = 0 WHERE id = ?")
       .run(expiresAt, numericIdentifier(id));
     if (result.changes !== 1) throw new Error("No se pudo activar el Plan Pro.");
+  }
+
+  recordCheckoutAttempt(userId: number, payment: CheckoutPayment): void {
+    this.database.exec("BEGIN IMMEDIATE");
+    try {
+      this.insertCheckoutPayment(userId, payment);
+      this.database.exec("COMMIT");
+    } catch (error) {
+      this.database.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  recordApprovedCheckout(userId: number, expiresAt: string, payment: CheckoutPayment): void {
+    this.database.exec("BEGIN IMMEDIATE");
+    try {
+      const updated = this.database
+        .prepare("UPDATE users SET plan = 'PRO', plan_expires_at = ?, plan_cancel_at_period_end = 0 WHERE id = ?")
+        .run(expiresAt, numericIdentifier(userId));
+      if (updated.changes !== 1) throw new Error("No se pudo activar el Plan Pro.");
+      this.insertCheckoutPayment(userId, payment);
+      this.database.exec("COMMIT");
+    } catch (error) {
+      this.database.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  findCheckoutHistory(userId: number): CheckoutPayment[] {
+    const query = this.database.prepare(
+      "SELECT reference, outcome, occurred_at, plan_id, amount, currency, receipt_status FROM checkout_payment_history WHERE user_id = ? ORDER BY occurred_at DESC, id DESC",
+    );
+    const rows = query.all(numericIdentifier(userId)) as unknown as CheckoutPaymentRow[];
+    return rows.map((row) => this.mapCheckoutPayment(row));
+  }
+
+  findCheckoutReceipt(userId: number, reference: string): CheckoutPayment | null {
+    const query = this.database.prepare(
+      "SELECT reference, outcome, occurred_at, plan_id, amount, currency, receipt_status FROM checkout_payment_history WHERE user_id = ? AND reference = ?",
+    );
+    const row = query.get(numericIdentifier(userId), reference) as unknown as CheckoutPaymentRow | undefined;
+    return row ? this.mapCheckoutPayment(row) : null;
+  }
+
+  private insertCheckoutPayment(userId: number, payment: CheckoutPayment): void {
+    this.database.prepare(
+      "INSERT INTO checkout_payment_history (user_id, reference, outcome, occurred_at, plan_id, amount, currency, receipt_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    ).run(
+      numericIdentifier(userId),
+      payment.reference,
+      payment.outcome,
+      payment.occurredAt,
+      payment.planId,
+      payment.amount,
+      payment.currency,
+      payment.receiptStatus,
+    );
+  }
+
+  private mapCheckoutPayment(row: CheckoutPaymentRow): CheckoutPayment {
+    return {
+      reference: row.reference,
+      outcome: row.outcome,
+      occurredAt: row.occurred_at,
+      planId: row.plan_id,
+      amount: row.amount,
+      currency: row.currency,
+      receiptStatus: row.receipt_status,
+    };
   }
 
   requestProCancellation(id: number): void {

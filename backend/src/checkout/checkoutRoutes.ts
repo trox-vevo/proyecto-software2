@@ -4,7 +4,9 @@ import type { CheckoutController } from "./CheckoutController";
 
 export { validateBilling } from "./BillingValidation";
 
-export function createCheckoutRouter(controller: Pick<CheckoutController, "processPayment">): Router {
+export function createCheckoutRouter(
+  controller: Pick<CheckoutController, "processPayment" | "getHistory" | "downloadReceipt">,
+): Router {
   const router = Router();
   router.get("/config", (_req, res) => {
     res.json({
@@ -33,5 +35,7 @@ export function createCheckoutRouter(controller: Pick<CheckoutController, "proce
   });
   // US33: el pago exige sesión y activa el Plan Pro; el controlador traduce HTTP.
   router.post("/simulate", controller.processPayment);
+  router.get("/history", controller.getHistory);
+  router.get("/history/:reference/receipt", controller.downloadReceipt);
   return router;
 }

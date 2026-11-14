@@ -14,6 +14,7 @@ function setup() {
     if (url.endsWith("/api/perfil")) return Response.json({ id: "usuario-demo", nombre: "Usuario demo", correo: "demo@example.com" });
     if (url.endsWith("/api/plans")) return new Response(JSON.stringify(catalog));
     if (url.endsWith("/api/checkout/config")) return new Response(JSON.stringify({ environment: "DEMO", provider: "LOCAL_MOCK", simulation: true, cardCaptureAvailable: true, processingAvailable: true, realPaymentsAvailable: false, membershipActivationAvailable: true }));
+    if (url.endsWith("/api/checkout/history")) return Response.json({ transactions: [] });
     if (url.endsWith("/api/favorites")) return new Response("{}", { status: 403 });
     return new Response(JSON.stringify({ resultados: [{ cuentaId: "A", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024", monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true } }] }));
   });
@@ -53,5 +54,14 @@ describe("Sprint 3 desde la navegación normal", () => {
     await screen.findByRole("table");
     act(() => { window.history.replaceState(null, "", "/planes"); window.dispatchEvent(new PopStateEvent("popstate")); });
     expect(await screen.findByRole("heading", { name: "Compara los planes" })).toBeInTheDocument();
+  });
+
+  it("abre el historial de facturación desde los ajustes de la cuenta", async () => {
+    const fetchMock = setup();
+    await screen.findByRole("table");
+    await userEvent.click(screen.getByRole("button", { name: "Historial de facturación" }));
+    expect(await screen.findByRole("heading", { name: "Historial de facturación" })).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/facturacion");
+    expect(fetchMock.mock.calls.some(([url]) => url.endsWith("/api/checkout/history"))).toBe(true);
   });
 });

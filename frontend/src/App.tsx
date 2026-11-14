@@ -19,6 +19,7 @@ import { SubscriptionStatusBanner } from "./commerce/SubscriptionStatusBanner";
 import "./commerce/commerce.css";
 import { GlosarioFinanciero } from "./glosario/GlosarioFinanciero";
 import { SavedSimulations, type FavoriteParameters } from "./commerce/SavedSimulations";
+import { BillingHistory } from "./commerce/BillingHistory";
 
 export default function App() {
   return <RegistrationRoute><CommerceApp /></RegistrationRoute>;
@@ -54,6 +55,7 @@ function CommerceApp() {
       <a href="/" aria-current={path === "/" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/"); }}>Inicio</a>
       <a href="/planes" aria-current={path === "/planes" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/planes"); }}>Planes</a>
       <a href="/favoritos" aria-current={path === "/favoritos" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/favoritos"); }}>Mis favoritos</a>
+      <a href="/facturacion" aria-current={path === "/facturacion" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/facturacion"); }}>Facturación</a>
     </nav>
     <SubscriptionStatusBanner />
     {path === "/planes" ? <PlanComparison onCheckout={() => navigate("/checkout")} />
@@ -62,15 +64,18 @@ function CommerceApp() {
         <button type="button" onClick={() => navigate("/")}>Volver al inicio</button>
         <SavedSimulations onReplay={volverASimular} onViewPlans={() => navigate("/planes")} />
       </main>
-      : <FinanceApp onViewPlans={() => navigate("/planes")} replay={replayRequest} />}
+      : path === "/facturacion" ? <main className="pagina"><BillingHistory onReturn={() => navigate("/")} /></main>
+      : <FinanceApp onViewPlans={() => navigate("/planes")} onViewBillingHistory={() => navigate("/facturacion")} replay={replayRequest} />}
   </>;
 }
 
 function FinanceApp({
   onViewPlans,
+  onViewBillingHistory,
   replay,
 }: {
   onViewPlans: () => void;
+  onViewBillingHistory: () => void;
   replay?: { id: number; parameters: FavoriteParameters };
 }) {
   const [glosario, setGlosario] = useState<{ termino: string | null } | null>(null);
@@ -104,7 +109,7 @@ function FinanceApp({
   return (
     <main className="pagina">
       <h1>Yupay Finance</h1>
-      <ProfileEditor />
+      <ProfileEditor onViewBillingHistory={onViewBillingHistory} />
       <div className="glosario-enlaces">
         <button className="glosario-enlace" type="button" onClick={() => setGlosario({ termino: null })}>Glosario financiero</button>
         <span>Consulta:</span>
