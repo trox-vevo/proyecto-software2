@@ -39,6 +39,8 @@ export function isEntityId(value: unknown): value is number {
 
 export interface FavoriteRepository {
   save(favorite: NewFavorite): { favorite: Favorite; created: boolean };
+  listByUser(userId: number): Favorite[];
+  deleteByUser(userId: number, favoriteId: number): boolean;
 }
 
 export class FavoriteError extends Error {

@@ -293,7 +293,7 @@ El script puede repetirse exclusivamente en una carpeta temporal nueva, copiando
 | --- | --- | --- | --- |
 | US01 | US28 | `User.id` y `userId` numéricos, PK/FK | Verificado mediante módulos reales, HTTP y SQLite temporal |
 | US01 | Autenticación | Identificador del usuario | Contrato numérico preparado; integración US03 pendiente |
-| US28 | US29 | ID de favorito y propietario | Contrato y persistencia verificados; historial/gestión pendientes |
+| US28 | US29 | ID de favorito y propietario | Contrato, persistencia, historial y eliminación usan IDs numéricos seguros |
 | US31 | US32 | Código de plan `PRO` | Verificado en regresión y navegación; continúa como string |
 | US32 | US33 | Usuario numérico y referencia de operación | Pendiente de integrar identidad y suscripciones. US32 aporta una referencia DEMO local, sin proveedor o SDK externo |
 

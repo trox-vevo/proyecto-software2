@@ -2,9 +2,21 @@ import { DownloadReportButton } from "./DownloadReportButton";
 import { FormularioPlazoFijo } from "./FormularioPlazoFijo";
 import { TablaResultadosPlazoFijo } from "./TablaResultadosPlazoFijo";
 import { usePlazoFijoController } from "./usePlazoFijoController";
+import { useEffect } from "react";
+import type { ParametrosPlazoFijo } from "./tipos";
 
-export function PlazoFijoView({ onViewPlans }: { onViewPlans?: () => void }) {
+export function PlazoFijoView({
+  onViewPlans,
+  replay,
+}: {
+  onViewPlans?: () => void;
+  replay?: { id: number; parameters: ParametrosPlazoFijo };
+}) {
   const flujo = usePlazoFijoController();
+  const { volverASimular } = flujo;
+  useEffect(() => {
+    if (replay) void volverASimular(replay.parameters);
+  }, [replay, volverASimular]);
   return (
     <section className="plazo-seccion" aria-labelledby="titulo-plazo-fijo">
       <h2 id="titulo-plazo-fijo">Depósito a Plazo Fijo</h2>

@@ -1,5 +1,5 @@
 import { PlazoFijoView } from "./plazo_fijo/PlazoFijoView";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { applyFilters } from "./filters/resultFilters";
 import { ResultFiltersPanel } from "./filters/ResultFiltersPanel";
 import { useResultFilters } from "./filters/useResultFilters";
@@ -18,6 +18,7 @@ import { Checkout } from "./commerce/Checkout";
 import { SubscriptionStatusBanner } from "./commerce/SubscriptionStatusBanner";
 import "./commerce/commerce.css";
 import { GlosarioFinanciero } from "./glosario/GlosarioFinanciero";
+import { SavedSimulations, type FavoriteParameters } from "./commerce/SavedSimulations";
 
 export default function App() {
   return <RegistrationRoute><CommerceApp /></RegistrationRoute>;
@@ -25,35 +26,73 @@ export default function App() {
 
 function CommerceApp() {
   const [path, setPath] = useState(window.location.pathname);
+  const [replayRequest, setReplayRequest] = useState<{ id: number; parameters: FavoriteParameters }>();
+  const replaySequence = useRef(0);
   useEffect(() => {
-    const onPopState = () => setPath(window.location.pathname);
+    const onPopState = () => {
+      setReplayRequest(undefined);
+      setPath(window.location.pathname);
+    };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  function navigate(next: string) {
+  function navigate(next: string, preserveReplay = false) {
+    if (!preserveReplay) setReplayRequest(undefined);
     window.history.pushState(null, "", next);
     setPath(next);
+  }
+
+  function volverASimular(parameters: FavoriteParameters) {
+    replaySequence.current += 1;
+    setReplayRequest({ id: replaySequence.current, parameters });
+    navigate("/", true);
   }
 
   return <>
     <nav className="comercio-nav" aria-label="Navegación principal">
       <a href="/" aria-current={path === "/" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/"); }}>Inicio</a>
       <a href="/planes" aria-current={path === "/planes" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/planes"); }}>Planes</a>
+      <a href="/favoritos" aria-current={path === "/favoritos" ? "page" : undefined} onClick={(event) => { event.preventDefault(); navigate("/favoritos"); }}>Mis favoritos</a>
     </nav>
     <SubscriptionStatusBanner />
     {path === "/planes" ? <PlanComparison onCheckout={() => navigate("/checkout")} />
       : path === "/checkout" ? <Checkout onViewPlans={() => navigate("/planes")} onReturnToApp={() => navigate("/")} />
-        : <FinanceApp onViewPlans={() => navigate("/planes")} />}
+      : path === "/favoritos" ? <main className="pagina">
+        <button type="button" onClick={() => navigate("/")}>Volver al inicio</button>
+        <SavedSimulations onReplay={volverASimular} onViewPlans={() => navigate("/planes")} />
+      </main>
+      : <FinanceApp onViewPlans={() => navigate("/planes")} replay={replayRequest} />}
   </>;
 }
 
-function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
+function FinanceApp({
+  onViewPlans,
+  replay,
+}: {
+  onViewPlans: () => void;
+  replay?: { id: number; parameters: FavoriteParameters };
+}) {
   const [glosario, setGlosario] = useState<{ termino: string | null } | null>(null);
   const cerrarGlosario = useCallback(() => setGlosario(null), []);
-  const [tipoInstrumento, setTipoInstrumento] =
-    useState<TipoInstrumento>("AHORROS");
-  const tabla = useTablaAhorrosController();
+  const [tipoInstrumento, setTipoInstrumento] = useState<TipoInstrumento>(
+    replay?.parameters.instrument === "PLAZO_FIJO" ? "PLAZO_FIJO" : "AHORROS",
+  );
+  const savingsReplay = replay?.parameters.instrument === "AHORROS"
+    ? { accountId: replay.parameters.accountId, days: replay.parameters.days }
+    : undefined;
+  const tabla = useTablaAhorrosController(savingsReplay);
+  const fixedReplay = replay?.parameters.instrument === "PLAZO_FIJO"
+    ? {
+      id: replay.id,
+      parameters: {
+        amount: replay.parameters.amount,
+        department: replay.parameters.department,
+        paymentMode: replay.parameters.paymentMode,
+        termDays: replay.parameters.termDays,
+      },
+    }
+    : undefined;
   const monitor = useMonitorBloqueos(tabla.vista);
   // US17/US18: se filtra en el cliente sobre las filas ya recibidas (sin nueva petición).
   // "SAVINGS" fijo: los filtros solo se muestran en la sección de ahorros.
@@ -72,7 +111,7 @@ function FinanceApp({ onViewPlans }: { onViewPlans: () => void }) {
         {["TEA", "TREA", "Rentabilidad", "Depósito a plazo fijo"].map((termino) => <button className="glosario-enlace" key={termino} type="button" onClick={() => setGlosario({ termino })}>{termino}</button>)}
       </div>
       <FormularioInversion
-        plazoFijo={<PlazoFijoView onViewPlans={onViewPlans} />}
+        plazoFijo={<PlazoFijoView onViewPlans={onViewPlans} replay={fixedReplay} />}
         tipoInstrumento={tipoInstrumento}
         onTipoInstrumentoChange={setTipoInstrumento}
       />

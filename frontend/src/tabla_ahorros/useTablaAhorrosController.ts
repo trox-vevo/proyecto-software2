@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { VistaObservable } from "../monitor/tipos";
 import { aplicarRiesgoMock } from "../semaforo/riesgoMock";
 import type { FilaConRiesgo } from "../semaforo/tipos";
@@ -10,6 +10,8 @@ const DIAS = 365;
 
 interface Consulta {
   criterio: CriterioOrden;
+  days: number;
+  accountId?: string;
 }
 
 interface Carga {
@@ -26,8 +28,12 @@ interface Marcas {
 }
 
 /** Controlador de la tabla: pide los datos al backend y decide en qué estado está la vista. */
-export function useTablaAhorrosController() {
-  const [consulta, setConsulta] = useState<Consulta>({ criterio: "RENTABILIDAD" });
+export function useTablaAhorrosController(initialReplay?: { accountId: string; days: number }) {
+  const [consulta, setConsulta] = useState<Consulta>(() => ({
+    criterio: "RENTABILIDAD",
+    days: initialReplay?.days ?? DIAS,
+    ...(initialReplay ? { accountId: initialReplay.accountId } : {}),
+  }));
   const [carga, setCarga] = useState<Carga | null>(null);
   const marcas = useRef<Marcas>({ inicioCargaMs: 0, finCargaMs: null, renderListoMs: null });
   const estadoRef = useRef<EstadoTabla>("CARGANDO");
@@ -35,7 +41,8 @@ export function useTablaAhorrosController() {
   // cargarResultados(): se ejecuta al abrir la tabla y cada vez que cambia la consulta
   useEffect(() => {
     const controlador = new AbortController();
-    const parametros = new URLSearchParams({ dias: String(DIAS), criterio: consulta.criterio });
+    const parametros = new URLSearchParams({ dias: String(consulta.days), criterio: consulta.criterio });
+    if (consulta.accountId) parametros.set("accountId", consulta.accountId);
     marcas.current = { inicioCargaMs: performance.now(), finCargaMs: null, renderListoMs: null };
 
     fetchWithAuth(`${API_URL}/api/ahorros/rentabilidad?${parametros}`, { signal: controlador.signal })
@@ -92,21 +99,27 @@ export function useTablaAhorrosController() {
   function onOrdenar(columna: ColumnaTabla) {
     const criterio = columna.criterio;
     if (criterio === undefined) return;
-    setConsulta((actual) => (actual.criterio === criterio ? actual : { criterio }));
+    setConsulta((actual) => (actual.criterio === criterio ? actual : { ...actual, criterio }));
   }
 
   function reintentar() {
     setConsulta((actual) => ({ ...actual }));
   }
 
+  const volverASimular = useCallback((accountId: string, days: number) => {
+    if (!Number.isSafeInteger(days) || days <= 0 || !accountId.trim()) return;
+    setConsulta((actual) => ({ ...actual, accountId, days }));
+  }, []);
+
   return {
     estado,
     filas: carga?.filas ?? [],
     mensajeError: carga?.error,
     criterioActivo: consulta.criterio,
-    dias: DIAS,
+    dias: consulta.days,
     vista,
     onOrdenar,
     reintentar,
+    volverASimular,
   };
 }

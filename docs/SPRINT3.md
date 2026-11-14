@@ -48,7 +48,7 @@ El usuario y la membresía deben resolverse a partir de una sesión comprobada y
 
 Se adoptó como decisión técnica la deduplicación por propietario y parámetros, incluyendo el producto o la cuenta. Si el mercado cambia para esos mismos parámetros, un reintento conserva la primera instantánea. El equipo debe acordar con US29 si en el futuro desea incorporar versiones de mercado a esa identidad.
 
-### API para US29
+### API ampliada para US29
 
 `POST /api/favorites` recibe uno de estos cuerpos.
 
@@ -79,7 +79,12 @@ La respuesta contiene `favorite`, `created` y `message`. El favorito incluye su 
 | 404 | Cuenta o producto ausente para esos parámetros |
 | 503 | Persistencia o servicio pendiente de integración |
 
-US29 puede utilizar la clave `user_id` para sus consultas futuras y los identificadores del contrato para gestionar cada favorito. Los endpoints de historial, eliminación y actualización pertenecen a esa historia.
+US29 utiliza los identificadores numéricos ya establecidos por US28 y la misma autenticación con sesión verificada. La API incorpora:
+
+- `GET /api/favorites`: devuelve `{ "favorites": [...] }` del usuario autenticado, ordenados del más reciente al más antiguo.
+- `DELETE /api/favorites/:favoriteId`: elimina solo si el favorito pertenece al usuario autenticado; un ID ajeno y uno inexistente responden igual con 404.
+
+Ambos endpoints requieren acceso Pro vigente. Los errores de autenticación, plan y persistencia conservan los códigos del contrato de US28. La sección “Mis Simulaciones Guardadas”, accesible desde “Mis favoritos”, presenta nombre del producto, fecha, monto y plazo, y permite confirmar la eliminación. “Volver a simular” abre el dashboard con los parámetros guardados; en ahorros también limita la consulta a la cuenta y días guardados.
 
 ### Auditoría y corrección de identificadores del 6 de noviembre de 2026
 

@@ -109,7 +109,7 @@ Destino exclusivo de publicación: `feat/sprint3-us28-us31-us32`, mediante push 
 - La migración real y la renovación de sesiones/JWT anteriores requieren coordinación y autorización. La herramienta del PR #10 debe revisarse e incorporarse por el equipo; no se fusiona esa rama dentro de Sprint 3.
 - El registro y el resto de protecciones numéricas adicionales del PR #10 siguen sujetos a revisión del líder. Esta rama solo añade al repositorio de main la búsqueda necesaria para favoritos y protege el arranque.
 - US33 sigue pendiente para asociar resultados DEMO y suscripciones/activación autorizada. Un usuario nuevo continúa BASICO; no hay un mecanismo de ascenso inventado en esta entrega.
-- US29 sigue pendiente para historial/gestión de favoritos. No se añaden sus endpoints.
+- US29 agrega historial y eliminación de favoritos mediante `GET /api/favorites` y `DELETE /api/favorites/:favoriteId`; ambos verifican propiedad y acceso Pro vigente. El panel ofrece reproducción de parámetros y gestión de tarjetas.
 - El perfil JSON sigue siendo demo e independiente del usuario registrado. Se conserva la funcionalidad del equipo, sin inventar una asociación.
 - Precios comerciales, cobros reales y credenciales de proveedores no se incorporan. SMTP/JWT de producción necesitan configuración externa.
 - Sprint 1 y Sprint 2 siguen independientes, con sus commits y datos intactos. Al incorporar sus PR a main habrá que revisar de nuevo la composición de `App.tsx`, tabla, bootstrap y repositorio de usuarios. Que los PR sean compatibles con el main actual no garantiza que sus combinaciones futuras carezcan de conflictos.

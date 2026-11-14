@@ -52,6 +52,8 @@ function leerFecha(valor: string | undefined, nombre: string): Date | undefined 
 ahorrosRouter.get("/rentabilidad", (req, res) => {
   try {
     const dias = Number(texto(req.query.dias) ?? 365);
+    const accountId = texto(req.query.accountId);
+    if (accountId !== undefined && !accountId.trim()) throw new RangeError("accountId debe identificar una cuenta");
     const criterio = leerCriterio(texto(req.query.criterio));
     const algoritmo = leerAlgoritmo(texto(req.query.algoritmo));
     const filtro = new FiltroAhorros({
@@ -62,7 +64,11 @@ ahorrosRouter.get("/rentabilidad", (req, res) => {
     });
 
     const motor = new MotorCalculo(algoritmo, filtro, new FormateadorResultados());
-    const resultados = motor.calcular(repositorio.obtenerTodas(), dias, criterio);
+    const cuentas = repositorio.obtenerTodas();
+    const seleccionadas = accountId === undefined
+      ? cuentas
+      : cuentas.filter((cuenta) => cuenta.id === accountId);
+    const resultados = motor.calcular(seleccionadas, dias, criterio);
 
     res.json({ resultados });
   } catch (error) {

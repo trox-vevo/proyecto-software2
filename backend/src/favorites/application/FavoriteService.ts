@@ -62,6 +62,22 @@ export class FavoriteService {
     return this.repository.save({ userId: user.id, fingerprint, parameters, snapshot, createdAt: new Date().toISOString() });
   }
 
+  list(user: AuthenticatedUser | null) {
+    if (!user || !isEntityId(user.id)) throw new FavoriteError(401, "AUTHENTICATION_REQUIRED", "Inicia sesión para consultar tus simulaciones favoritas.");
+    if (user.plan !== "PRO") throw new FavoriteError(403, "PRO_REQUIRED", "Consultar favoritos es un beneficio del Plan Pro.");
+    return this.repository.listByUser(user.id);
+  }
+
+  delete(user: AuthenticatedUser | null, favoriteId: number) {
+    if (!user || !isEntityId(user.id)) throw new FavoriteError(401, "AUTHENTICATION_REQUIRED", "Inicia sesión para eliminar una simulación favorita.");
+    if (user.plan !== "PRO") throw new FavoriteError(403, "PRO_REQUIRED", "Gestionar favoritos es un beneficio del Plan Pro.");
+    if (!isEntityId(favoriteId)) throw new FavoriteError(400, "INVALID_FAVORITE_ID", "El identificador del favorito no es válido.");
+    if (!this.repository.deleteByUser(user.id, favoriteId)) {
+      throw new FavoriteError(404, "FAVORITE_NOT_FOUND", "La simulación favorita no existe.");
+    }
+    return { deleted: true };
+  }
+
   private async simulate(parameters: FavoriteParameters): Promise<unknown> {
     if (parameters.instrument === "AHORROS") {
       const account = this.accounts.obtenerTodas().find((item) => item.id === parameters.accountId);
