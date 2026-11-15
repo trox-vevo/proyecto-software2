@@ -16,8 +16,10 @@ import { RepositorioCuentasSqlite } from "./repositorio/RepositorioCuentasSqlite
 import { SqliteSbsRiskRepository } from "./risk/infrastructure/SqliteSbsRiskRepository";
 import { SqliteEconomistReportRepository } from "./risk/infrastructure/SqliteEconomistReportRepository";
 import { SqlitePerfilRepository } from "./profile/infrastructure/SqlitePerfilRepository";
+import { createMarketMonitoringRuntime, monitoringSettings } from "./monitoring/infrastructure/createMarketMonitoringRuntime";
 
 const PORT = process.env.PORT ?? 3000;
+const marketConfiguration = monitoringSettings(process.env);
 // Base de datos única: DB_PATH (USER_DB_PATH se acepta por compatibilidad)
 const file = process.env.DB_PATH ?? process.env.USER_DB_PATH ?? "data/usuarios.sqlite";
 assertNumericDatabase(file);
@@ -26,6 +28,10 @@ const favorites = new SqliteFavoriteRepository(file);
 const database = openDatabase(file); // catálogo: entidades, productos, cuentas, SBS e informes
 const products = new SqliteProductRepository(database);
 const savingsAccounts = new RepositorioCuentasSqlite(database);
+const marketRuntime = createMarketMonitoringRuntime(database, users, marketConfiguration);
+if (marketConfiguration.enabled) {
+  console.log("Monitoreo del catálogo SQLite local habilitado. TS-117/TS-120 pendientes; no se generan alertas de mercado.");
+}
 const stopSubscriptionMaintenanceJob = startSubscriptionMaintenanceJob(
   new SubscriptionMaintenanceService(users, new SmtpPlanChangeEmailService()),
 );
@@ -39,9 +45,12 @@ const server = createApp(products, users, users, new SmtpRecoveryEmailService(),
   console.log(`Backend escuchando en http://localhost:${PORT}`);
 });
 
+let shuttingDown = false;
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.once(signal, () => {
-    void stopSubscriptionMaintenanceJob().finally(() => server.close(() => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    void Promise.all([stopSubscriptionMaintenanceJob(), marketRuntime.stop()]).finally(() => server.close(() => {
       try { favorites.close(); } finally { try { users.close(); } finally { database.close(); } }
     }));
   });
