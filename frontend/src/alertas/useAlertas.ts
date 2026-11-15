@@ -3,7 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchWithAuth } from "../auth/session";
 import type { Alerta } from "./tipos";
 
-const URL_ALERTAS = "/api/alertas";
+const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const URL_ALERTAS = `${API_URL}/api/alertas`;
 const MENSAJE_SIN_SESION = "Inicia sesión para ver tus alertas.";
 const MENSAJE_ERROR_CARGA = "No se pudieron cargar las alertas. Inténtalo de nuevo más tarde.";
 
@@ -76,12 +77,10 @@ export function useAlertas() {
       intentadas.current.add(id);
       cambiarLeida(id, true);
       void (async () => {
-        let guardada = false;
-        try {
-          guardada = (await fetchWithAuth(`${URL_ALERTAS}/${id}/leida`, { method: "PATCH" })).ok;
-        } catch {
-          guardada = false;
-        }
+          const guardada = await fetchWithAuth(`${URL_ALERTAS}/${id}/leida`, { method: "PATCH" }).then(
+          (respuesta) => respuesta.ok,
+          () => false,
+        );
         if (!guardada) cambiarLeida(id, false);
       })();
     },

@@ -139,7 +139,7 @@ describe("Alertas: carga desde la API y guardado de la lectura (TS-110)", () => 
 
     expect(screen.getByText("Cargando alertas…")).toBeInTheDocument();
     await cargada();
-    expect(fetchMock).toHaveBeenCalledWith("/api/alertas", expect.anything());
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringMatching(/\/api\/alertas$/), expect.anything());
   });
 
   it("al abrir una alerta sin leer se guarda con PATCH /api/alertas/ID/leida", async () => {
@@ -149,7 +149,10 @@ describe("Alertas: carga desde la API y guardado de la lectura (TS-110)", () => 
     await abrir("Banco Andino Demo");
 
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith("/api/alertas/1/leida", expect.objectContaining({ method: "PATCH" })),
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringMatching(/\/api\/alertas\/1\/leida$/),
+        expect.objectContaining({ method: "PATCH" }),
+      ),  
     );
     expect(guardados()).toHaveLength(1);
   });

@@ -161,7 +161,7 @@ describe("Servicio de envío de correo con reintentos (US40, TS-125 y TS-126)", 
     expect(proveedor.llamadas).toHaveLength(1);
     expect(proveedor.llamadas[0].para).toBe("ana@ejemplo.com");
     expect(proveedor.llamadas[0].contenido.asunto).toContain("Entidad A");
-    expect(proveedor.llamadas[0].contenido.texto).toContain("https://yupay.test/?alerta=12");
+    expect(proveedor.llamadas[0].contenido.texto).toContain("https://yupay.test/perfil?alerta=12");
     expect(registro.intentos.map((i) => i.resultado)).toEqual(["OK"]);
     expect(registro.agotados).toHaveLength(0);
     expect(cola.entregadas).toEqual([{ id: 12, token: "token-12" }]);

@@ -159,7 +159,7 @@ export class ServicioEnvioCorreo {
 
   /** Enlace que abre la plataforma con el detalle de esa alerta (lo entiende useAlertas en el frontend). */
   private enlaceA(notificacionId: number): string {
-    const url = new URL("/", this.frontendUrl);
+    const url = new URL("/perfil", this.frontendUrl);
     url.searchParams.set("alerta", String(notificacionId));
     return url.toString();
   }
