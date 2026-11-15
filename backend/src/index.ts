@@ -23,6 +23,8 @@ import { SqliteResolvedorAlertaCorreo } from "./alertas/infrastructure/SqliteRes
 import { ConsolaRegistroEnvios } from "./alertas/infrastructure/ConsolaRegistroEnvios";
 import { SmtpCorreoAlertas } from "./alertas/infrastructure/SmtpCorreoAlertas";
 import { TemporizadorReal } from "./alertas/infrastructure/TemporizadorReal";
+import { SqliteAlertasRepository } from "./alertas/infrastructure/SqliteAlertasRepository";
+import { ServicioAlertas } from "./alertas/application/ServicioAlertas";
 
 const PORT = process.env.PORT ?? 3000;
 const marketConfiguration = monitoringSettings(process.env);
@@ -57,6 +59,7 @@ const server = createApp(products, users, users, new SmtpRecoveryEmailService(),
   savingsAccounts,
   sbsRiskRepository: new SqliteSbsRiskRepository(database),
   economistReportRepository: new SqliteEconomistReportRepository(database),
+  alertas: new ServicioAlertas(new SqliteAlertasRepository(database)),
 }).listen(PORT, () => {
   console.log(`Backend escuchando en http://localhost:${PORT}`);
 });

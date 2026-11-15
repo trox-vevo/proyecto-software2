@@ -40,18 +40,22 @@ export function PanelDetalleAlerta({ alerta, onMostrado, onCerrar }: Props) {
           <dt>Tipo de cambio</dt>
           <dd>{alerta.tipo === "TASA" ? "Cambio de tasa" : "Cambio de riesgo"}</dd>
         </div>
-        <div>
-          <dt>Tasa anterior</dt>
-          <dd>{alerta.tasaAnterior}</dd>
-        </div>
-        <div>
-          <dt>Tasa nueva</dt>
-          <dd>{alerta.tasaNueva}</dd>
-        </div>
-        <div>
-          <dt>Variación</dt>
-          <dd>{alerta.variacionPct}</dd>
-        </div>
+         {alerta.tipo === "TASA" && (
+          <>
+            <div>
+              <dt>Tasa anterior</dt>
+              <dd>{alerta.tasaAnterior ?? "Sin dato"}</dd>
+            </div>
+            <div>
+              <dt>Tasa nueva</dt>
+              <dd>{alerta.tasaNueva ?? "Sin dato"}</dd>
+            </div>
+            <div>
+              <dt>Variación</dt>
+              <dd>{alerta.variacionPct ?? "Sin dato"}</dd>
+            </div>
+          </>
+        )}
         {alerta.tipo === "RIESGO" && (
           <div>
             <dt>Calificación anterior</dt>

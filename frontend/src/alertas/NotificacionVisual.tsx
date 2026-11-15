@@ -13,7 +13,7 @@ interface Props {
 export function NotificacionVisual({ alerta, seleccionada, onAbrir }: Props) {
   const resumen =
     alerta.tipo === "TASA"
-      ? `Tasa: ${alerta.tasaAnterior} → ${alerta.tasaNueva} (${alerta.variacionPct})`
+      ? `Tasa: ${alerta.tasaAnterior ?? "sin dato"} → ${alerta.tasaNueva ?? "sin dato"} (${alerta.variacionPct ?? "sin variación"})`
       : `Riesgo: ${alerta.calificacionAnterior ?? "sin dato"} → ${alerta.calificacion ?? "sin dato"}`;
   const clases = ["alerta-item", alerta.leida ? "" : "alerta-item-nueva", seleccionada ? "alerta-item-activa" : ""]
     .filter(Boolean)

@@ -64,6 +64,8 @@ import {
 } from "./notifications/NotificationPreferences";
 import { NotificationPreferencesService } from "./notifications/NotificationPreferencesService";
 import { createNotificationPreferencesRouter } from "./notifications/notificationPreferencesRoutes";
+import type { ServicioAlertas } from "./alertas/application/ServicioAlertas";
+import { createAlertasRouter } from "./alertas/interface/alertasRoutes";
 
 export interface Sprint3Dependencies {
   resolveUser?: ResolveUser;
@@ -73,6 +75,7 @@ export interface Sprint3Dependencies {
   savingsAccounts?: FuenteCuentas;
   sbsRiskRepository?: SbsRiskRepository;
   economistReportRepository?: EconomistReportRepository;
+  alertas?: ServicioAlertas;
 }
 
 
@@ -161,6 +164,14 @@ export function createApp(
     dependencies.favoriteService,
     userRepository ? proAccessService : undefined,
   ));
+  if (dependencies.alertas) {
+    const resolveUser = dependencies.resolveUser ?? (async () => null);
+    app.use("/api/alertas", createAlertasRouter(
+      dependencies.alertas,
+      async (req) => (await resolveUser(req))?.id ?? null,
+    ));
+  }
+  
   const notificationPreferencesRepository =
     dependencies.notificationPreferencesRepository ??
     (userRepository && supportsNotificationPreferences(userRepository) ? userRepository : undefined);

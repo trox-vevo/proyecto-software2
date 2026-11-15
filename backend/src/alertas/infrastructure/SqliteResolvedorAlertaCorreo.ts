@@ -4,10 +4,10 @@ import type { QueuedNotification } from "../../notifications/queue/domain/QueueC
 import type { DatosAlertaCorreo, ResolvedorAlertaCorreo } from "../domain/EnvioCorreo";
 
 /** 0.055 -> "5.50%". Las tasas del catálogo y de los eventos vienen como fracción. */
-const porcentaje = (fraccion: string) => `${new Decimal(fraccion).times(100).toFixed(2)}%`;
+export const porcentaje = (fraccion: string) => `${new Decimal(fraccion).times(100).toFixed(2)}%`;
 
 /** Variación porcentual de la tasa: "+20.00%" o "-15.56%". null si la tasa anterior era 0. */
-function variacion(anterior: string, nuevo: string): string | null {
+export function variacion(anterior: string, nuevo: string): string | null {
   const base = new Decimal(anterior);
   if (base.isZero()) return null;
   const cambio = new Decimal(nuevo).minus(base).dividedBy(base).times(100);

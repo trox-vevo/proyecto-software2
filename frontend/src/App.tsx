@@ -22,6 +22,7 @@ import { SavedSimulations, type FavoriteParameters } from "./commerce/SavedSimul
 import { BillingHistory } from "./commerce/BillingHistory";
 import { AlertasSeccion } from "./alertas/AlertasSeccion";
 
+
 export default function App() {
   return <RegistrationRoute><CommerceApp /></RegistrationRoute>;
 }

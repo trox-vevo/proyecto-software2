@@ -15,10 +15,10 @@ export interface Alerta {
   entidadId: number;
   entidad: string;
   tipo: TipoAlerta;
-  tasaAnterior: string;
-  tasaNueva: string;
+  tasaAnterior: string | null;
+  tasaNueva: string | null;
   /** Variación porcentual de la tasa, por ejemplo "-15.56%". */
-  variacionPct: string;
+  variacionPct: string | null;
   /** Calificación de la SBS antes del cambio (A+, A, A-, B+ ... E); null si no tenía datos. */
   calificacionAnterior: string | null;
   /** Calificación de la SBS actualizada; null si la entidad no tiene datos. El semáforo se obtiene con nivelDeCalificacion. */
