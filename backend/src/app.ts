@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
-import { ahorrosRouter } from "./routes/ahorros";
+import { createAhorrosRouter, type FuenteCuentas } from "./routes/ahorros";
 import { FixedDepositSimulationService } from "./simulation/application/FixedDepositSimulationService";
 import type { FinancialProductRepository } from "./simulation/domain/FinancialProductRepository";
 import { SimulationController } from "./simulation/interface/SimulationController";
@@ -27,6 +27,8 @@ import { RiskEvaluationService } from "./risk/application/RiskEvaluationService"
 import { JsonSbsRiskRepository } from "./risk/infrastructure/JsonSbsRiskRepository";
 import { EconomistReportService } from "./risk/application/EconomistReportService";
 import { JsonEconomistReportRepository } from "./risk/infrastructure/JsonEconomistReportRepository";
+import type { SbsRiskRepository } from "./risk/domain/SbsRiskRepository";
+import type { EconomistReportRepository } from "./risk/domain/EconomistReportRepository";
 import { EconomistReportController } from "./risk/interface/EconomistReportController";
 import type { RecoveryTokenRepository } from "./recovery/domain/RecoveryTokenRepository";
 import {
@@ -67,6 +69,10 @@ export interface Sprint3Dependencies {
   resolveUser?: ResolveUser;
   favoriteService?: FavoriteService;
   notificationPreferencesRepository?: NotificationPreferencesRepository;
+  // Base de datos única: si no se pasan, se usan los JSON de data/ (como antes)
+  savingsAccounts?: FuenteCuentas;
+  sbsRiskRepository?: SbsRiskRepository;
+  economistReportRepository?: EconomistReportRepository;
 }
 
 
@@ -127,7 +133,7 @@ export function createApp(
   app.use(cors());
   app.use(express.json());
   app.use("/api", optionalAuthMiddleware);
-  app.use("/api/ahorros", ahorrosRouter);
+  app.use("/api/ahorros", createAhorrosRouter(dependencies.savingsAccounts));
   app.get("/api/plans", (_req, res) => res.json({ plans: PLANS, features: PLAN_FEATURES }));
   // US33: sin repositorio de usuarios (algunas pruebas), nadie puede pagar (401).
   const paymentHistoryRepository = userRepository && supportsCheckoutPaymentHistory(userRepository)
@@ -173,12 +179,26 @@ export function createApp(
   );
   const profileService = new ServicioPerfiles(selectedProfileRepository);
 
-  app.get("/api/perfil", (_req, res) => {
-    res.json(profileService.obtener(PERFIL_DEMO_ID));
+  // US16: con sesión se usa el perfil del usuario autenticado. Sin sesión, el perfil de demostración,
+  // que solo existe en el repositorio JSON de las pruebas; con la base de datos se pide iniciar sesión.
+  const perfilId = (userId: number | undefined) => (userId === undefined ? PERFIL_DEMO_ID : String(userId));
+  const requiereSesion = (userId: number | undefined) =>
+    userId === undefined && selectedProfileRepository.buscarPorId(PERFIL_DEMO_ID) === undefined;
+
+  app.get("/api/perfil", (req, res) => {
+    if (requiereSesion(req.userId)) {
+      res.status(401).json({ message: "Inicia sesión para ver y editar tu perfil." });
+      return;
+    }
+    res.json(profileService.obtener(perfilId(req.userId)));
   });
 
   app.put("/api/perfil", (req, res) => {
-    res.json(profileService.actualizar(PERFIL_DEMO_ID, req.body));
+    if (requiereSesion(req.userId)) {
+      res.status(401).json({ message: "Inicia sesión para ver y editar tu perfil." });
+      return;
+    }
+    res.json(profileService.actualizar(perfilId(req.userId), req.body));
   });
 
   app.get("/api/health", (_req, res) => {
@@ -191,12 +211,12 @@ export function createApp(
   app.use("/api/risk-reports", proAccessMiddleware.handle); // protege la ruta de la US26
 
   // US25: calificación de riesgo de la SBS para cada resultado de plazo fijo
-  const sbsRiskRepository = new JsonSbsRiskRepository();
+  const sbsRiskRepository = dependencies.sbsRiskRepository ?? new JsonSbsRiskRepository();
   const riskEvaluationService = new RiskEvaluationService(sbsRiskRepository);
 
   // US26: informe del economista; ProAccessMiddleware (arriba) ya dejó pasar solo a usuarios Pro
   const economistReportController = new EconomistReportController(
-    new EconomistReportService(new JsonEconomistReportRepository(), sbsRiskRepository),
+    new EconomistReportService(dependencies.economistReportRepository ?? new JsonEconomistReportRepository(), sbsRiskRepository),
   );
   app.get("/api/risk-reports/:entityId", economistReportController.getReport);
 
