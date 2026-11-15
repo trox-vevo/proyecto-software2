@@ -53,9 +53,9 @@ definirse, por lo que el historial no atribuye montos ficticios.
 
 ## Perfil de usuario
 
-El perfil de demostración se sirve mediante `GET /api/perfil` y se actualiza con
-`PUT /api/perfil`, enviando `nombre` y `correo` como JSON. Los datos se guardan en
-`backend/data/perfiles.json`; los correos deben ser únicos entre los perfiles.
+El perfil del usuario con sesión se sirve mediante `GET /api/perfil` y se actualiza con
+`PUT /api/perfil`, enviando `nombre` y `correo` como JSON. Los datos se guardan en la
+tabla `users` de la base única; los correos deben ser únicos. Sin sesión se responde `401`.
 En la interfaz, el botón **Mi perfil** abre la página `/perfil`, donde se agrupan
 la edición del perfil y las preferencias de notificación.
 
@@ -78,6 +78,21 @@ local por un archivo descargado del repositorio.
 
 Consulta [la integraci?n de Sprint 1 con main](docs/INTEGRACION_SPRINT1_MAIN.md)
 para las decisiones, pruebas y dependencias de esta entrega.
+
+## Base de datos
+
+Toda la persistencia usa **un solo archivo SQLite**, indicado con `DB_PATH` (por defecto
+`data/usuarios.sqlite`; `USER_DB_PATH` se acepta por compatibilidad). Ahí viven los usuarios,
+los pagos, los favoritos y el catálogo financiero (entidades, plazo fijo, cuentas de ahorro,
+indicadores SBS e informes del economista).
+
+- El catálogo se crea y llena solo al arrancar con `backend/db/schema.sql` y `backend/db/seed.sql`.
+  Es idempotente: reiniciar no duplica filas.
+- Las tablas de usuarios, pagos y favoritos las crean sus propios repositorios.
+- Para regenerar el script de creación completo:
+  `npm run build --prefix backend && node scripts/export-schema.mjs docs/BaseDeDatos/schema.sql`.
+- En Railway: `DB_PATH=/data/yupay.sqlite` sobre un volumen montado en `/data`, para que la base
+  sobreviva a los redespliegues.
 
 ## Verificación de la integración US06 y US12
 
