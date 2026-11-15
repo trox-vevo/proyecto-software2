@@ -20,6 +20,8 @@ import "./commerce/commerce.css";
 import { GlosarioFinanciero } from "./glosario/GlosarioFinanciero";
 import { SavedSimulations, type FavoriteParameters } from "./commerce/SavedSimulations";
 import { BillingHistory } from "./commerce/BillingHistory";
+import { AlertasSeccion } from "./alertas/AlertasSeccion";
+
 
 export default function App() {
   return <RegistrationRoute><CommerceApp /></RegistrationRoute>;
@@ -69,6 +71,7 @@ function CommerceApp() {
       : path === "/perfil" ? <main className="pagina">
         <button type="button" onClick={() => navigate("/")}>Volver al inicio</button>
         <ProfileEditor onViewBillingHistory={() => navigate("/facturacion")} />
+        <AlertasSeccion />
       </main>
       : <FinanceApp onViewPlans={() => navigate("/planes")} onViewProfile={() => navigate("/perfil")} replay={replayRequest} />}
   </>;

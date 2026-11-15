@@ -17,6 +17,14 @@ import { SqliteSbsRiskRepository } from "./risk/infrastructure/SqliteSbsRiskRepo
 import { SqliteEconomistReportRepository } from "./risk/infrastructure/SqliteEconomistReportRepository";
 import { SqlitePerfilRepository } from "./profile/infrastructure/SqlitePerfilRepository";
 import { createMarketMonitoringRuntime, monitoringSettings } from "./monitoring/infrastructure/createMarketMonitoringRuntime";
+import { ServicioEnvioCorreo } from "./alertas/application/ServicioEnvioCorreo";
+import { startAlertEmailJob } from "./alertas/application/AlertEmailJob";
+import { SqliteResolvedorAlertaCorreo } from "./alertas/infrastructure/SqliteResolvedorAlertaCorreo";
+import { ConsolaRegistroEnvios } from "./alertas/infrastructure/ConsolaRegistroEnvios";
+import { SmtpCorreoAlertas } from "./alertas/infrastructure/SmtpCorreoAlertas";
+import { TemporizadorReal } from "./alertas/infrastructure/TemporizadorReal";
+import { SqliteAlertasRepository } from "./alertas/infrastructure/SqliteAlertasRepository";
+import { ServicioAlertas } from "./alertas/application/ServicioAlertas";
 
 const PORT = process.env.PORT ?? 3000;
 const marketConfiguration = monitoringSettings(process.env);
@@ -32,6 +40,16 @@ const marketRuntime = createMarketMonitoringRuntime(database, users, marketConfi
 if (marketConfiguration.enabled) {
   console.log("Monitoreo del catálogo SQLite local habilitado. TS-117/TS-120 pendientes; no se generan alertas de mercado.");
 }
+const stopAlertEmailJob = process.env.ALERT_EMAIL_JOB_ENABLED === "true"
+  ? startAlertEmailJob(new ServicioEnvioCorreo({
+      cola: marketRuntime.queue,
+      usuarios: users,
+      alertas: new SqliteResolvedorAlertaCorreo(database),
+      proveedor: new SmtpCorreoAlertas(),
+      registro: new ConsolaRegistroEnvios(),
+      temporizador: new TemporizadorReal(),
+    }))
+  : undefined;
 const stopSubscriptionMaintenanceJob = startSubscriptionMaintenanceJob(
   new SubscriptionMaintenanceService(users, new SmtpPlanChangeEmailService()),
 );
@@ -41,6 +59,7 @@ const server = createApp(products, users, users, new SmtpRecoveryEmailService(),
   savingsAccounts,
   sbsRiskRepository: new SqliteSbsRiskRepository(database),
   economistReportRepository: new SqliteEconomistReportRepository(database),
+  alertas: new ServicioAlertas(new SqliteAlertasRepository(database)),
 }).listen(PORT, () => {
   console.log(`Backend escuchando en http://localhost:${PORT}`);
 });
@@ -50,7 +69,7 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.once(signal, () => {
     if (shuttingDown) return;
     shuttingDown = true;
-    void Promise.all([stopSubscriptionMaintenanceJob(), marketRuntime.stop()]).finally(() => server.close(() => {
+    void Promise.all([stopSubscriptionMaintenanceJob(), marketRuntime.stop(), stopAlertEmailJob?.()]).finally(() => server.close(() => {
       try { favorites.close(); } finally { try { users.close(); } finally { database.close(); } }
     }));
   });

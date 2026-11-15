@@ -1,3 +1,4 @@
+import { useId } from "react";
 import "./IndicadorFSD.css";
 
 export interface CoberturaFSD {
@@ -19,9 +20,20 @@ function evidenciaVigente(value: CoberturaFSD | undefined): value is CoberturaFS
   } catch { return false; }
 }
 
-export function IndicadorFSD({ cobertura }: { cobertura?: CoberturaFSD }) {
+export function IndicadorFSD({ cobertura, variante = "completo" }: { cobertura?: CoberturaFSD; variante?: "completo" | "compacto" }) {
+  const idTooltip = useId();
   const estado = evidenciaVigente(cobertura) && ["CUBIERTO", "NO_CUBIERTO"].includes(cobertura.estado) ? cobertura.estado : "NO_VERIFICADO";
   const labels = { CUBIERTO: "Con cobertura FSD", NO_CUBIERTO: "Sin cobertura FSD", NO_VERIFICADO: "Cobertura FSD no verificada" };
+    if (variante === "compacto") {
+    const detalle = estado === "NO_VERIFICADO"
+      ? "No se dispone de evidencia vigente. No implica ausencia de cobertura."
+      : `${cobertura!.entidadFinanciera} · Verificado: ${cobertura!.fechaVerificacion} · Vigente hasta: ${cobertura!.vigenteHasta}.${estado === "CUBIERTO" ? " Sujeto a los límites y condiciones vigentes del FSD." : ""}`;
+    return <span className={`fsd-compacto fsd-compacto-${estado.toLowerCase()}`} tabIndex={0} aria-describedby={idTooltip}>
+      <span aria-hidden="true">{estado === "CUBIERTO" ? "🛡" : estado === "NO_CUBIERTO" ? "⊘" : "?"}</span>
+      <span>{labels[estado]}</span>
+      <span role="tooltip" id={idTooltip} className="fsd-tooltip">{detalle}</span>
+    </span>;
+  }
   return <div className={`fsd-indicador fsd-${estado.toLowerCase()}`}>
     <span aria-hidden="true">{estado === "CUBIERTO" ? "🛡" : estado === "NO_CUBIERTO" ? "⊘" : "?"}</span>{" "}
     <span>{labels[estado]}</span>

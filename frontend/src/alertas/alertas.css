@@ -1,0 +1,141 @@
+.alertas {
+  margin: 1.5rem 0;
+}
+
+.alertas-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.alertas-contador {
+  font-size: 0.9rem;
+  color: var(--text-h, inherit);
+}
+
+.alertas-cuerpo {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+/* En pantallas anchas el detalle queda al lado de la lista; en angostas, debajo. */
+@media (min-width: 52rem) {
+  .alertas-cuerpo-con-panel {
+    grid-template-columns: 1fr minmax(18rem, 26rem);
+  }
+}
+
+.alertas-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.alerta-item {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.3));
+  border-radius: 8px;
+  text-align: left;
+}
+
+.alerta-item-nueva {
+  border-left: 4px solid var(--accent, currentColor);
+}
+
+.alerta-item-activa {
+  background: var(--accent-bg, rgba(128, 128, 128, 0.1));
+}
+
+.alerta-item-boton {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.alerta-item-boton:focus-visible {
+  outline: 2px solid var(--accent, currentColor);
+  outline-offset: 3px;
+}
+
+.alerta-punto {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-right: 0.4rem;
+  border-radius: 50%;
+  background: var(--accent, currentColor);
+}
+
+/* Texto solo para lectores de pantalla. */
+.alerta-solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.alerta-panel {
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.3));
+  border-radius: 8px;
+  text-align: left;
+}
+
+.alerta-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.alerta-panel h3 {
+  margin: 0;
+}
+
+.alerta-panel-datos {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.8rem 0;
+}
+
+.alerta-panel-datos div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border, rgba(128, 128, 128, 0.3));
+}
+
+.alerta-panel-datos dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.alerta-riesgo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.alerta-luz {
+  flex-shrink: 0;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+}
