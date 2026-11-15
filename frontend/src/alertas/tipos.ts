@@ -4,9 +4,7 @@ import type { CoberturaFSD } from "../fsd/IndicadorFSD";
 export type TipoAlerta = "TASA" | "RIESGO";
 
 /**
- * PROPUESTA de la forma de una alerta, armada con los criterios de US35, US36 y US40.
- * El modelo real lo define US38/US39: cuando exista, se ajustan los nombres aquí.
- * Las tasas van como texto ya formateado, igual que FilaAhorro.
+ * Forma de una alerta tal como la devuelve GET /api/alertas
  */
 export interface Alerta {
   /** Entero positivo, como los demás identificadores del proyecto. */

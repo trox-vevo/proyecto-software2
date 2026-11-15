@@ -160,6 +160,7 @@ describe("Alertas en la plataforma (US35, US36, TS-110)", () => {
   it("la cobertura FSD sale de la entidad: no verificada si es NULL, y la evidencia guardada si existe", async () => {
     insertar(entorno.database, { userId: 7, eventId: "e1", tipo: "CAMBIO_TASA", entityId: 1, anterior: "0.05", actual: "0.06" });
     insertar(entorno.database, { userId: 7, eventId: "e2", tipo: "CAMBIO_TASA", entityId: 2, anterior: "0.06", actual: "0.07" });
+    entorno.database.prepare("UPDATE financial_entities SET fsd_coverage = NULL WHERE id = 1").run();
     entorno.database
       .prepare("UPDATE financial_entities SET fsd_coverage = ? WHERE id = 2")
       .run(

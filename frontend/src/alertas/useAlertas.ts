@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-// Ajusta la ruta a donde esté session.ts en tu proyecto.
 import { fetchWithAuth } from "../auth/session";
 import type { Alerta } from "./tipos";
 
@@ -52,7 +51,6 @@ export function useAlertas() {
     };
   }, []);
 
-  // El contador se deduce de la lista: no hay un segundo número que pueda quedar desactualizado.
   const pendientes = useMemo(() => alertas.filter((alerta) => !alerta.leida).length, [alertas]);
   const seleccionada = useMemo(
     () => alertas.find((alerta) => alerta.id === seleccionadaId) ?? null,

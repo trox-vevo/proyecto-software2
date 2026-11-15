@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AlertasSeccion } from "./AlertasSeccion";
-import { alertasMock } from "./alertasMock";
+import { alertasMock } from "./pruebas/alertasMock";
 
 // La API se simula con fetch. Los datos son los de alertasMock.ts: 5 alertas, 4 sin leer
 // (la de Cooperativa Quipu ya está leída).

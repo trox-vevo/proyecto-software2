@@ -1,13 +1,14 @@
-import type { CoberturaFSD } from "../fsd/IndicadorFSD";
-import type { Alerta } from "./tipos";
+import type { CoberturaFSD } from "../../fsd/IndicadorFSD";
+import type { Alerta } from "../tipos";
 
 /**
- * TEMPORAL: alertas inventadas para construir US35, US36 y US40 antes de que exista el
- * motor de alertas (US38/US39). Las entidades son ficticias y no representan cobertura real.
- * Cuando exista la API de alertas, se borra este archivo y su uso en el hook.
+ * Datos de PRUEBA con la misma forma que devuelve GET /api/alertas. Solo los usan las pruebas:
+ * la aplicación carga las alertas reales desde la API (useAlertas). Las entidades son ficticias
+ * y no representan cobertura real.
  *
- * Cubre: alerta de tasa y de riesgo, las tres coberturas FSD, entidad sin datos de la SBS
- * y alertas leídas y no leídas (4 pendientes).
+ * Cubre: alerta de tasa y de riesgo, las tres coberturas FSD, una alerta sin calificación de la SBS
+ * y alertas leídas y no leídas (4 pendientes). Una alerta de tasa no trae calificación anterior ni
+ * una de riesgo trae tasas, igual que en la API.
  */
 
 // Evidencia que IndicadorFSD acepta como vigente: fuente https de un dominio permitido y fechas válidas.
@@ -38,7 +39,7 @@ const ALERTAS_MOCK: Alerta[] = [
     tasaAnterior: "4.50%",
     tasaNueva: "3.80%",
     variacionPct: "-15.56%",
-    calificacionAnterior: "A-",
+    calificacionAnterior: null,
     calificacion: "A-",
     coberturaFSD: cubierta("Banco Andino Demo"),
     leida: false,
@@ -52,7 +53,7 @@ const ALERTAS_MOCK: Alerta[] = [
     tasaAnterior: "6.00%",
     tasaNueva: "7.50%",
     variacionPct: "+25.00%",
-    calificacionAnterior: "B",
+    calificacionAnterior: null,
     calificacion: "B",
     coberturaFSD: noCubierta("Caja Rimay Demo"),
     leida: false,
@@ -63,9 +64,9 @@ const ALERTAS_MOCK: Alerta[] = [
     entidadId: 103,
     entidad: "Financiera Sol Demo",
     tipo: "RIESGO",
-    tasaAnterior: "5.20%",
-    tasaNueva: "5.20%",
-    variacionPct: "0.00%",
+    tasaAnterior: null,
+    tasaNueva: null,
+    variacionPct: null,
     calificacionAnterior: "A-",
     calificacion: "C",
     coberturaFSD: NO_VERIFICADA,
@@ -91,9 +92,9 @@ const ALERTAS_MOCK: Alerta[] = [
     entidadId: 105,
     entidad: "Mutual Inti Demo",
     tipo: "RIESGO",
-    tasaAnterior: "4.00%",
-    tasaNueva: "4.00%",
-    variacionPct: "0.00%",
+    tasaAnterior: null,
+    tasaNueva: null,
+    variacionPct: null,
     calificacionAnterior: "B+",
     calificacion: "A-",
     coberturaFSD: cubierta("Mutual Inti Demo"),
@@ -102,7 +103,7 @@ const ALERTAS_MOCK: Alerta[] = [
   },
 ];
 
-/** Devuelve una copia, para que marcar una alerta como leída no altere los datos originales. */
+/** Devuelve una copia, para que una prueba que cambie una alerta no altere los datos originales. */
 export function alertasMock(): Alerta[] {
   return ALERTAS_MOCK.map((alerta) => ({ ...alerta, coberturaFSD: { ...alerta.coberturaFSD } }));
 }

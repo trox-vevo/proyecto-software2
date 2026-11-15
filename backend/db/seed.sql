@@ -9,6 +9,12 @@ INSERT OR IGNORE INTO financial_entities (id, name, has_physical_branches, has_a
   (5, 'Entidad E', 1, 1, 1, 1, NULL),
   (6, 'Entidad F', 1, 0, 0, 1, NULL);
 
+  -- US21/US35: evidencia FSD de demostración (entidades ficticias). Solo rellena las que no tienen evidencia.
+UPDATE financial_entities SET fsd_coverage = '{"estado":"CUBIERTO","entidadFinanciera":"Entidad A","fechaVerificacion":"2026-10-15","vigenteHasta":"2027-12-31","fuente":"https://www.fsd.org.pe/"}' WHERE id = 1 AND fsd_coverage IS NULL;
+UPDATE financial_entities SET fsd_coverage = '{"estado":"CUBIERTO","entidadFinanciera":"Entidad B","fechaVerificacion":"2026-10-15","vigenteHasta":"2027-12-31","fuente":"https://www.fsd.org.pe/"}' WHERE id = 2 AND fsd_coverage IS NULL;
+UPDATE financial_entities SET fsd_coverage = '{"estado":"NO_CUBIERTO","entidadFinanciera":"Entidad C","fechaVerificacion":"2026-10-15","vigenteHasta":"2027-12-31","fuente":"https://www.fsd.org.pe/"}' WHERE id = 3 AND fsd_coverage IS NULL;
+UPDATE financial_entities SET fsd_coverage = '{"estado":"CUBIERTO","entidadFinanciera":"Entidad E","fechaVerificacion":"2026-10-15","vigenteHasta":"2027-12-31","fuente":"https://www.fsd.org.pe/"}' WHERE id = 5 AND fsd_coverage IS NULL;
+
 -- El id del producto es el id de su entidad (US25/US26 dependen de eso)
 INSERT OR IGNORE INTO fixed_deposit_products (id, entity_id, department, tea, minimum_amount) VALUES
   (1, 1, 'Lima', '0.055', '500'),
