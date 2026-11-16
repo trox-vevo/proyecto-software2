@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { validateBilling, type BillingErrors } from "./BillingValidation";
 import type { PaymentGateway } from "./PaymentGateway";
+import { PRO_MONTHLY_PRICE } from "../plans/Plan";
 
 export type DemoScenarioId = "DEMO_APPROVED" | "DEMO_DECLINED";
 
@@ -11,7 +12,7 @@ export interface MockPaymentResult {
   environment: "DEMO";
   occurredAt: string;
   planId: "PRO";
-  amount: null;
+  amount: string;
   message: string;
   declineReason: null | "Fondos ficticios insuficientes.";
 }
@@ -48,10 +49,11 @@ export class MockPaymentService implements PaymentGateway {
       environment: "DEMO",
       occurredAt: new Date().toISOString(),
       planId: "PRO",
-      amount: null,
+      // US31: el monto lo decide el servidor; nunca se lee de la petición.
+      amount: PRO_MONTHLY_PRICE,
       message: approved
-        ? "Transacción de demostración aprobada. No se realizó ningún cobro."
-        : "Transacción de demostración rechazada. No se realizó ningún cobro.",
+        ? `Pago de demostración aprobado por S/ ${PRO_MONTHLY_PRICE}. No se realizó ningún cobro real.`
+        : "Pago de demostración rechazado. No se realizó ningún cobro.",
       declineReason: approved ? null : "Fondos ficticios insuficientes.",
     };
   }

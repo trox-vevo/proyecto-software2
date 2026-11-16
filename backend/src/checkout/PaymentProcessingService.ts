@@ -4,6 +4,7 @@ import {
   type CheckoutPaymentHistoryRepository,
 } from "./CheckoutPaymentHistory";
 import type { PaymentGateway, PaymentResult } from "./PaymentGateway";
+import { PRO_MONTHLY_PRICE } from "../plans/Plan";
 
 const PRO_PERIOD_DAYS = 30;
 
@@ -39,7 +40,7 @@ export class PaymentProcessingService {
       outcome: result.outcome,
       occurredAt: result.occurredAt,
       planId: "PRO" as const,
-      amount: null,
+      amount: PRO_MONTHLY_PRICE, // US31: también en el rechazo (monto que se intentó cobrar)
       currency: "PEN" as const,
       receiptStatus: "AVAILABLE" as const,
     };

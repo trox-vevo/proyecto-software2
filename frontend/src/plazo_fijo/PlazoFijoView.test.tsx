@@ -122,7 +122,7 @@ describe("Integración US06 + US12 | Flujo de simulación", () => {
       saldoFinal: "1,050.00", fechaApertura: "10/01/2023", monthlyMaintenanceFee: "0.00",
       channels: { hasPhysicalBranches: true, hasAtms: true },
     }] }))));
-    window.history.replaceState(null, "", "/");
+    window.history.replaceState(null, "", "/simular/ahorros");
     localStorage.clear();
     render(<App />);
     expect(await screen.findByText("AH-001")).toBeVisible();

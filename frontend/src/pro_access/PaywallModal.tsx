@@ -1,3 +1,4 @@
+import { PRO_MONTHLY_PRICE } from "../commerce/types";
 import "./ProAccess.css";
 
 const proBenefits: string[] = [
@@ -26,6 +27,7 @@ export function PaywallModal({ open, onClose, onViewPlans }: Props) {
     <div className="paywall-fondo" onKeyDown={(event) => event.key === "Escape" && onClose()}>
       <div className="paywall" role="dialog" aria-modal="true" aria-labelledby="paywall-titulo">
         <h2 id="paywall-titulo">Desbloquea el Plan Pro</h2>
+        <p>Por solo S/ {PRO_MONTHLY_PRICE} al mes.</p>
         <ul>
           {proBenefits.map((benefit) => (
             <li key={benefit}>{benefit}</li>

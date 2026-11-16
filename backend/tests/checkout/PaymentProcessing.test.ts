@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/app";
 import { getJwtSecret } from "../../src/auth/jwtSecret";
 import type { PaymentGateway, PaymentResult } from "../../src/checkout/PaymentGateway";
+import { PaymentReceiptGenerator } from "../../src/checkout/PaymentReceiptGenerator";
 import { AuthenticationRequiredError, PaymentProcessingService } from "../../src/checkout/PaymentProcessingService";
 import type { User } from "../../src/registration/domain/User";
 import { SqliteUserRepository } from "../../src/registration/infrastructure/SqliteUserRepository";
@@ -110,7 +111,7 @@ describe("US34, historial persistente de facturación", () => {
       outcome: "APPROVED" as const,
       occurredAt: NOW.toISOString(),
       planId: "PRO" as const,
-      amount: null,
+      amount: "9.90",
       currency: "PEN" as const,
       receiptStatus: "AVAILABLE" as const,
     };
@@ -133,6 +134,34 @@ describe("US34, historial persistente de facturación", () => {
       const reopened = new SqliteUserRepository(file);
       expect(reopened.findCheckoutHistory(user.id)).toEqual([payment, earlierPayment]);
       reopened.close();
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("US31: lee el monto REAL como texto con 2 decimales y conserva null en pagos anteriores al precio", async () => {
+    const directory = mkdtempSync(join(tmpdir(), "yupay-us31-"));
+    const payment = {
+      reference: "DEMO-00000000000000000000aaaa",
+      outcome: "APPROVED" as const,
+      occurredAt: NOW.toISOString(),
+      planId: "PRO" as const,
+      amount: "9.90",
+      currency: "PEN" as const,
+      receiptStatus: "AVAILABLE" as const,
+    };
+    const legacy = { ...payment, reference: "DEMO-00000000000000000000bbbb", occurredAt: "2026-11-01T12:00:00.000Z", amount: null };
+    try {
+      const users = new SqliteUserRepository(join(directory, "users.sqlite"));
+      const user = users.create({ username: "u", email: "u31@prueba.com", passwordHash: "h", plan: "BASICO", createdAt: NOW.toISOString() });
+      users.recordCheckoutAttempt(user.id, legacy);
+      users.recordApprovedCheckout(user.id, IN_30_DAYS, payment);
+      expect(users.findCheckoutHistory(user.id).map((item) => item.amount)).toEqual(["9.90", null]);
+      for (const item of users.findCheckoutHistory(user.id)) {
+        const pdf = await new PaymentReceiptGenerator().generate(item);
+        expect(pdf.subarray(0, 4).toString()).toBe("%PDF");
+      }
+      users.close();
     } finally {
       rmSync(directory, { recursive: true, force: true });
     }
@@ -207,7 +236,10 @@ describe("US33, POST /api/checkout/simulate con la app real", () => {
       .toContain(approved.reference);
     expect(history.transactions.map((transaction: { reference: string }) => transaction.reference))
       .toContain(declined.reference);
-    expect(history.transactions.every((transaction: { amount: number | null }) => transaction.amount === null)).toBe(true);
+    expect(approved.amount).toBe("9.90");
+    expect(declined.amount).toBe("9.90");
+    // US31: el historial devuelve el monto como texto (no número), aunque SQLite lo guarde como REAL.
+    expect(history.transactions.every((transaction: { amount: string | null }) => transaction.amount === "9.90")).toBe(true);
     const otherHistory = await fetch(`${baseUrl}/api/checkout/history`, {
       headers: { Authorization: `Bearer ${tokenFor(otherId)}` },
     });

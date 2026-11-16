@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ForgotPasswordView } from "./ForgotPasswordView";
-import { RegistrationRoute } from "../registration/RegistrationRoute";
+import { RutasAcceso } from "../pages/AccesoPages";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -56,9 +56,9 @@ describe("pantalla de recuperación de contraseña", () => {
   it("permite llegar a recuperación desde el enlace de inicio de sesión", async () => {
     window.history.replaceState(null, "", "/login");
     render(
-      <RegistrationRoute>
+      <RutasAcceso>
         <p>Inicio</p>
-      </RegistrationRoute>,
+      </RutasAcceso>,
     );
 
     await userEvent.click(screen.getByRole("link", { name: "¿Olvidaste tu contraseña?" }));

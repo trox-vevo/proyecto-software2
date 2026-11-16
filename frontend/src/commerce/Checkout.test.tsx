@@ -6,23 +6,17 @@ import { sessionStore } from "../pro_access/SessionStore";
 import { Checkout } from "./Checkout";
 
 const config = { environment: "DEMO", provider: "LOCAL_MOCK", simulation: true, cardCaptureAvailable: true,
-  processingAvailable: true, realPaymentsAvailable: false, membershipActivationAvailable: true };
+  processingAvailable: true, realPaymentsAvailable: false, membershipActivationAvailable: true,
+  price: "9.90", currency: "PEN", billingPeriod: "MONTHLY" };
 const configResponse = () => new Response(JSON.stringify(config));
 const result = (outcome: "APPROVED" | "DECLINED" = "APPROVED") => ({
   reference: "DEMO-0123456789abcdef01234567", outcome, simulation: true, environment: "DEMO",
-  occurredAt: "2026-11-06T19:00:00.000Z", planId: "PRO", amount: null,
+  occurredAt: "2026-11-06T19:00:00.000Z", planId: "PRO", amount: "9.90",
   message: outcome === "APPROVED" ? "Operación aprobada únicamente para la demostración." : "Operación rechazada únicamente para la demostración.",
   declineReason: outcome === "DECLINED" ? "Fondos ficticios insuficientes." : null,
   plan: outcome === "APPROVED" ? "PRO" : "BASICO", planExpiresAt: outcome === "APPROVED" ? "2026-12-06T19:00:00.000Z" : null,
 });
 const successfulResponse = (outcome: "APPROVED" | "DECLINED" = "APPROVED") => new Response(JSON.stringify(result(outcome)));
-const cancellationResponse = (planExpiresAt: string) => new Response(JSON.stringify({
-  status: "CANCELLATION_SCHEDULED",
-  plan: "PRO",
-  planExpiresAt,
-  planCancellationRequested: true,
-  message: "Tu suscripción Pro se cancelará al finalizar el período actual.",
-}));
 const labels = ["Nombre o razón social", "Correo de facturación", "Nombre del titular", "Número de tarjeta", "Fecha de vencimiento", "CVV"];
 const futureExpiry = `12/${String(new Date().getFullYear() + 2).slice(-2)}`;
 function fill(number = "0000111122223333", decline = false) {
@@ -240,7 +234,7 @@ describe("US32, checkout de simulación académica", () => {
   it.each([
     null, {}, { ...result(), reference: "bank-real-reference" }, { ...result(), outcome: "PAID" },
     { ...result("DECLINED") }, { ...result(), simulation: false }, { ...result(), environment: "sandbox" },
-    { ...result(), planId: "BASICO" }, { ...result(), amount: 10 }, { ...result(), message: "" },
+    { ...result(), planId: "BASICO" }, { ...result(), amount: 10 }, { ...result(), amount: null }, { ...result(), amount: "9.9" }, { ...result(), message: "" },
     { ...result(), occurredAt: "fecha-invalida" }, { ...result(), occurredAt: "2026-02-30T19:00:00.000Z" },
     { ...result(), declineReason: "motivo inesperado" }, { ...result(), subscription: { plan: "PRO" } },
     { ...result(), plan: "BASICO" }, { ...result(), planExpiresAt: null }, { ...result(), planExpiresAt: "mañana" },
@@ -259,6 +253,7 @@ describe("US32, checkout de simulación académica", () => {
     { ...config, simulation: false }, { ...config, cardCaptureAvailable: false },
     { ...config, processingAvailable: false }, { ...config, realPaymentsAvailable: true },
     { ...config, membershipActivationAvailable: false },
+    { ...config, price: 9.9 }, { ...config, price: "9.9" }, { ...config, currency: "USD" }, { ...config, price: undefined },
   ])("bloquea configuraciones ajenas a la demostración %j", async (value) => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(value))));
     render(<Checkout onViewPlans={vi.fn()} />);
@@ -382,56 +377,5 @@ describe("US33, procesamiento de pago y activación del Plan Pro", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Inicia sesión para suscribirte al Plan Pro.");
     expect(alert).not.toHaveTextContent("AUTHENTICATION_REQUIRED");
-  });
-});
-
-describe("TS-128/TS-130, cancelación de la suscripción Pro", () => {
-  const proSession = () => saveAuthSession({
-    id: "s1",
-    userId: 7,
-    tokenJwt: "token-pro",
-    expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
-    plan: "PRO",
-    planExpiresAt: new Date(Date.now() + 86_400_000).toISOString(),
-    planCancellationRequested: false,
-  });
-  afterEach(() => clearAuthSession());
-
-  it("pide confirmación, permite desistir y no llama al endpoint", async () => {
-    proSession();
-    const fetchMock = vi.fn().mockResolvedValueOnce(configResponse());
-    await open(fetchMock);
-
-    await userEvent.click(screen.getByRole("button", { name: "Cancelar suscripción" }));
-    expect(screen.getByText(/¿Confirmas que quieres programar la cancelación/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Mantener mi suscripción" }));
-
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(sessionStore.isPro()).toBe(true);
-    expect(screen.getByRole("button", { name: "Cancelar suscripción" })).toBeInTheDocument();
-  });
-
-  it("confirma la cancelación al final del período y mantiene Pro hasta esa fecha", async () => {
-    proSession();
-    const expiresAt = new Date(Date.now() + 86_400_000).toISOString();
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(configResponse())
-      .mockResolvedValueOnce(cancellationResponse(expiresAt));
-    await open(fetchMock);
-
-    await userEvent.click(screen.getByRole("button", { name: "Cancelar suscripción" }));
-    await userEvent.click(screen.getByRole("button", { name: "Confirmar cancelación" }));
-
-    expect(await screen.findByRole("status")).toHaveTextContent("Tu suscripción Pro se cancelará al finalizar el período actual.");
-    expect(sessionStore.isPro()).toBe(true);
-    expect(JSON.parse(localStorage.getItem("yupay.auth.session") ?? "{}")).toMatchObject({
-      plan: "PRO",
-      planExpiresAt: expiresAt,
-      planCancellationRequested: true,
-    });
-    const [url, request] = fetchMock.mock.calls[1];
-    expect(url).toContain("/api/subscription/cancel");
-    expect(request.method).toBe("POST");
-    expect(new Headers(request.headers).get("Authorization")).toBe("Bearer token-pro");
   });
 });

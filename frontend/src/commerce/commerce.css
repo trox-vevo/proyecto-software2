@@ -1,12 +1,3 @@
-.comercio-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.comercio-nav a { color: var(--accent); }
 .suscripcion-banner { margin: 1rem; padding: 1rem; border: 1px solid var(--accent-border); border-radius: 8px; background: var(--accent-bg); color: var(--text-h); }
 .comercio p { margin: 1rem 0; }
 .comercio button, .favorito-accion button, .simulaciones-guardadas button {
@@ -59,6 +50,7 @@
 .checkout-resumen { position: sticky; top: 1rem; padding: 1.25rem; border: 1px solid var(--border); border-radius: 12px; background: var(--social-bg); }
 .checkout-resumen h2 { margin: 0 0 1rem; font-size: 1.15rem; }
 .checkout-demo .checkout-resumen-plan { display: flex; justify-content: space-between; margin: 0; padding-bottom: .75rem; border-bottom: 1px solid var(--border); color: var(--text-h); }
+.checkout-resumen-total { margin: .75rem 0 0; color: var(--text-h); font-weight: 600; }
 .checkout-resumen ul { margin: 1rem 0; padding-left: 1.2rem; display: grid; gap: .4rem; }
 .checkout-suscripcion { margin-top: 1.25rem; padding: 1rem; border: 1px solid var(--border); border-radius: 8px; }
 .checkout-suscripcion h2 { margin-top: 0; }

@@ -88,14 +88,6 @@
   line-height: 1.6;
 }
 
-.glosario-enlaces {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  margin: 12px 0 24px;
-}
-
 .glosario-enlace {
   padding: 6px 10px;
   border: 1px solid #466f79;

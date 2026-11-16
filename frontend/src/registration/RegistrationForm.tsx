@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
-import "./RegistrationForm.css";
+import { Fragment, useEffect, useRef, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
+import { alHacerClic } from "../app/navegacion";
+import "../auth/LoginView.css";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 type Fields = "username" | "email" | "password" | "confirmation";
 type Errors = Partial<Record<Fields, string>>;
 
-export function RegistrationForm({ onRegistered }: { onRegistered: () => void }) {
+export function RegistrationForm({ onRegistered, children }: { onRegistered: () => void; children?: ReactNode }) {
   const [values, setValues] = useState({ username: "", email: "", password: "", confirmation: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [message, setMessage] = useState("");
@@ -72,24 +73,31 @@ export function RegistrationForm({ onRegistered }: { onRegistered: () => void })
     { key: "confirmation", label: "Confirmar contraseña", type: "password", autoComplete: "new-password", maxLength: 1024 },
   ];
   return (
-    <section className="registro" aria-labelledby="registro-titulo">
-      <h2 id="registro-titulo">Crea tu cuenta</h2>
-      <p>Tu cuenta comienza con el plan básico.</p>
-      <form onSubmit={submit} noValidate aria-busy={pending}>
-        {fields.map(({ key, label, ...props }) => (
-          <div key={key}>
-            <label htmlFor={`registro-${key}`}>{label}</label>
-            <input {...props} id={`registro-${key}`} name={key} required disabled={pending}
-              value={values[key]} aria-invalid={Boolean(errors[key])}
-              aria-describedby={errors[key] ? `error-${key}` : undefined}
-              onChange={(event) => { setValues({ ...values, [key]: event.target.value }); setErrors({ ...errors, [key]: undefined }); setMessage(""); }} />
-            {errors[key] && <p id={`error-${key}`} role="alert">{errors[key]}</p>}
-          </div>
-        ))}
-        <p>Usa una contraseña de al menos 8 caracteres.</p>
-        {message && <p role="alert">{message}</p>}
-        <button type="submit" disabled={pending}>{pending ? "Creando cuenta…" : "Crear cuenta"}</button>
-      </form>
-    </section>
+    <main className="login-pagina">
+      <section className="login-tarjeta" aria-labelledby="registro-titulo">
+        <p className="login-etiqueta">Yupay Finance</p>
+        <h1 id="registro-titulo">Crea tu cuenta</h1>
+        <p className="login-descripcion">Tu cuenta comienza con el plan básico.</p>
+        <form className="login-formulario" onSubmit={submit} noValidate aria-busy={pending}>
+          {fields.map(({ key, label, ...props }) => (
+            <Fragment key={key}>
+              <label htmlFor={`registro-${key}`}>{label}</label>
+              <input {...props} id={`registro-${key}`} name={key} required disabled={pending}
+                value={values[key]} aria-invalid={Boolean(errors[key])}
+                aria-describedby={errors[key] ? `error-${key}` : undefined}
+                onChange={(event) => { setValues({ ...values, [key]: event.target.value }); setErrors({ ...errors, [key]: undefined }); setMessage(""); }} />
+              {errors[key] && <p id={`error-${key}`} className="login-error" role="alert">{errors[key]}</p>}
+            </Fragment>
+          ))}
+          <p className="login-ayuda">Usa una contraseña de al menos 8 caracteres.</p>
+          {message && <p className="login-error" role="alert">{message}</p>}
+          <button type="submit" disabled={pending}>{pending ? "Creando cuenta…" : "Crear cuenta"}</button>
+        </form>
+        <a className="login-enlace-recuperacion" href="/login" onClick={alHacerClic("/login")}>
+          ¿Ya tienes cuenta? Inicia sesión
+        </a>
+        {children}
+      </section>
+    </main>
   );
 }

@@ -35,6 +35,7 @@ function renderAppWith(filas: FilaAhorro[]) {
     return new Response(JSON.stringify({ resultados: filas }));
   });
   vi.stubGlobal("fetch", fetchMock);
+  window.history.pushState(null, "", "/simular/ahorros");
   render(<App />);
   return fetchMock;
 }

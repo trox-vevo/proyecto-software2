@@ -2,7 +2,8 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RegistrationForm } from "./RegistrationForm";
-import { RegistrationRoute } from "./RegistrationRoute";
+import { RutasAcceso } from "../pages/AccesoPages";
+import { Layout } from "../app/Layout";
 import App from "../App";
 
 afterEach(() => { vi.unstubAllGlobals(); localStorage.clear(); window.history.replaceState(null, "", "/"); });
@@ -30,7 +31,7 @@ describe("Formulario de registro", () => {
   it("envía el contrato esperado y redirige a /login después de un 201", async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ user: { id: 1 } }), { status: 201 })); vi.stubGlobal("fetch", fetchMock);
     window.history.replaceState(null, "", "/registro");
-    render(<RegistrationRoute><p>Inicio</p></RegistrationRoute>); await complete("ESTUDIANTE@example.com");
+    render(<RutasAcceso><p>Inicio</p></RutasAcceso>); await complete("ESTUDIANTE@example.com");
     await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
     expect(await screen.findByText("Cuenta creada correctamente.")).toBeInTheDocument();
     expect(window.location.pathname).toBe("/login");
@@ -69,7 +70,7 @@ describe("Formulario de registro", () => {
     await screen.findByRole("alert");
   });
   it("permite abrir y abandonar registro, y responde a la navegación del navegador", async () => {
-    render(<RegistrationRoute><p>Simulador</p></RegistrationRoute>);
+    render(<RutasAcceso><Layout><p>Simulador</p></Layout></RutasAcceso>);
     await userEvent.click(screen.getByRole("link", { name: "Crear cuenta" }));
     expect(window.location.pathname).toBe("/registro");
     expect(screen.getByRole("heading", { name: "Crea tu cuenta" })).toBeInTheDocument();
@@ -87,6 +88,7 @@ describe("Formulario de registro", () => {
       return new Response(JSON.stringify({ resultados: [] }));
     });
     vi.stubGlobal("fetch", fetchMock);
+    window.history.pushState(null, "", "/simular/ahorros");
     render(<App />);
     await screen.findByText("Sin resultados");
     await userEvent.click(screen.getByRole("link", { name: "Crear cuenta" }));
@@ -95,6 +97,7 @@ describe("Formulario de registro", () => {
     expect(await screen.findByText("Cuenta creada correctamente.")).toBeInTheDocument();
     expect(window.location.pathname).toBe("/login");
     await userEvent.click(screen.getByRole("link", { name: "Volver al inicio" }));
+    await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
     expect(screen.getByRole("heading", { name: "Configura tu inversión" })).toBeInTheDocument();
   });
   it("no declara éxito ante un 200 inesperado de una API mal configurada", async () => {
@@ -137,7 +140,7 @@ describe("Formulario de registro", () => {
       new Response(JSON.stringify({ session, plan: "PRO" }), { status: 200 }),
     ));
     window.history.replaceState(null, "", "/login");
-    const firstRender = render(<RegistrationRoute><p>Inicio</p></RegistrationRoute>);
+    const firstRender = render(<RutasAcceso><Layout><p>Inicio</p></Layout></RutasAcceso>);
     await userEvent.type(screen.getByLabelText("Correo electrónico"), "pro@example.com");
     await userEvent.type(screen.getByLabelText("Contraseña"), "Clave-segura-123");
     await userEvent.click(screen.getByRole("button", { name: "Ingresar" }));
@@ -147,7 +150,7 @@ describe("Formulario de registro", () => {
 
     firstRender.unmount();
     window.history.replaceState(null, "", "/");
-    render(<RegistrationRoute><p>Inicio</p></RegistrationRoute>);
+    render(<RutasAcceso><Layout><p>Inicio</p></Layout></RutasAcceso>);
     expect(screen.getByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Cerrar sesión" }));
     expect(localStorage.getItem("yupay.auth.session")).toBeNull();
@@ -160,7 +163,7 @@ describe("Formulario de registro", () => {
       return new Promise<Response>((done) => { resolve = done; });
     }));
     window.history.replaceState(null, "", "/registro");
-    render(<RegistrationRoute><p>Simulador</p></RegistrationRoute>);
+    render(<RutasAcceso><p>Simulador</p></RutasAcceso>);
     await complete();
     await userEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
     await userEvent.click(screen.getByRole("link", { name: "Volver al inicio" }));

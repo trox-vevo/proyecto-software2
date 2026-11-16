@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { RegistrationRoute } from "../registration/RegistrationRoute";
+import { RutasAcceso } from "../pages/AccesoPages";
 import { ResetPasswordView } from "./ResetPasswordView";
 
 afterEach(() => {
@@ -49,9 +49,9 @@ describe("pantalla de restablecimiento de contraseña", () => {
     vi.stubGlobal("fetch", fetchMock);
     window.history.replaceState(null, "", "/restablecer-contrasena?token=token-de-prueba");
     render(
-      <RegistrationRoute>
+      <RutasAcceso>
         <p>Inicio</p>
-      </RegistrationRoute>,
+      </RutasAcceso>,
     );
 
     await completeNewPassword();

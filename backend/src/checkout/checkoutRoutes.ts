@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { validateBilling } from "./BillingValidation";
+import { PLAN_CURRENCY, PRO_MONTHLY_PRICE } from "../plans/Plan";
 import type { CheckoutController } from "./CheckoutController";
 
 export { validateBilling } from "./BillingValidation";
@@ -17,6 +18,9 @@ export function createCheckoutRouter(
       processingAvailable: true,
       realPaymentsAvailable: false,
       membershipActivationAvailable: true,
+      price: PRO_MONTHLY_PRICE,
+      currency: PLAN_CURRENCY,
+      billingPeriod: "MONTHLY",
     });
   });
   router.post("/validate-billing", (req, res) => {

@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import Decimal from "decimal.js";
 import type { NewUser, User } from "../domain/User";
 import { DuplicateEmailError, type UserRepository } from "../domain/UserRepository";
 import type { NewRecoveryToken, RecoveryTokenRepository } from "../../recovery/domain/RecoveryTokenRepository";
@@ -147,6 +148,8 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
           outcome TEXT NOT NULL CHECK(outcome IN ('APPROVED', 'DECLINED')),
           occurred_at TEXT NOT NULL,
           plan_id TEXT NOT NULL CHECK(plan_id = 'PRO'),
+          -- US31: REAL por compatibilidad (cambiar el tipo exige una migración). Se escribe el texto "9.90"
+          -- y al leer se vuelve a texto con 2 decimales (Decimal.toFixed(2)). NULL = pago anterior al precio.
           amount REAL,
           currency TEXT NOT NULL CHECK(currency = 'PEN'),
           receipt_status TEXT NOT NULL CHECK(receipt_status IN ('AVAILABLE', 'NOT_APPLICABLE'))
@@ -298,7 +301,7 @@ export class SqliteUserRepository implements UserRepository, RecoveryTokenReposi
       outcome: row.outcome,
       occurredAt: row.occurred_at,
       planId: row.plan_id,
-      amount: row.amount,
+      amount: row.amount === null ? null : new Decimal(row.amount).toFixed(2),
       currency: row.currency,
       receiptStatus: row.receipt_status,
     };

@@ -24,7 +24,9 @@ export class PaymentReceiptGenerator {
         .text(`Referencia de operación (DEMO): ${payment.reference}`)
         .text(`Fecha: ${new Date(payment.occurredAt).toLocaleString("es-PE", { timeZone: "UTC" })}`)
         .text("Concepto: Suscripción al Plan Pro")
-        .text("Monto: No disponible. Esta operación es una simulación sin cobro real.")
+        .text(payment.amount !== null
+          ? `Monto: S/ ${payment.amount} (simulación, sin cobro real).`
+          : "Monto: No disponible. Esta operación es una simulación sin cobro real.")
         .text(`Estado: ${payment.outcome === "APPROVED" ? "Aprobada (simulación)" : "Rechazada (simulación)"}`);
       document.moveDown(2);
       document.font("Helvetica-Bold").fillColor("#6B7280")

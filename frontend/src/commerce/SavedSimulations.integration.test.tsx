@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import App from "../App";
+import { navegar } from "../app/navegacion";
 
 afterEach(() => {
   localStorage.clear();
@@ -30,11 +31,12 @@ it("abre Mis favoritos y re-simula la cuenta y los días guardados", async () =>
   vi.stubGlobal("fetch", fetchMock);
   render(<App />);
 
-  await userEvent.click(screen.getByRole("link", { name: "Mis favoritos" }));
+  act(() => navegar("/favoritos")); // sin sesión, la cabecera no muestra "Mis favoritos"
   expect(window.location.pathname).toBe("/favoritos");
   expect(await screen.findByRole("heading", { name: "Mis Simulaciones Guardadas" })).toBeInTheDocument();
   await userEvent.click(await screen.findByRole("button", { name: "Volver a simular" }));
-  expect(window.location.pathname).toBe("/");
+  // Requisito nuevo (4.5): "Volver a simular" lleva a la pantalla del instrumento, ya no a Inicio.
+  expect(window.location.pathname).toBe("/simular/ahorros");
   await waitFor(() => {
     const requests = fetchMock.mock.calls.map(([url]) => new URL(String(url)));
     expect(requests.some((url) => url.pathname.endsWith("/api/ahorros/rentabilidad") &&

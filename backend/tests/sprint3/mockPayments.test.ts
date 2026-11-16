@@ -40,7 +40,7 @@ describe("US32, servicio de pasarela académica", () => {
     ["DEMO_DECLINED", "DECLINED", "Fondos ficticios insuficientes."],
   ])("produce %s sin importar un importe o activar membresía", (scenarioId, outcome, declineReason) => {
     const result = service.simulate({ ...request, scenarioId });
-    expect(result).toMatchObject({ outcome, declineReason, environment: "DEMO", simulation: true, planId: "PRO", amount: null });
+    expect(result).toMatchObject({ outcome, declineReason, environment: "DEMO", simulation: true, planId: "PRO", amount: "9.90" });
     expect(result.reference).toMatch(/^DEMO-[0-9a-f]{24}$/);
     expect(new Date(result.occurredAt).toISOString()).toBe(result.occurredAt);
     expect(result.message).toContain("demostración");
@@ -77,7 +77,7 @@ describe("US32, endpoint local de simulación", () => {
     expect(result).toEqual({
       reference: expect.stringMatching(/^DEMO-[0-9a-f]{24}$/),
       outcome: scenarioId === "DEMO_APPROVED" ? "APPROVED" : "DECLINED",
-      simulation: true, environment: "DEMO", occurredAt: expect.any(String), planId: "PRO", amount: null,
+      simulation: true, environment: "DEMO", occurredAt: expect.any(String), planId: "PRO", amount: "9.90",
       message: expect.stringContaining("demostración"),
       declineReason: scenarioId === "DEMO_APPROVED" ? null : "Fondos ficticios insuficientes.",
     });
