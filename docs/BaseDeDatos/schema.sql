@@ -134,3 +134,9 @@ CREATE TABLE IF NOT EXISTS users (
         , plan_expires_at TEXT);
 
 CREATE INDEX IF NOT EXISTS idx_fixed_deposit_products_department ON fixed_deposit_products(department);
+
+-- US21: relación adicional; ninguna columna o fila de las tablas originales se modifica.
+CREATE TABLE IF NOT EXISTS savings_account_entities (
+  account_id TEXT NOT NULL PRIMARY KEY REFERENCES savings_accounts(id),
+  entity_id INTEGER NOT NULL REFERENCES financial_entities(id)
+);

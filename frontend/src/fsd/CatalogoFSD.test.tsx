@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NotificacionVisual } from "../alertas/NotificacionVisual";
 import type { Alerta } from "../alertas/tipos";
 import { TablaResultadosPlazoFijo } from "../plazo_fijo/TablaResultadosPlazoFijo";
-import { AvisoCatalogoDemo } from "./AvisoCatalogoDemo";
+import { Layout } from "../app/Layout";
 import type { CoberturaFSD } from "./IndicadorFSD";
 
 const revision = revisionData as {
@@ -62,12 +62,10 @@ describe("US21 y US35 con la revisión FSD local", () => {
     expect(screen.queryByText("Sin cobertura FSD")).not.toBeInTheDocument();
   });
 
-  it("explica los datos ficticios, el régimen FSDC y el plazo de revisión local", () => {
-    render(<AvisoCatalogoDemo />);
-    const note = screen.getByRole("note");
-    expect(note).toHaveTextContent("son ficticios");
-    expect(note).toHaveTextContent("FSDC");
-    expect(note).toHaveTextContent("no es una vigencia oficial del FSD");
-    expect(note).toHaveTextContent("no significa ausencia de protección");
+  it("mantiene la interfaz sin avisos académicos ni banners decorativos", () => {
+    render(<Layout><p>Contenido principal</p></Layout>);
+    expect(screen.getByText("Contenido principal")).toBeInTheDocument();
+    expect(screen.queryByRole("note", { name: "Aviso del catálogo de demostración" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Demostración académica|son ficticios|Proyecto académico/)).not.toBeInTheDocument();
   });
 });

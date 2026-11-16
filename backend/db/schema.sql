@@ -39,6 +39,12 @@ CREATE TABLE IF NOT EXISTS savings_accounts (
   fsd_coverage TEXT
 );
 
+-- US21: asociación sin modificar las columnas ni los registros originales de ahorro.
+CREATE TABLE IF NOT EXISTS savings_account_entities (
+  account_id TEXT NOT NULL PRIMARY KEY REFERENCES savings_accounts(id),
+  entity_id INTEGER NOT NULL REFERENCES financial_entities(id)
+);
+
 -- US25: indicadores de riesgo de la SBS por entidad
 CREATE TABLE IF NOT EXISTS sbs_risk_profiles (
   entity_id INTEGER PRIMARY KEY REFERENCES financial_entities(id),

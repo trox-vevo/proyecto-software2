@@ -44,7 +44,7 @@ it("combina FSD, consulta contextual, semáforo y favoritos con el acceso a plan
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   const table = await screen.findByRole("table");
   expect(within(table).getByRole("columnheader", { name: "Favoritos Pro" })).toBeInTheDocument();
-  expect(within(table).getByText("Cobertura FSD no verificada")).toBeInTheDocument();
+  expect(within(table).getByLabelText("FSD: No verificado")).toBeInTheDocument();
   const queryFsd = within(table).getByRole("button", { name: "Consultar FSD" });
   await userEvent.click(queryFsd);
   expect(within(screen.getByRole("dialog")).getByRole("heading", { name: "FSD" })).toBeInTheDocument();

@@ -40,6 +40,7 @@ export class FormateadorResultados {
       const d = resultado.getDatos();
       return {
         cuentaId: d.cuentaId,
+        ...(d.entityId !== null && d.entityName !== null ? { entityId: d.entityId, entityName: d.entityName } : {}),
         coberturaFSD: d.coberturaFSD,
         capitalInicial: monto(d.capitalInicial),
         interesGenerado: monto(d.interesGenerado),

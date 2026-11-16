@@ -1,4 +1,10 @@
 .fsd-indicador { min-width: 12rem; color: var(--text-h); }
+.fsd-resumen { display: inline-flex; align-items: center; gap: .55rem; white-space: nowrap; }
+.fsd-badge { border: 1px solid var(--border); border-radius: 999px; padding: .2rem .55rem; font-size: .8rem; }
+.fsd-resumen .fsd-badge-cubierto { border-color: #308756; }
+.fsd-resumen .fsd-badge-no_cubierto { border-color: #c33737; }
+.fsd-badge:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fsd-fuente { font-size: .76rem; color: var(--accent); }
 .fsd-indicador small, .fsd-indicador a { display: block; font-size: .78rem; line-height: 1.45; margin-top: .3rem; }
 .fsd-indicador a { color: var(--accent); }
 .fsd-cubierto { border-left: 3px solid #308756; padding-left: .5rem; }

@@ -1,0 +1,8 @@
+[
+  { "accountId": "AH-001", "entityId": 1, "entityName": "Banco de Crédito del Perú (BCP)" },
+  { "accountId": "AH-002", "entityId": 2, "entityName": "BBVA Perú" },
+  { "accountId": "AH-003", "entityId": 3, "entityName": "Interbank" },
+  { "accountId": "AH-004", "entityId": 4, "entityName": "Scotiabank Perú" },
+  { "accountId": "AH-005", "entityId": 5, "entityName": "Cooperativa Abaco" },
+  { "accountId": "AH-006", "entityId": 6, "entityName": "Cooperativa Pacífico" }
+]

@@ -109,7 +109,7 @@ export function TablaAhorrosView({
                       key={columna.clave}
                       className={columna.numerica ? "num" : undefined}
                     >
-                      {columna.clave === "coberturaFSD" ? <IndicadorFSD cobertura={fila.coberturaFSD} /> : columna.clave === "riesgo" ? (
+                      {columna.clave === "coberturaFSD" ? <IndicadorFSD cobertura={fila.coberturaFSD} variante="resumen" /> : columna.clave === "riesgo" ? (
                         <SemaforoRiesgo
                           riesgo={fila.riesgo}
                           expandido={abierta}
@@ -117,9 +117,9 @@ export function TablaAhorrosView({
                           onToggle={() => alternar(fila.cuentaId)}
                         />
                       ) : columna.mostrar ? (
-                        columna.mostrar(fila[columna.clave])
+                        columna.mostrar(fila[columna.clave] ?? "—")
                       ) : (
-                        fila[columna.clave]
+                        fila[columna.clave] ?? "—"
                       )}
                     </td>
                   ))}

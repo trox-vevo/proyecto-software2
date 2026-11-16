@@ -29,6 +29,20 @@ INSERT OR IGNORE INTO savings_accounts (id, holder, balance, annual_rate, opened
   ('AH-005', 'Elena Vargas', '850.75', '0.045', '2024-08-05', '8.50', 1, 1, 1, 1, NULL),
   ('AH-006', 'Fabio Medina', '2200.00', '0.03', '2023-09-30', '3.00', 1, 0, 0, 1, NULL);
 
+-- US21: únicamente asociaciones explícitas, sin deducir por titular o modificar la cuenta.
+WITH associations(account_id, entity_id, entity_name) AS (VALUES
+  ('AH-001', 1, 'Banco de Crédito del Perú (BCP)'),
+  ('AH-002', 2, 'BBVA Perú'),
+  ('AH-003', 3, 'Interbank'),
+  ('AH-004', 4, 'Scotiabank Perú'),
+  ('AH-005', 5, 'Cooperativa Abaco'),
+  ('AH-006', 6, 'Cooperativa Pacífico')
+)
+INSERT OR IGNORE INTO savings_account_entities (account_id, entity_id)
+SELECT a.account_id, a.entity_id FROM associations a
+JOIN savings_accounts s ON s.id = a.account_id
+JOIN financial_entities e ON e.id = a.entity_id AND e.name = a.entity_name;
+
 INSERT OR IGNORE INTO sbs_risk_profiles (entity_id, risk_rating, capital_adequacy_ratio, delinquency_rate, liquidity_ratio, report_date, source_url) VALUES
   (1, 'A+', '0.1620', '0.0210', '0.3150', '2026-09-30', 'https://www.sbs.gob.pe/'),
   (2, 'A', '0.1480', '0.0290', '0.2840', '2026-09-30', 'https://www.sbs.gob.pe/'),
