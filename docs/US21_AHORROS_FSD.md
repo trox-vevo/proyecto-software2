@@ -86,3 +86,11 @@ Las pruebas comprueban seis asociaciones y ambos estados FSD, propagación HTTP,
 Los resultados completos y los logs de compilación/lint quedan en `.tools/us21-ahorros-20261116/`. Se incluyen suites existentes de glosario, favoritos, planes, checkout y alertas para comprobar compatibilidad.
 
 Resultado inicial sobre `983360c`: **520 pruebas backend y 383 frontend aprobadas, cero fallidas u omitidas**. Compilación y lint aprobados en ambos proyectos; `git diff --check` aprobado. Las verificaciones por hash confirman que los archivos de datos locales y la SQLite original del Sprint 1 no cambiaron. La aplicación real, su migración respaldada y la comprobación manual posterior están documentadas en [US21_VERIFICACION_REAL.md](US21_VERIFICACION_REAL.md).
+
+### Validación de publicación hacia main
+
+Para preparar el nuevo PR se integra `origin/main` en `a40c8fafa91528b4a0da9c34852a1a7f0973bada` mediante merge normal, sin conflictos. Se conservan `FRONTEND_DIST`, el servidor de archivos estáticos, la configuración de Node 24 y la consulta de estado de suscripción incorporados por el equipo para despliegue.
+
+Sobre ese resultado se repiten las suites completas: **520 pruebas backend y 383 frontend aprobadas**, sin fallos ni omisiones; compilación y lint aprobados en ambos proyectos. Además, el backend compilado se inicia con base temporal nueva y `FRONTEND_DIST`: la ruta `/simular/ahorros`, su archivo JavaScript y la API responden HTTP 200, con seis cuentas, cuatro estados verificados y dos no verificados. Esta prueba no modifica la base real ni la copia que utiliza el usuario.
+
+Las evidencias de publicación están en `.tools/us21-ahorros-20261116/publication/`. En bases existentes de otros entornos sigue siendo obligatorio ejecutar previamente la migración manual con respaldo; no se sustituye por un cambio automático de datos al desplegar.

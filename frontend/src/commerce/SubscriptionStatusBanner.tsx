@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "./types";
 import {
   AUTH_SESSION_CHANGED_EVENT,
   fetchWithAuth,
@@ -30,7 +31,8 @@ function isSubscriptionStatus(value: unknown): value is SubscriptionStatus {
   const status = value as Record<string, unknown>;
   return (
     (status.plan === "BASICO" || status.plan === "PRO") &&
-    (status.planExpiresAt === null || typeof status.planExpiresAt === "string") &&
+    (status.planExpiresAt === null ||
+      typeof status.planExpiresAt === "string") &&
     typeof status.planCancellationRequested === "boolean" &&
     Array.isArray(status.history) &&
     status.history.every((item) => {
@@ -40,10 +42,11 @@ function isSubscriptionStatus(value: unknown): value is SubscriptionStatus {
         typeof entry.id === "number" &&
         entry.fromPlan === "PRO" &&
         entry.toPlan === "BASICO" &&
-        (entry.reason === "PERIOD_EXPIRED" || entry.reason === "RENEWAL_PAYMENT_FAILED") &&
+        (entry.reason === "PERIOD_EXPIRED" ||
+          entry.reason === "RENEWAL_PAYMENT_FAILED") &&
         typeof entry.changedAt === "string" &&
-          Number.isFinite(Date.parse(entry.changedAt)) &&
-          typeof entry.planExpiresAt === "string"
+        Number.isFinite(Date.parse(entry.changedAt)) &&
+        typeof entry.planExpiresAt === "string"
       );
     })
   );
@@ -72,11 +75,14 @@ export function SubscriptionStatusBanner() {
     if (userId === undefined || tokenJwt === undefined) return;
 
     const controller = new AbortController();
-    void fetchWithAuth("/api/subscription/history", { signal: controller.signal })
+    void fetchWithAuth(`${API_URL}/api/subscription/history`, {
+      signal: controller.signal,
+    })
       .then(async (response) => {
         if (!response.ok) throw new Error("No se pudo consultar el historial.");
         const body: unknown = await response.json();
-        if (!isSubscriptionStatus(body)) throw new Error("La respuesta del historial no es válida.");
+        if (!isSubscriptionStatus(body))
+          throw new Error("La respuesta del historial no es válida.");
         return body;
       })
       .then((subscriptionStatus) => {
@@ -87,18 +93,23 @@ export function SubscriptionStatusBanner() {
           currentSession.tokenJwt === tokenJwt &&
           (currentSession.plan !== subscriptionStatus.plan ||
             currentSession.planExpiresAt !== subscriptionStatus.planExpiresAt ||
-            (currentSession.planCancellationRequested ?? false) !== subscriptionStatus.planCancellationRequested)
+            (currentSession.planCancellationRequested ?? false) !==
+              subscriptionStatus.planCancellationRequested)
         ) {
           sessionStore.setPlan(subscriptionStatus.plan, {
             planExpiresAt: subscriptionStatus.planExpiresAt,
-            planCancellationRequested: subscriptionStatus.planCancellationRequested,
+            planCancellationRequested:
+              subscriptionStatus.planCancellationRequested,
           });
         }
         setSubscriptionData({ userId, status: subscriptionStatus });
       })
       .catch((error: unknown) => {
         if (!controller.signal.aborted) {
-          console.error("No se pudo consultar el historial de la suscripción.", error);
+          console.error(
+            "No se pudo consultar el historial de la suscripción.",
+            error,
+          );
         }
       });
 
@@ -118,28 +129,41 @@ export function SubscriptionStatusBanner() {
       }
       timer = window.setTimeout(refresh, Math.min(remaining + 1, 86_400_000));
     };
-    timer = window.setTimeout(refresh, Math.max(0, Math.min(expiration - Date.now() + 1, 86_400_000)));
+    timer = window.setTimeout(
+      refresh,
+      Math.max(0, Math.min(expiration - Date.now() + 1, 86_400_000)),
+    );
     return () => window.clearTimeout(timer);
   }, [session]);
 
-  const cancellationScheduled = session?.plan === "PRO" &&
+  const cancellationScheduled =
+    session?.plan === "PRO" &&
     session.planCancellationRequested &&
     Boolean(session.planExpiresAt);
-  const expiration = cancellationScheduled ? Date.parse(session.planExpiresAt!) : NaN;
-  const status = subscriptionData && subscriptionData.userId === session?.userId
-    ? subscriptionData.status
-    : null;
+  const expiration = cancellationScheduled
+    ? Date.parse(session.planExpiresAt!)
+    : NaN;
+  const status =
+    subscriptionData && subscriptionData.userId === session?.userId
+      ? subscriptionData.status
+      : null;
   const history = status?.history ?? [];
   if (!session || (!cancellationScheduled && history.length === 0)) return null;
 
   return (
-    <aside className="suscripcion-banner" role="status" aria-label="Estado de suscripción">
+    <aside
+      className="suscripcion-banner"
+      role="status"
+      aria-label="Estado de suscripción"
+    >
       {cancellationScheduled && Number.isFinite(expiration) && (
         <p>
-          <strong>Cancelación programada.</strong>{" "}
-          Tu Plan Pro seguirá activo hasta{" "}
+          <strong>Cancelación programada.</strong> Tu Plan Pro seguirá activo
+          hasta{" "}
           <time dateTime={session.planExpiresAt!}>
-            {new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(new Date(expiration))}
+            {new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(
+              new Date(expiration),
+            )}
           </time>
           . Después conservarás las funciones del plan Básico.
         </p>
@@ -153,7 +177,9 @@ export function SubscriptionStatusBanner() {
               : "fallo en el pago de renovación"}
             , el{" "}
             <time dateTime={history[0].changedAt}>
-              {new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(new Date(history[0].changedAt))}
+              {new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(
+                new Date(history[0].changedAt),
+              )}
             </time>
             .
           </p>
@@ -169,7 +195,9 @@ export function SubscriptionStatusBanner() {
                     : "pago de renovación rechazado"}{" "}
                   el{" "}
                   <time dateTime={entry.changedAt}>
-                    {new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(new Date(entry.changedAt))}
+                    {new Intl.DateTimeFormat("es", {
+                      dateStyle: "long",
+                    }).format(new Date(entry.changedAt))}
                   </time>
                   .
                 </li>
