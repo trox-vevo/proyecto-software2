@@ -8,6 +8,7 @@ import { SqliteFavoriteRepository } from "./favorites/infrastructure/SqliteFavor
 import { FavoriteService } from "./favorites/application/FavoriteService";
 import { createFavoriteUserResolver } from "./favorites/infrastructure/createFavoriteUserResolver";
 import { assertNumericDatabase } from "./favorites/infrastructure/assertNumericDatabase";
+import { assertSavingsEntityMigration } from "./migrations/SavingsEntitySchema";
 import { FixedDepositSimulationService } from "./simulation/application/FixedDepositSimulationService";
 import { SubscriptionMaintenanceService } from "./subscription/application/SubscriptionMaintenanceService";
 import { startSubscriptionMaintenanceJob } from "./subscription/application/SubscriptionMaintenanceJob";
@@ -40,6 +41,7 @@ const marketConfiguration = monitoringSettings(process.env);
 const file =
   process.env.DB_PATH ?? process.env.USER_DB_PATH ?? "data/usuarios.sqlite";
 assertNumericDatabase(file);
+assertSavingsEntityMigration(file);
 const users = new SqliteUserRepository(file); // crea users antes que el perfil la use
 const favorites = new SqliteFavoriteRepository(file);
 const database = openDatabase(file); // catálogo: entidades, productos, cuentas, SBS e informes

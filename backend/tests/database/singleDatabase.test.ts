@@ -62,10 +62,14 @@ describe("paridad con las fuentes anteriores", () => {
     database.close();
   });
 
-  it("cuentas de ahorro = data/cuentas.json", () => {
+  it("cuentas de ahorro conservan los datos JSON y agregan la relación FSD", () => {
     const database = openDatabase(":memory:");
-    expect(plain(new RepositorioCuentasSqlite(database).obtenerTodas()))
-      .toEqual(plain(new RepositorioCuentas().obtenerTodas()));
+    const accounts = new RepositorioCuentasSqlite(database).obtenerTodas();
+    const originalFields = (items: unknown) => (plain(items) as Record<string, unknown>[])
+      .map((item) => Object.fromEntries(Object.entries(item).filter(([key]) => !["entityId", "entityName", "coberturaFSD"].includes(key))));
+    expect(originalFields(accounts)).toEqual(originalFields(new RepositorioCuentas().obtenerTodas()));
+    expect(accounts.map((account) => account.entityId)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(accounts.every((account) => account.coberturaFSD.entidadFinanciera === account.entityName)).toBe(true);
     database.close();
   });
 

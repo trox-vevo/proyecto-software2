@@ -29,6 +29,8 @@ export class CuentaAhorros {
     channels: ServiceChannels,
     coberturaFSD?: unknown,
     digitalChannels: DigitalChannels = new DigitalChannels(false, false),
+    readonly entityId: number | null = null,
+    readonly entityName: string | null = null,
   ) {
     this.id = id;
     this.titular = titular;

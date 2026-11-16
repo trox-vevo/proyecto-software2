@@ -21,7 +21,6 @@ export function PlazoFijoView({
     <section className="plazo-seccion" aria-labelledby="titulo-plazo-fijo">
       <h2 id="titulo-plazo-fijo">Depósito a Plazo Fijo</h2>
       <p>Configura tu inversión y compara los resultados de la simulación.</p>
-      <p>Demostración: los nombres de las entidades son reales; las tasas y demás condiciones son ficticias, no ofertas vigentes.</p>
       <FormularioPlazoFijo parametros={flujo.parametros} onCambiar={flujo.cambiarParametros}
         onSimular={flujo.simular} cargando={flujo.cargando} errores={flujo.errores} />
       {flujo.cargando && <p role="status">Calculando resultados…</p>}

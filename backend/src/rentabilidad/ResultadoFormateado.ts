@@ -1,6 +1,8 @@
 import type { CoberturaFSD } from "../fsd/CoberturaFSD";
 /** Un resultado listo para enviar al frontend: montos y fecha ya formateados como texto. */
 export interface ResultadoFormateado {
+  entityId?: number;
+  entityName?: string;
   cuentaId: string;
   coberturaFSD: CoberturaFSD;
   capitalInicial: string;

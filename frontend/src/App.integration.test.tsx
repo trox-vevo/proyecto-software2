@@ -38,7 +38,7 @@ it("mantiene edición de perfil, FSD, glosario contextual y zero-state al filtra
   window.history.pushState(null, "", "/simular/ahorros");
   render(<App />);
   await screen.findByRole("table");
-  expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
+  expect(screen.getByLabelText("FSD: No verificado")).toBeInTheDocument();
   act(() => navegar("/perfil")); // sin sesión, la cabecera no muestra "Mi perfil"
   expect(window.location.pathname).toBe("/perfil");
   expect(screen.getByRole("heading", { name: "Preferencias de notificaciones" })).toBeInTheDocument();
@@ -68,7 +68,7 @@ it("mantiene edición de perfil, FSD, glosario contextual y zero-state al filtra
   await userEvent.keyboard("{Escape}");
   await userEvent.click(screen.getByLabelText("Sin costo de mantenimiento"));
   expect(screen.getByRole("table")).toBeInTheDocument();
-  expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
+  expect(screen.getByLabelText("FSD: No verificado")).toBeInTheDocument();
   expect(fetchMock.mock.calls.filter(([url]) => String(url).includes("/api/ahorros/")))
     .toHaveLength(savingsRequestsBeforeFiltering);
   expect(fetchMock.mock.calls.find(([url, init]) => String(url).endsWith("/api/perfil") && init?.method === "PUT")?.[1]?.body)
@@ -120,5 +120,5 @@ it("navega registro → login → finanzas y conserva perfil, glosario y bearer 
   // Requisito nuevo (cabecera, 2.3): sin sesión la cabecera ofrece "Iniciar sesión" y ya no "Mi perfil".
   expect(screen.getByRole("link", { name: "Iniciar sesión" })).toBeInTheDocument();
   expect(screen.queryByRole("link", { name: "Mi perfil" })).not.toBeInTheDocument();
-  expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
+  expect(screen.getByLabelText("FSD: No verificado")).toBeInTheDocument();
 });

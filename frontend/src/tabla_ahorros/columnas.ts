@@ -10,6 +10,7 @@ const mostrarCosto = (costo: string) =>
  */
 export const COLUMNAS: ColumnaTabla[] = [
   { clave: "cuentaId", titulo: "Cuenta", ordenable: false },
+  { clave: "entityName", titulo: "Entidad financiera", ordenable: false },
   {
     clave: "capitalInicial",
     titulo: "Capital inicial",

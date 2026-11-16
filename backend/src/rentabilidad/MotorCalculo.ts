@@ -47,6 +47,8 @@ export class MotorCalculo {
           cuenta.channels,
           cuenta.coberturaFSD,
           cuenta.digitalChannels,
+          cuenta.entityId,
+          cuenta.entityName,
         ),
       );
     }

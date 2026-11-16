@@ -20,10 +20,23 @@ function evidenciaVigente(value: CoberturaFSD | undefined): value is CoberturaFS
   } catch { return false; }
 }
 
-export function IndicadorFSD({ cobertura, variante = "completo" }: { cobertura?: CoberturaFSD; variante?: "completo" | "compacto" }) {
+export function IndicadorFSD({ cobertura, variante = "completo" }: { cobertura?: CoberturaFSD; variante?: "completo" | "compacto" | "resumen" }) {
   const idTooltip = useId();
   const estado = evidenciaVigente(cobertura) && ["CUBIERTO", "NO_CUBIERTO"].includes(cobertura.estado) ? cobertura.estado : "NO_VERIFICADO";
   const labels = { CUBIERTO: "Con cobertura FSD", NO_CUBIERTO: "Sin cobertura FSD", NO_VERIFICADO: "Cobertura FSD no verificada" };
+  if (variante === "resumen") {
+    const label = estado === "CUBIERTO" ? "Verificado" : estado === "NO_CUBIERTO" ? "No cubierto" : "No verificado";
+    const detalle = estado === "NO_VERIFICADO"
+      ? "FSD tradicional no verificado. No implica ausencia de protección; las cooperativas tienen un régimen FSDC distinto."
+      : `Consulta: ${cobertura!.fechaVerificacion}. Revisión local hasta ${cobertura!.vigenteHasta}; no es vigencia oficial. Sujeto a los límites y condiciones del FSD.`;
+    return <span className="fsd-resumen">
+      <span className={`fsd-compacto fsd-badge fsd-badge-${estado.toLowerCase()}`} tabIndex={0} aria-label={`FSD: ${label}`} aria-describedby={idTooltip}>
+        <span aria-hidden="true">{estado === "CUBIERTO" ? "✓" : estado === "NO_CUBIERTO" ? "⊘" : "?"}</span>
+        {label}<span role="tooltip" id={idTooltip} className="fsd-tooltip">{detalle}</span>
+      </span>
+      {estado !== "NO_VERIFICADO" && <a className="fsd-fuente" href={cobertura!.fuente!} target="_blank" rel="noreferrer" aria-label={`Consultar fuente FSD de ${cobertura!.entidadFinanciera}`}>Fuente</a>}
+    </span>;
+  }
     if (variante === "compacto") {
     const detalle = estado === "NO_VERIFICADO"
       ? "No se dispone de evidencia vigente. No implica ausencia de cobertura."

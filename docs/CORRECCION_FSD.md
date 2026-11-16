@@ -1,5 +1,7 @@
 # Corrección de datos FSD — US21 y US35
 
+> Actualización del 16/11/2026: la [entrega de US21 para ahorros](US21_AHORROS_FSD.md) agrega la asociación de cuentas con entidades y retira los avisos académicos de la interfaz. Este documento conserva el historial de la entrega anterior; sus menciones a ausencia de asociación o al banner describen aquel estado.
+
 Implementación inicial preparada el 15/11/2026 sobre `origin/main` en `f823cf1`, en la rama `codex/correccion-fsd-entidades-reales`. La solicitud posterior autoriza publicar esta corrección mediante un Pull Request hacia main; la integración definitiva queda a cargo del líder. Las ramas de los tres sprints y la referencia local de main se conservan.
 
 ## Entidades y evidencia

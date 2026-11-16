@@ -19,7 +19,7 @@ describe("Integración de FSD y glosario en resultados", () => {
     const fetchMock = savingsResponse([{ cuentaId: "A", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024", monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true } }]);
     vi.stubGlobal("fetch", fetchMock); window.history.pushState(null, "", "/simular/ahorros"); render(<App />);
     await screen.findByRole("table");
-    expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
+    expect(screen.getByLabelText("FSD: No verificado")).toBeInTheDocument();
     const button = screen.getByRole("button", { name: "Consultar FSD" });
     await userEvent.click(button);
     expect(within(screen.getByRole("dialog")).getByRole("heading", { name: "FSD" })).toBeInTheDocument();
@@ -50,14 +50,14 @@ describe("Integración de FSD y glosario en resultados", () => {
     window.history.pushState(null, "", "/simular/ahorros");
     render(<App />);
     await screen.findByRole("table");
-    expect(screen.getByText("Con cobertura FSD")).toBeInTheDocument();
-    expect(screen.getByText("Sin cobertura FSD")).toBeInTheDocument();
-    expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
+    expect(screen.getByLabelText("FSD: Verificado")).toBeInTheDocument();
+    expect(screen.getByLabelText("FSD: No cubierto")).toBeInTheDocument();
+    expect(screen.getByLabelText("FSD: No verificado")).toBeInTheDocument();
     await userEvent.click(screen.getByLabelText("Sin costo de mantenimiento"));
     expect(screen.getByText("Mostrando 2 de 3 opciones")).toBeInTheDocument();
-    expect(screen.getByText("Con cobertura FSD")).toBeInTheDocument();
-    expect(screen.getByText("Sin cobertura FSD")).toBeInTheDocument();
-    expect(screen.queryByText("Cobertura FSD no verificada")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("FSD: Verificado")).toBeInTheDocument();
+    expect(screen.getByLabelText("FSD: No cubierto")).toBeInTheDocument();
+    expect(screen.queryByLabelText("FSD: No verificado")).not.toBeInTheDocument();
   });
   it("permite consultar el glosario desde la navegación general en ambos instrumentos", async () => {
     vi.stubGlobal("fetch", savingsResponse([]));

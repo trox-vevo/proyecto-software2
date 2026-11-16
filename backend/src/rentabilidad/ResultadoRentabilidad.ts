@@ -4,6 +4,8 @@ import { ServiceChannels } from "../simulation/domain/ServiceChannels";
 import { crearCoberturaNoVerificada, type CoberturaFSD } from "../fsd/CoberturaFSD";
 
 export interface DatosResultado {
+  entityId: number | null;
+  entityName: string | null;
   cuentaId: string;
   capitalInicial: Decimal;
   interesGenerado: Decimal;
@@ -36,6 +38,8 @@ export class ResultadoRentabilidad {
     channels: ServiceChannels,
     readonly coberturaFSD: CoberturaFSD = crearCoberturaNoVerificada(),
     digitalChannels: DigitalChannels = new DigitalChannels(false, false),
+    readonly entityId: number | null = null,
+    readonly entityName: string | null = null,
   ) {
     this.cuentaId = cuentaId;
     this.capitalInicial = capitalInicial;
@@ -66,6 +70,8 @@ export class ResultadoRentabilidad {
   /** Todos los datos juntos (lo usa el formateador). */
   getDatos(): DatosResultado {
     return {
+      entityId: this.entityId,
+      entityName: this.entityName,
       cuentaId: this.cuentaId,
       capitalInicial: this.capitalInicial,
       interesGenerado: this.interesGenerado,
