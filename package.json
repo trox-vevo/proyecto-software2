@@ -2,6 +2,9 @@
   "name": "yupay-finance",
   "private": true,
   "scripts": {
-    "test": "node scripts/test-sprint-review.mjs"
-  }
+    "test": "node scripts/test-sprint-review.mjs",
+    "build": "npm ci --prefix frontend --include=dev && VITE_API_URL= npm run build --prefix frontend && npm ci --prefix backend --include=dev && npm run build --prefix backend",
+    "start": "cd backend && FRONTEND_DIST=../frontend/dist node dist/index.js"
+  },
+  "engines": { "node": "24.x" }
 }
