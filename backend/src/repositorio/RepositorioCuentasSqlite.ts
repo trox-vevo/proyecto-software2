@@ -19,6 +19,8 @@ interface CuentaRow {
   fsd_coverage: string | null;
   entity_id: number | null;
   entity_name: string | null;
+  department: string | null;
+  minimum_amount: string | null;
 }
 
 /** US09/US11: mismas cuentas y mismo contrato que RepositorioCuentas, pero leídas de la base única. */
@@ -29,10 +31,12 @@ export class RepositorioCuentasSqlite {
     const rows = this.database
       .prepare(`SELECT s.id, s.holder, s.balance, s.annual_rate, s.opened_at, s.monthly_maintenance_fee,
         s.has_physical_branches, s.has_atms, s.has_digital_banking, s.has_mobile_app,
-        e.id AS entity_id, e.name AS entity_name, e.fsd_coverage
+        e.id AS entity_id, e.name AS entity_name, e.fsd_coverage,
+        t.department, t.minimum_amount
         FROM savings_accounts s
         LEFT JOIN savings_account_entities a ON a.account_id = s.id
-        LEFT JOIN financial_entities e ON e.id = a.entity_id ORDER BY s.id`)
+        LEFT JOIN financial_entities e ON e.id = a.entity_id
+        LEFT JOIN savings_account_terms t ON t.account_id = s.id ORDER BY s.id`)
       .all() as unknown as CuentaRow[];
     return rows.map((c) => {
       // La evidencia siempre procede de la entidad asociada. JSON inválido o una
@@ -55,6 +59,8 @@ export class RepositorioCuentasSqlite {
         new DigitalChannels(c.has_digital_banking === 1, c.has_mobile_app === 1),
         c.entity_id === null ? null : numericIdentifier(c.entity_id),
         c.entity_name,
+        c.department,
+        c.minimum_amount ?? "0",
       );
     });
   }

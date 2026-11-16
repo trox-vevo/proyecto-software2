@@ -49,7 +49,7 @@ describe("US21: ahorro obtiene FSD de su entidad", () => {
     expect(repo.obtenerTodas()[0].coberturaFSD.estado).toBe("CUBIERTO");
     db.exec("UPDATE financial_entities SET fsd_coverage = NULL WHERE id = 1");
     expect(repo.obtenerTodas()[0].coberturaFSD.estado).toBe("NO_VERIFICADO");
-    vi.setSystemTime(new Date("2026-11-23T00:00:00Z"));
+    vi.setSystemTime(new Date("2026-12-16T00:00:00Z"));
     expect(repo.obtenerTodas().every((account) => account.coberturaFSD.estado === "NO_VERIFICADO")).toBe(true);
     expect(db.prepare("SELECT * FROM savings_accounts ORDER BY id").all()).toEqual(before);
   });

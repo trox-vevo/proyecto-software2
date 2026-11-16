@@ -14,6 +14,9 @@ interface CuentaJson {
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
   coberturaFSD?: unknown;
   digitalChannels?: { hasDigitalBanking: boolean; hasMobileApp: boolean };
+  /** US08/US13 (opcionales): dónde se ofrece la cuenta y su monto mínimo de apertura. */
+  departamento?: string;
+  montoMinimo?: string;
 }
 
 /**
@@ -48,6 +51,10 @@ export class RepositorioCuentas {
         new ServiceChannels(c.channels.hasPhysicalBranches, c.channels.hasAtms),
         c.coberturaFSD,
         new DigitalChannels(c.digitalChannels?.hasDigitalBanking ?? false, c.digitalChannels?.hasMobileApp ?? false),
+        null,
+        null,
+        c.departamento ?? null,
+        c.montoMinimo ?? "0",
       );
     });
   }

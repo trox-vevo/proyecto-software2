@@ -27,7 +27,8 @@ export function PlazoFijoView({
       {flujo.error && <p role="alert">{flujo.error}</p>}
       {flujo.simulacion && (
         <TablaResultadosPlazoFijo resultados={flujo.simulacion.resultados}
-          modalidad={flujo.simulacion.parametros.paymentMode} onViewPlans={onViewPlans} />
+          modalidad={flujo.simulacion.parametros.paymentMode} onViewPlans={onViewPlans}
+          parametros={flujo.simulacion.parametros} />
       )}
       {/* US30: exportar los resultados a PDF (el botón se oculta solo si el usuario no es Pro) */}
       {flujo.simulacion && flujo.simulacion.resultados.length > 0 && (

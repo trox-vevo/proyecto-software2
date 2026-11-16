@@ -45,6 +45,14 @@ CREATE TABLE IF NOT EXISTS savings_account_entities (
   entity_id INTEGER NOT NULL REFERENCES financial_entities(id)
 );
 
+-- US08/US13: condiciones de búsqueda de cada cuenta (departamento y monto mínimo de apertura).
+-- Tabla aparte para no modificar las columnas ni las filas originales de savings_accounts.
+CREATE TABLE IF NOT EXISTS savings_account_terms (
+  account_id TEXT NOT NULL PRIMARY KEY REFERENCES savings_accounts(id) ON DELETE CASCADE,
+  department TEXT NOT NULL,
+  minimum_amount TEXT NOT NULL
+);
+
 -- US25: indicadores de riesgo de la SBS por entidad
 CREATE TABLE IF NOT EXISTS sbs_risk_profiles (
   entity_id INTEGER PRIMARY KEY REFERENCES financial_entities(id),

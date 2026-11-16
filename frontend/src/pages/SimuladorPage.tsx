@@ -4,6 +4,7 @@ import { applyFilters } from "../filters/resultFilters";
 import { ResultFiltersPanel } from "../filters/ResultFiltersPanel";
 import { useResultFilters } from "../filters/useResultFilters";
 import { FormularioInversion, type TipoInstrumento } from "../inversiones/FormularioInversion";
+import { formatearImporte } from "../plazo_fijo/formato";
 import { PlazoFijoView } from "../plazo_fijo/PlazoFijoView";
 import type { ParametrosPlazoFijo } from "../plazo_fijo/tipos";
 import { COLUMNAS } from "../tabla_ahorros/columnas";
@@ -52,10 +53,16 @@ export function SimuladorPage({
         plazoFijo={<PlazoFijoView onViewPlans={verPlanes} replay={fixedReplay} />}
         tipoInstrumento={instrumento}
         onTipoInstrumentoChange={(tipo) => navegar(RUTA_SIMULADOR[tipo])}
+        onBuscarAhorros={tabla.buscar}
       />
       {instrumento === "AHORROS" && (
         <section aria-labelledby="titulo-resultados-ahorros">
           <h2 id="titulo-resultados-ahorros">Cuentas de ahorro disponibles</h2>
+          <p className="resumen-busqueda">
+            {tabla.busqueda
+              ? `Simulación de ${formatearImporte(tabla.busqueda.monto)} a ${tabla.dias} días en ${tabla.busqueda.departamento}.`
+              : `Mostrando todas las cuentas con su saldo actual a ${tabla.dias} días. Ingresa tu monto y departamento para simular.`}
+          </p>
           {tabla.estado === "CON_DATOS" && (
             <ResultFiltersPanel
               available={filtros.available}

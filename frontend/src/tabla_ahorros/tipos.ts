@@ -15,6 +15,10 @@ export interface FilaAhorro {
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
   /** US19: banca digital y app móvil; se muestran como íconos en su propia columna. */
   digitalChannels?: { hasDigitalBanking: boolean; hasMobileApp: boolean };
+  /** US09: tasa anual como fracción en texto, ej. "0.05" (5 %). */
+  tasaAnual?: string | null;
+  /** US13: monto mínimo de apertura con 2 decimales, ej. "500.00". */
+  montoMinimo?: string | null;
 }
 
 /** Criterios de ordenamiento que entiende el backend (enum CriterioOrden). */

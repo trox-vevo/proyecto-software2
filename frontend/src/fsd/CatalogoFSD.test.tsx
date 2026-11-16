@@ -55,7 +55,7 @@ describe("US21 y US35 con la revisión FSD local", () => {
   });
 
   it("US35 advierte también al vencer la revisión sin afirmar falta de protección", () => {
-    vi.setSystemTime(new Date("2026-11-23T00:00:00Z"));
+    vi.setSystemTime(new Date("2026-12-16T00:00:00Z"));
     render(alerts());
     expect(screen.getAllByText("Cobertura FSD no verificada")).toHaveLength(2);
     expect(screen.queryByText("Con cobertura FSD")).not.toBeInTheDocument();

@@ -12,6 +12,14 @@ interface Consulta {
   criterio: CriterioOrden;
   days: number;
   accountId?: string;
+  /** US08/US09: búsqueda del formulario; sin ella se listan todas las cuentas con su saldo. */
+  busqueda?: BusquedaAhorros;
+}
+
+/** Parámetros del formulario de ahorros (US06/US08). */
+export interface BusquedaAhorros {
+  monto: string;
+  departamento: string;
 }
 
 interface Carga {
@@ -43,6 +51,10 @@ export function useTablaAhorrosController(initialReplay?: { accountId: string; d
     const controlador = new AbortController();
     const parametros = new URLSearchParams({ dias: String(consulta.days), criterio: consulta.criterio });
     if (consulta.accountId) parametros.set("accountId", consulta.accountId);
+    if (consulta.busqueda) {
+      parametros.set("monto", consulta.busqueda.monto);
+      parametros.set("departamento", consulta.busqueda.departamento);
+    }
     marcas.current = { inicioCargaMs: performance.now(), finCargaMs: null, renderListoMs: null };
 
     fetchWithAuth(`${API_URL}/api/ahorros/rentabilidad?${parametros}`, { signal: controlador.signal })
@@ -108,7 +120,13 @@ export function useTablaAhorrosController(initialReplay?: { accountId: string; d
 
   const volverASimular = useCallback((accountId: string, days: number) => {
     if (!Number.isSafeInteger(days) || days <= 0 || !accountId.trim()) return;
-    setConsulta((actual) => ({ ...actual, accountId, days }));
+    // El replay de un favorito simula la cuenta guardada con su saldo: se descarta la búsqueda del formulario
+    setConsulta((actual) => ({ ...actual, accountId, days, busqueda: undefined }));
+  }, []);
+
+  /** US08: nueva búsqueda con el monto y departamento del formulario (deja de lado el replay). */
+  const buscar = useCallback((busqueda: BusquedaAhorros) => {
+    setConsulta((actual) => ({ criterio: actual.criterio, days: actual.days, busqueda }));
   }, []);
 
   return {
@@ -121,5 +139,7 @@ export function useTablaAhorrosController(initialReplay?: { accountId: string; d
     onOrdenar,
     reintentar,
     volverASimular,
+    buscar,
+    busqueda: consulta.busqueda,
   };
 }

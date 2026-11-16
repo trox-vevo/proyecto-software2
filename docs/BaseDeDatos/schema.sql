@@ -1,6 +1,12 @@
 -- Yupay Finance: esquema completo de la base de datos (SQLite).
 -- Generado automáticamente con: node scripts/export-schema.mjs
 -- Los datos de demostración del catálogo están en backend/db/seed.sql.
+CREATE TABLE IF NOT EXISTS alert_reads (
+      notification_id INTEGER PRIMARY KEY REFERENCES market_notification_queue(id),
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      read_at TEXT NOT NULL
+    );
+
 CREATE TABLE IF NOT EXISTS checkout_payment_history (
           id INTEGER PRIMARY KEY AUTOINCREMENT CHECK(id BETWEEN 1 AND 9007199254740991),
           user_id INTEGER NOT NULL REFERENCES users(id),
@@ -8,6 +14,8 @@ CREATE TABLE IF NOT EXISTS checkout_payment_history (
           outcome TEXT NOT NULL CHECK(outcome IN ('APPROVED', 'DECLINED')),
           occurred_at TEXT NOT NULL,
           plan_id TEXT NOT NULL CHECK(plan_id = 'PRO'),
+          -- US31: REAL por compatibilidad (cambiar el tipo exige una migración). Se escribe el texto "9.90"
+          -- y al leer se vuelve a texto con 2 decimales (Decimal.toFixed(2)). NULL = pago anterior al precio.
           amount REAL,
           currency TEXT NOT NULL CHECK(currency = 'PEN'),
           receipt_status TEXT NOT NULL CHECK(receipt_status IN ('AVAILABLE', 'NOT_APPLICABLE'))
@@ -54,6 +62,26 @@ CREATE TABLE IF NOT EXISTS fixed_deposit_products (
   minimum_amount TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS market_change_outbox (
+      event_id TEXT PRIMARY KEY, event_json TEXT NOT NULL, published INTEGER NOT NULL DEFAULT 0 CHECK(published IN (0,1))
+    );
+
+CREATE TABLE IF NOT EXISTS market_monitoring_baseline (
+      product_id INTEGER PRIMARY KEY, snapshot_json TEXT NOT NULL, revision INTEGER NOT NULL
+    );
+
+CREATE TABLE IF NOT EXISTS market_notification_queue (
+      id INTEGER PRIMARY KEY CHECK(id BETWEEN 1 AND 9007199254740991),
+      event_id TEXT NOT NULL, event_json TEXT NOT NULL,
+      user_id INTEGER NOT NULL REFERENCES users(id) CHECK(user_id BETWEEN 1 AND 9007199254740991),
+      frequency TEXT NOT NULL CHECK(frequency IN ('INMEDIATA','RESUMEN_DIARIO')),
+      idempotency_key TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL CHECK(status IN ('PENDING','CLAIMED','SENT','FAILED')),
+      available_at TEXT NOT NULL, created_at TEXT NOT NULL,
+      claim_token TEXT, lease_until TEXT, last_error TEXT,
+      UNIQUE(event_id, user_id)
+    );
+
 CREATE TABLE IF NOT EXISTS notification_preferences (
           user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
           alert_types TEXT NOT NULL,
@@ -91,6 +119,17 @@ CREATE TABLE IF NOT EXISTS plan_change_notifications (
             CHECK(reason IN ('PERIOD_EXPIRED', 'RENEWAL_PAYMENT_FAILED')),
           UNIQUE(user_id, plan_expires_at)
         );
+
+CREATE TABLE IF NOT EXISTS savings_account_entities (
+  account_id TEXT NOT NULL PRIMARY KEY REFERENCES savings_accounts(id),
+  entity_id INTEGER NOT NULL REFERENCES financial_entities(id)
+);
+
+CREATE TABLE IF NOT EXISTS savings_account_terms (
+  account_id TEXT NOT NULL PRIMARY KEY REFERENCES savings_accounts(id) ON DELETE CASCADE,
+  department TEXT NOT NULL,
+  minimum_amount TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS savings_accounts (
   id TEXT PRIMARY KEY,
@@ -135,8 +174,5 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX IF NOT EXISTS idx_fixed_deposit_products_department ON fixed_deposit_products(department);
 
--- US21: relación adicional; ninguna columna o fila de las tablas originales se modifica.
-CREATE TABLE IF NOT EXISTS savings_account_entities (
-  account_id TEXT NOT NULL PRIMARY KEY REFERENCES savings_accounts(id),
-  entity_id INTEGER NOT NULL REFERENCES financial_entities(id)
-);
+CREATE INDEX IF NOT EXISTS market_notification_ready
+      ON market_notification_queue(frequency, status, available_at, id);
