@@ -1,13 +1,16 @@
--- Yupay Finance: datos de DEMOSTRACIÓN del catálogo (entidades ficticias, tasas no reales).
--- INSERT OR IGNORE: se ejecuta en cada arranque sin duplicar filas.
+-- Yupay Finance: nombres reales, tasas/canales/riesgos/informes FICTICIOS de demostración.
+-- Solo la participación FSD procede de fuentes oficiales: db/fsd-verificacion-2026-11-15.json.
+-- Consulta: 2026-11-15. vigenteHasta = revisión LOCAL hasta 2026-11-22, NO vigencia oficial.
+-- COOPAC: NO_VERIFICADO en FSD tradicional; régimen FSDC distinto, sin afirmar desprotección.
+-- INSERT OR IGNORE: no modifica filas existentes. Para actualizarlas manualmente, ver docs/CORRECCION_FSD.md.
 
 INSERT OR IGNORE INTO financial_entities (id, name, has_physical_branches, has_atms, has_digital_banking, has_mobile_app, fsd_coverage) VALUES
-  (1, 'Entidad A', 1, 1, 1, 1, NULL),
-  (2, 'Entidad B', 1, 0, 1, 0, NULL),
-  (3, 'Entidad C', 0, 1, 0, 1, NULL),
-  (4, 'Entidad D', 0, 0, 0, 0, NULL),
-  (5, 'Entidad E', 1, 1, 1, 1, NULL),
-  (6, 'Entidad F', 1, 0, 0, 1, NULL);
+  (1, 'Banco de Crédito del Perú (BCP)', 1, 1, 1, 1, '{"estado":"CUBIERTO","entidadFinanciera":"Banco de Crédito del Perú (BCP)","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-11-22","fuente":"https://fsd.org.pe/miembros/"}'),
+  (2, 'BBVA Perú', 1, 0, 1, 0, '{"estado":"CUBIERTO","entidadFinanciera":"BBVA Perú","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-11-22","fuente":"https://fsd.org.pe/miembros/"}'),
+  (3, 'Interbank', 0, 1, 0, 1, '{"estado":"CUBIERTO","entidadFinanciera":"Interbank","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-11-22","fuente":"https://fsd.org.pe/miembros/"}'),
+  (4, 'Scotiabank Perú', 0, 0, 0, 0, '{"estado":"CUBIERTO","entidadFinanciera":"Scotiabank Perú","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-11-22","fuente":"https://fsd.org.pe/miembros/"}'),
+  (5, 'Cooperativa Abaco', 1, 1, 1, 1, '{"estado":"NO_VERIFICADO","entidadFinanciera":"Cooperativa Abaco","fechaVerificacion":"2026-11-15","vigenteHasta":null,"fuente":"https://www.sbs.gob.pe/app/pp/empresasweb/Paginas/EmpCaptarDep.aspx"}'),
+  (6, 'Cooperativa Pacífico', 1, 0, 0, 1, '{"estado":"NO_VERIFICADO","entidadFinanciera":"Cooperativa Pacífico","fechaVerificacion":"2026-11-15","vigenteHasta":null,"fuente":"https://www.sbs.gob.pe/app/pp/empresasweb/Paginas/EmpCaptarDep.aspx"}');
 
 -- El id del producto es el id de su entidad (US25/US26 dependen de eso)
 INSERT OR IGNORE INTO fixed_deposit_products (id, entity_id, department, tea, minimum_amount) VALUES

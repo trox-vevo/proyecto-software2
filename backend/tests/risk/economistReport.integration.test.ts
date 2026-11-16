@@ -42,7 +42,7 @@ describe("US26, GET /api/risk-reports/:entityId", () => {
     const report = await response.json();
     expect(report).toMatchObject({
       entityId: 1,
-      entityName: "Entidad A",
+      entityName: "Banco de Crédito del Perú (BCP)",
       publishedAt: "2026-10-15",
       sbsProfile: { riskRating: "A+", capitalAdequacyRatio: "0.1620", reportDate: "2026-09-30" },
     });

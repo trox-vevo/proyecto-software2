@@ -13,7 +13,7 @@ describe("US12 | TS-34 y TS-35 | Tabla de resultados", () => {
   it("muestra entidades e importes recibidos y los encabezados estándar", () => {
     render(<TablaResultadosPlazoFijo resultados={[resultado]} modalidad="AT_MATURITY" />);
     expect(screen.getAllByRole("columnheader").map((celda) => celda.textContent)).toEqual([
-      "Entidad", "Tasa (TEA)", "Intereses Totales", "Monto Mínimo de Cuenta", "Calificación", // US27
+      "Entidad", "Tasa (TEA)", "Intereses Totales", "Monto Mínimo de Cuenta", "FSD", "Calificación",
     ]);
     for (const valor of ["Entidad de prueba", "5.75 %", "S/ 56.04", "S/ 1,000.00"]) {
       expect(screen.getByRole("cell", { name: valor })).toBeInTheDocument();
@@ -26,11 +26,11 @@ describe("US12 | TS-34 y TS-35 | Tabla de resultados", () => {
     expect(screen.getByRole("columnheader", { name: "Intereses Mensuales (Aproximado)" })).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "S/ 4.67" })).toBeInTheDocument();
     rerender(<TablaResultadosPlazoFijo resultados={[resultado]} modalidad="AT_MATURITY" />);
-    // US27: +1 por la columna "Calificación"
-    expect(screen.getAllByRole("columnheader")).toHaveLength(5);
+    // Conserva Calificación y agrega FSD sin cambiar las columnas monetarias.
+    expect(screen.getAllByRole("columnheader")).toHaveLength(6);
     expect(screen.queryByText("Intereses Mensuales (Aproximado)")).not.toBeInTheDocument();
     rerender(<TablaResultadosPlazoFijo resultados={[resultado]} modalidad="MONTHLY" />);
-    expect(screen.getAllByRole("columnheader")).toHaveLength(6);
+    expect(screen.getAllByRole("columnheader")).toHaveLength(7);
   });
 
   it("no inventa un interés mensual cuando llega null", () => {

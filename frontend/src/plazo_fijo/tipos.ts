@@ -1,3 +1,5 @@
+import type { CoberturaFSD } from "../fsd/IndicadorFSD";
+
 export const PLAZOS_PERMITIDOS = [180, 360, 540, 720, 900, 1080] as const;
 export type PlazoDias = (typeof PLAZOS_PERMITIDOS)[number];
 export type ModalidadPago = "AT_MATURITY" | "MONTHLY";
@@ -13,6 +15,7 @@ export interface ParametrosPlazoFijo {
 export interface ResultadoPlazoFijo {
   productId: number;
   entityName: string;
+  coberturaFSD?: CoberturaFSD;
   tea: string;
   totalInterest: string;
   monthlyInterest: string | null;
