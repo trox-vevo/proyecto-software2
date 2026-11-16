@@ -41,7 +41,7 @@ const products = new SqliteProductRepository(database);
 const savingsAccounts = new RepositorioCuentasSqlite(database);
 const marketRuntime = createMarketMonitoringRuntime(database, users, marketConfiguration);
 if (marketConfiguration.enabled) {
-  console.log("Monitoreo del catálogo SQLite local habilitado. TS-117/TS-120 pendientes; no se generan alertas de mercado.");
+  console.log("Monitoreo del catálogo SQLite local habilitado: cambios y alertas para favoritos Pro. Fuente de demostración.");
 }
 const stopAlertEmailJob = process.env.ALERT_EMAIL_JOB_ENABLED === "true"
   ? startAlertEmailJob(new ServicioEnvioCorreo({

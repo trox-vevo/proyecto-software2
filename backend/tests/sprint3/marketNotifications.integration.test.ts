@@ -29,13 +29,13 @@ describe("TS-116 y TS-121 composición interna", () => {
     { MARKET_MONITORING_INTERVAL_MS: "-1" }, { MARKET_MONITORING_INTERVAL_MS: "abc" }])("rechaza configuración %j", (config) => {
     expect(() => monitoringSettings(config)).toThrow();
   });
-  it("por defecto no agenda ciclos ni genera alertas", async () => {
+  it("deshabilitado explícitamente no agenda ciclos", async () => {
     vi.useFakeTimers();
     const provider = { fetchCurrent: vi.fn() };
-    const runtime = createMarketMonitoringRuntime(database, users, monitoringSettings({}), { provider });
+    const runtime = createMarketMonitoringRuntime(database, users, monitoringSettings({ MARKET_MONITORING_ENABLED: "false" }), { provider });
     await vi.advanceTimersByTimeAsync(120000); await runtime.stop();
     expect(provider.fetchCurrent).not.toHaveBeenCalled();
-    expect(runtime.publisher).toBeUndefined();
+    expect(runtime.publisher).toBeDefined();
   });
   it("inicia por configuración, se recupera de errores y Express continúa disponible", async () => {
     vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });

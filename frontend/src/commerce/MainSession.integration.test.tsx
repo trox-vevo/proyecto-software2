@@ -43,7 +43,7 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
   expect(await screen.findByLabelText("Nombre de usuario")).toHaveValue("Perfil demo");
-  await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
+  await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("button", { name: "Guardar favorito de A" }));

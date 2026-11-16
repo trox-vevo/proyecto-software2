@@ -17,6 +17,8 @@ export interface MarketDataProvider { fetchCurrent(signal: AbortSignal): Promise
 /** TS-117 conserva y compara sus instantáneas. TS-116 solo entrega el lote. */
 export interface MarketVariationDetector {
   detect(snapshots: readonly MarketSnapshot[], signal: AbortSignal): Promise<AlertEvent[]>;
+  /** Confirmar solo después de publicar permite reintentar sin perder eventos. */
+  acknowledge?(events: readonly AlertEvent[]): Promise<void>;
 }
 export interface MarketChangePublisher { publish(events: readonly AlertEvent[]): Promise<void> }
 export interface CycleResult {

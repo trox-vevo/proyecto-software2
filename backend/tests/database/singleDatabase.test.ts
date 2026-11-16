@@ -51,7 +51,7 @@ describe("openDatabase", () => {
 });
 
 describe("paridad con las fuentes anteriores", () => {
-  it("productos de plazo fijo = InMemoryProductRepository", async () => {
+  it("productos de plazo fijo conservan parámetros y comparten la evidencia FSD revisada", async () => {
     const database = openDatabase(":memory:");
     const sqlite = new SqliteProductRepository(database);
     const memory = new InMemoryProductRepository();

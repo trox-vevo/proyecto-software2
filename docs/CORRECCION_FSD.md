@@ -52,6 +52,7 @@ No se adjudicó una entidad a las cuentas de ahorro: `savings_accounts` no tiene
 - `scripts/update-fsd-catalog.mjs`: herramienta manual de actualización con vista previa y respaldo obligatorio.
 - Nuevas pruebas: `backend/tests/fsd/catalog.test.ts`, `catalog-baseline.json`, `updateCatalog.test.ts` y `frontend/src/fsd/CatalogoFSD.test.tsx`.
 - Pruebas existentes adaptadas únicamente al nombre nuevo o a la columna FSD: `backend/tests/alertas/alertasApi.test.ts`, `sqliteResolvedorAlertaCorreo.test.ts`, `backend/tests/risk/economistReport.integration.test.ts` y `frontend/src/plazo_fijo/TablaResultadosPlazoFijo.test.tsx`. No se eliminaron aserciones ni pruebas.
+- Al actualizar la rama para publicación se adapta `backend/tests/database/singleDatabase.test.ts`: compara íntegramente ambos repositorios con la evidencia revisada compartida, retirando la sustitución de prueba que restauraba la antigua evidencia ficticia.
 
 ## Preservación y comprobaciones
 
@@ -61,7 +62,7 @@ Las nuevas pruebas comparan hashes fijados con el seed original de `f823cf1` de 
 
 La actualización manual se probó exclusivamente en bases temporales: vista previa sin cambios de bytes, respaldo consistente, conservación del esquema y operaciones relacionadas, reintento idempotente, ausencia de filas sin rellenarlas y rechazo de nombres/evidencias personalizados, colisiones y triggers. Nunca sobreescribe un respaldo existente. No se ejecutó sobre datos reales ni se reinicializó ninguna base.
 
-Resultados finales:
+Resultados de la implementación inicial sobre `f823cf1`:
 
 | Comprobación | Resultado |
 | --- | --- |
@@ -73,6 +74,10 @@ Resultados finales:
 | Sintaxis del actualizador y `git diff --check` | Aprobados |
 
 Los cuatro fallos de frontend se reprodujeron también en una copia intacta de `f823cf1` (369 aprobadas, los mismos cuatro fallos). Corresponden a dos casos de `App.integration.test.tsx`, uno de `commerce/MainSession.integration.test.tsx` y uno de `tabla_ahorros/FsdGlosarioComercio.integration.test.tsx`: esperan el botón «Volver al inicio», retirado en la navegación actual. No se cambió esa funcionalidad ni se debilitó su prueba para ocultarlos. Por ello no se afirma que la suite completa esté totalmente aprobada.
+
+### Comprobación posterior para publicar el Pull Request
+
+La rama incorpora mediante merge normal `origin/main` en `4154c5887af930b7ad5292411b4e05b96ad76293`. Esa actualización del equipo añade alertas automáticas y corrige las cuatro pruebas de navegación anteriores. La integración no presenta conflictos textuales. Las comprobaciones completas se repitieron sobre el resultado integrado: **500 pruebas backend y 380 frontend aprobadas, cero fallidas u omitidas**; compilación y lint de ambos proyectos aprobados. Las evidencias de esta repetición están en `.tools/fsd-real-20261115/publication/`. Los resultados iniciales anteriores se conservan como historial de la revisión, no como fallos pendientes de la publicación.
 
 Evidencias locales: `.tools/fsd-real-20261115/backend-final.json`, `frontend-final.json`, `frontend-baseline.json` y logs de compilación/lint. Los hashes confirman que los otros worktrees y la base SQLite original del Sprint 1 permanecen intactos. El checkout inicial de main era antiguo; los cambios de catálogo previos de main se recibieron al crear la rama desde `f823cf1`, no forman parte de esta corrección.
 
