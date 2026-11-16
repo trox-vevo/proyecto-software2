@@ -46,7 +46,7 @@ it("mantiene edición de perfil, FSD, glosario contextual y zero-state al filtra
   await userEvent.clear(nombre);
   await userEvent.type(nombre, "Nombre actualizado");
   await userEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
-  expect(await screen.findByText("Perfil actualizado correctamente.")).toBeInTheDocument();
+  expect(await screen.findByText("Tu perfil ha sido actualizado correctamente.")).toBeInTheDocument();
   await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   await screen.findByRole("table");

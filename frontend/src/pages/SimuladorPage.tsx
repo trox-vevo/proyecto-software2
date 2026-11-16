@@ -4,8 +4,6 @@ import { applyFilters } from "../filters/resultFilters";
 import { ResultFiltersPanel } from "../filters/ResultFiltersPanel";
 import { useResultFilters } from "../filters/useResultFilters";
 import { FormularioInversion, type TipoInstrumento } from "../inversiones/FormularioInversion";
-import { PanelBloqueos } from "../monitor/PanelBloqueos";
-import { useMonitorBloqueos } from "../monitor/useMonitorBloqueos";
 import { PlazoFijoView } from "../plazo_fijo/PlazoFijoView";
 import type { ParametrosPlazoFijo } from "../plazo_fijo/tipos";
 import { COLUMNAS } from "../tabla_ahorros/columnas";
@@ -39,7 +37,6 @@ export function SimuladorPage({
 }) {
   const abrirGlosario = useAbrirGlosario();
   const tabla = useTablaAhorrosController(savingsReplay);
-  const monitor = useMonitorBloqueos(tabla.vista);
   // US17/US18: se filtra en el cliente sobre las filas ya recibidas (sin nueva petición).
   // "SAVINGS" fijo: los filtros solo se muestran en la sección de ahorros.
   const filtros = useResultFilters("SAVINGS");
@@ -81,8 +78,6 @@ export function SimuladorPage({
           />
         </section>
       )}
-      {/* TS-33: herramienta técnica del equipo, solo en desarrollo. */}
-      {import.meta.env.DEV && <PanelBloqueos eventos={monitor.eventos} umbralMs={monitor.umbralMs} />}
     </main>
   );
 }

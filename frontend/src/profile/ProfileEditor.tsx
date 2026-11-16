@@ -87,7 +87,7 @@ export function ProfileEditor({
       const datos: unknown = await response.json();
       if (!esPerfil(datos)) throw new Error("El servidor devolvió un perfil inválido.");
       setPerfil(datos);
-      setConfirmacion("Perfil actualizado correctamente.");
+      setConfirmacion("Tu perfil ha sido actualizado correctamente.");
     } catch (cause: unknown) {
       setError(cause instanceof Error ? cause.message : "No se pudo actualizar el perfil.");
     } finally {

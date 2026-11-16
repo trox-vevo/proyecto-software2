@@ -55,7 +55,6 @@ export function SubscriptionStatusBanner() {
     userId: number;
     status: SubscriptionStatus;
   } | null>(null);
-  const [historyErrorUserId, setHistoryErrorUserId] = useState<number | null>(null);
 
   useEffect(() => {
     const refresh = () => setSession(getStoredSession());
@@ -82,7 +81,6 @@ export function SubscriptionStatusBanner() {
       })
       .then((subscriptionStatus) => {
         if (controller.signal.aborted) return;
-        setHistoryErrorUserId((previous) => previous === userId ? null : previous);
         const currentSession = getStoredSession();
         if (
           currentSession?.userId === userId &&
@@ -98,8 +96,10 @@ export function SubscriptionStatusBanner() {
         }
         setSubscriptionData({ userId, status: subscriptionStatus });
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setHistoryErrorUserId(userId);
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted) {
+          console.error("No se pudo consultar el historial de la suscripción.", error);
+        }
       });
 
     return () => controller.abort();
@@ -130,8 +130,7 @@ export function SubscriptionStatusBanner() {
     ? subscriptionData.status
     : null;
   const history = status?.history ?? [];
-  const historyError = historyErrorUserId === session?.userId;
-  if (!session || (!cancellationScheduled && history.length === 0 && !historyError)) return null;
+  if (!session || (!cancellationScheduled && history.length === 0)) return null;
 
   return (
     <aside className="suscripcion-banner" role="status" aria-label="Estado de suscripción">
@@ -179,7 +178,6 @@ export function SubscriptionStatusBanner() {
           </details>
         </section>
       )}
-      {historyError && <p role="alert">No se pudo consultar el historial de tu suscripción.</p>}
     </aside>
   );
 }

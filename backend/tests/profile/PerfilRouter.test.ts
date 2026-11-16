@@ -92,7 +92,7 @@ describe("API de perfiles", () => {
 
     expect(response.status).toBe(409);
     expect(await response.json()).toEqual({
-      message: "Ese correo ya está asociado a otro usuario.",
+      message: "El correo ingresado ya está en uso por otra cuenta.",
     });
     expect(repositorio.buscarPorId("usuario-demo")?.correo).toBe("usuario@ejemplo.com");
   });

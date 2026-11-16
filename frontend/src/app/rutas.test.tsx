@@ -88,6 +88,18 @@ describe("Pantallas y cabecera común", () => {
     expect(screen.getByLabelText(/Monto de inversión/)).toBeVisible();
   });
 
+  it("no muestra el panel técnico de bloqueos en los simuladores", async () => {
+    api();
+    const ahorros = abrir("/simular/ahorros");
+    await screen.findByRole("table");
+    expect(screen.queryByText(/Bloqueos detectados/)).not.toBeInTheDocument();
+    ahorros.unmount();
+
+    abrir("/simular/plazo-fijo");
+    expect(screen.getByRole("heading", { name: "Simula tu depósito a plazo fijo" })).toBeInTheDocument();
+    expect(screen.queryByText(/Bloqueos detectados/)).not.toBeInTheDocument();
+  });
+
   it("3. US04: el selector de instrumento cambia de pantalla en ambos sentidos", async () => {
     api();
     abrir("/simular/ahorros");
@@ -177,6 +189,19 @@ describe("Pantallas y cabecera común", () => {
     expect(window.location.pathname).toBe("/simular/plazo-fijo");
     await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith("/api/simulations/fixed-deposits"))).toBe(true));
     expect(screen.getByLabelText(/Monto de inversión/)).toHaveValue("1500.00");
+  });
+
+  it("favoritos y perfil no muestran un botón redundante para volver al inicio", async () => {
+    api();
+    iniciarSesion("PRO");
+    const favoritos = abrir("/favoritos");
+    await screen.findByRole("heading", { name: "Mis Simulaciones Guardadas" });
+    expect(screen.queryByRole("button", { name: "Volver al inicio" })).not.toBeInTheDocument();
+    favoritos.unmount();
+
+    abrir("/perfil");
+    expect(await screen.findByRole("heading", { name: "Mi perfil" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Volver al inicio" })).not.toBeInTheDocument();
   });
 
   it("11. la cancelación vive en Mi suscripción y ya no en el checkout", async () => {

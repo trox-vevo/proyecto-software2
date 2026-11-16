@@ -43,6 +43,7 @@ describe("US34, historial de facturación", () => {
     expect(within(table).getByText("Suscripción Plan Pro")).toBeInTheDocument();
     expect(within(table).getByText("9.90")).toBeInTheDocument();
     expect(within(table).getByRole("button", { name: "Descargar recibo" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Volver a mi cuenta" })).not.toBeInTheDocument();
     const [url, options] = fetchMock.mock.calls[0];
     expect(url).toContain("/api/checkout/history");
     expect(new Headers(options.headers).get("Authorization")).toBe("Bearer signed-test-token");
