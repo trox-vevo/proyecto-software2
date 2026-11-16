@@ -130,6 +130,7 @@ function crear(
     alertaExiste?: boolean;
     pendientes?: QueuedNotification[];
     colaConfirma?: boolean;
+    permitido?: boolean;
   } = {},
 ) {
   const proveedor = new ProveedorFalso(opciones.fallos ?? 0, opciones.modo);
@@ -145,6 +146,7 @@ function crear(
       proveedor,
       registro,
       temporizador,
+      autorizador: { puedeRecibir: () => opciones.permitido !== false },
     },
     { frontendUrl: "https://yupay.test", ahora: () => AHORA },
   );
@@ -283,6 +285,7 @@ describe("Servicio de envío de correo con reintentos (US40, TS-125 y TS-126)", 
       proveedor: new ProveedorFalso(0),
       registro: new RegistroEnMemoria(),
       temporizador: new TemporizadorFalso(),
+      autorizador: { puedeRecibir: () => true },
     };
 
     expect(() => new ServicioEnvioCorreo(dependencias, { arriendoMs: 1000 })).toThrow(RangeError);
@@ -300,6 +303,17 @@ describe("Política de reintentos", () => {
     expect(new PoliticaReintentos().esperaTotalMs()).toBe(3000);
     expect(new PoliticaReintentos(1).esperaTotalMs()).toBe(0);
   });
+
+  it("si el usuario ya no puede recibir la alerta (plan vencido o preferencias cambiadas), no envía nada y la marca como fallida", async () => {
+  const { servicio, proveedor, registro, cola } = crear({ permitido: false });
+
+  const resultado = await servicio.procesar(notificacion());
+
+  expect(resultado).toEqual({ enviado: false, intentos: 0 });
+  expect(proveedor.llamadas).toHaveLength(0);
+  expect(registro.agotados[0].error).toContain("acceso Pro");
+  expect(cola.falladas).toHaveLength(1);
+});
 
   it("por defecto son 3 intentos en total", () => {
     expect(new PoliticaReintentos().maxIntentos).toBe(3);

@@ -7,6 +7,7 @@ import type {
   RegistroEnvios,
   ResolvedorAlertaCorreo,
   Temporizador,
+  AutorizadorEnvio,
 } from "../domain/EnvioCorreo";
 import { PlantillaCorreoAlerta } from "./PlantillaCorreoAlerta";
 import { PoliticaReintentos } from "./PoliticaReintentos";
@@ -18,6 +19,7 @@ export interface DependenciasEnvio {
   proveedor: ProveedorCorreo;
   registro: RegistroEnvios;
   temporizador: Temporizador;
+  autorizador: AutorizadorEnvio;
 }
 
 export interface OpcionesEnvio {
@@ -95,6 +97,9 @@ export class ServicioEnvioCorreo {
     // Si faltan datos no tiene sentido reintentar: no es un fallo pasajero del servicio de correo.
     const usuario = usuarios.findById(notificacion.userId);
     if (usuario === null) return this.fallarSinReintento(notificacion, token, "El usuario de la notificación no existe.");
+    if (!this.dependencias.autorizador.puedeRecibir(notificacion.userId, notificacion.event.type)) {
+      return this.fallarSinReintento(notificacion, token, "El usuario ya no tiene acceso Pro o sus preferencias cambiaron; no se envía el correo.");
+    }
     const alerta = alertas.resolver(notificacion);
     if (alerta === null) return this.fallarSinReintento(notificacion, token, "No se pudo armar la alerta: la entidad no existe.");
 

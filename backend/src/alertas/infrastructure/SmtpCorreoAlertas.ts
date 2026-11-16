@@ -11,7 +11,7 @@ export class SmtpCorreoAlertas implements ProveedorCorreo {
   private remitente = "";
 
   async enviar(para: string, contenido: ContenidoCorreo): Promise<boolean> {
-    if ((process.env.ALERT_EMAIL_MODE ?? process.env.RECOVERY_EMAIL_MODE) === "console") {
+    if ((process.env.ALERT_EMAIL_MODE || process.env.RECOVERY_EMAIL_MODE) === "console") {
       if (process.env.NODE_ENV === "production") {
         throw new Error("RECOVERY_EMAIL_MODE=console no está permitido en producción");
       }

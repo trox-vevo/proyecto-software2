@@ -64,3 +64,12 @@ export interface RegistroEnvios {
 export interface Temporizador {
   esperar(ms: number): Promise<void>;
 }
+/** Decide, justo antes de enviar, si el usuario todavía puede recibir esta alerta (acceso Pro vigente y preferencias actuales). */
+export interface AutorizadorEnvio {
+  puedeRecibir(userId: number, tipo: NotificationType): boolean;
+}
+
+/** Decide, justo antes de enviar, si el usuario todavía puede recibir esta alerta (acceso Pro vigente y preferencias actuales). */
+export interface AutorizadorEnvio {
+  puedeRecibir(userId: number, tipo: NotificationType): boolean;
+}

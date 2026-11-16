@@ -25,6 +25,9 @@ import { SmtpCorreoAlertas } from "./alertas/infrastructure/SmtpCorreoAlertas";
 import { TemporizadorReal } from "./alertas/infrastructure/TemporizadorReal";
 import { SqliteAlertasRepository } from "./alertas/infrastructure/SqliteAlertasRepository";
 import { ServicioAlertas } from "./alertas/application/ServicioAlertas";
+import { AutorizadorEnvioPro } from "./alertas/infrastructure/AutorizadorEnvioPro";
+import { ProAccessService } from "./auth/application/ProAccessService";
+import { NotificationPreferencesService } from "./notifications/NotificationPreferencesService";
 
 const PORT = process.env.PORT ?? 3000;
 const marketConfiguration = monitoringSettings(process.env);
@@ -48,6 +51,8 @@ const stopAlertEmailJob = process.env.ALERT_EMAIL_JOB_ENABLED === "true"
       proveedor: new SmtpCorreoAlertas(),
       registro: new ConsolaRegistroEnvios(),
       temporizador: new TemporizadorReal(),
+      autorizador: new AutorizadorEnvioPro(new ProAccessService(users),
+      new NotificationPreferencesService(users)),
     }))
   : undefined;
 const stopSubscriptionMaintenanceJob = startSubscriptionMaintenanceJob(

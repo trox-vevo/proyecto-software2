@@ -25,6 +25,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  sessionStorage.clear();
   window.history.pushState(null, "", "/");
   vi.unstubAllGlobals();
 });
@@ -131,6 +132,20 @@ describe("Alertas: detalle, marcado como leída y contador (US35/US36, TS-111)",
     expect(await cargada()).toBeInTheDocument();
     expect(screen.queryByRole("complementary")).not.toBeInTheDocument();
   });
+  it("si el enlace llega sin sesión, recuerda la alerta y la abre al volver con la sesión iniciada", async () => {
+  window.history.pushState(null, "", "/?alerta=3");
+  fetchMock = simularApi({ lista: 401 });
+  const sinSesion = render(<AlertasSeccion />);
+  expect(await screen.findByRole("alert")).toHaveTextContent("Inicia sesión");
+  sinSesion.unmount();
+
+  // Tras iniciar sesión la app vuelve a "/" y la dirección ya no trae la alerta
+  window.history.pushState(null, "", "/");
+  fetchMock = simularApi();
+  render(<AlertasSeccion />);
+
+  expect(await screen.findByRole("complementary", { name: "Financiera Sol Demo" })).toBeInTheDocument();
+});
 });
 
 describe("Alertas: carga desde la API y guardado de la lectura (TS-110)", () => {

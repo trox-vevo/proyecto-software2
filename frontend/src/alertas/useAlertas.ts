@@ -13,6 +13,26 @@ function idDesdeUrl(): number | null {
   const id = Number(valor);
   return valor !== null && Number.isSafeInteger(id) && id > 0 ? id : null;
 }
+const CLAVE_PENDIENTE = "yupay.alerta.pendiente";
+
+function leerIdPendiente(): number | null {
+  try {
+    const valor = sessionStorage.getItem(CLAVE_PENDIENTE);
+    const id = Number(valor);
+    return valor !== null && Number.isSafeInteger(id) && id > 0 ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+function guardarIdPendiente(id: number | null): void {
+  try {
+    if (id === null) sessionStorage.removeItem(CLAVE_PENDIENTE);
+    else sessionStorage.setItem(CLAVE_PENDIENTE, String(id));
+  } catch {
+    /* sin almacenamiento disponible */
+  }
+}
 
 /**
  * Estado de las alertas: lista (desde GET /api/alertas), contador de pendientes y alerta abierta en el panel.
@@ -23,9 +43,14 @@ export function useAlertas() {
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [seleccionadaId, setSeleccionadaId] = useState<number | null>(idDesdeUrl);
+  const [seleccionadaId, setSeleccionadaId] = useState<number | null>(() => idDesdeUrl() ?? leerIdPendiente());
   // Alertas para las que ya se intentó guardar la lectura: evita repetir el PATCH en bucle si falla.
   const intentadas = useRef(new Set<number>());
+  // Si el enlace llegó sin sesión, se recuerda la alerta para abrirla después de iniciar sesión.
+  useEffect(() => {
+    const id = idDesdeUrl();
+    if (id !== null) guardarIdPendiente(id);
+  }, []);
 
   useEffect(() => {
     let activo = true;
@@ -70,6 +95,7 @@ export function useAlertas() {
   /** El panel avisa cuando ya se mostró: recién entonces la alerta se marca como leída (US36, escenario 2). */
   const panelMostrado = useCallback(
     (id: number) => {
+      guardarIdPendiente(null);
       const alerta = alertas.find((candidata) => candidata.id === id);
       if (!alerta || alerta.leida || intentadas.current.has(id)) return;
       intentadas.current.add(id);

@@ -12,7 +12,7 @@ export function AlertasSeccion() {
     <section className="alertas" aria-labelledby="alertas-titulo">
       <div className="alertas-cabecera">
         <h2 id="alertas-titulo">Alertas</h2>
-        <ContadorPendientes pendientes={pendientes} />
+        {!cargando && !error && <ContadorPendientes pendientes={pendientes} />}
       </div>
 
       {cargando ? (

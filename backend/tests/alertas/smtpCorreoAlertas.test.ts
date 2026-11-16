@@ -66,4 +66,12 @@ describe("Proveedor de correo de alertas (US40): modo consola como en US14", () 
   it("sin modo consola y sin SMTP configurado falla con un mensaje claro", async () => {
     await expect(new SmtpCorreoAlertas().enviar("ana@ejemplo.com", CORREO)).rejects.toThrow("Configura SMTP_HOST");
   });
+    it("un ALERT_EMAIL_MODE vacío cae en RECOVERY_EMAIL_MODE", async () => {
+    process.env.ALERT_EMAIL_MODE = "";
+    process.env.RECOVERY_EMAIL_MODE = "console";
+    const consola = vi.spyOn(console, "info").mockImplementation(() => {});
+
+    expect(await new SmtpCorreoAlertas().enviar("ana@ejemplo.com", CORREO)).toBe(true);
+    expect(consola).toHaveBeenCalledOnce();
+  });
 });
