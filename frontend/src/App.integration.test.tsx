@@ -47,7 +47,7 @@ it("mantiene edición de perfil, FSD, glosario contextual y zero-state al filtra
   await userEvent.type(nombre, "Nombre actualizado");
   await userEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
   expect(await screen.findByText("Tu perfil ha sido actualizado correctamente.")).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
+  await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   await screen.findByRole("table");
   const savingsRequestsBeforeFiltering = fetchMock.mock.calls
@@ -104,7 +104,7 @@ it("navega registro → login → finanzas y conserva perfil, glosario y bearer 
     const request = fetchMock.mock.calls.find(([url]) => String(url).includes(endpoint));
     expect(new Headers(request?.[1]?.headers).get("Authorization")).toBe("Bearer signed-test-token");
   }
-  await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
+  await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("button", { name: "Glosario financiero" }));

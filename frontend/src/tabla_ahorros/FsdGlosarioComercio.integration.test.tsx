@@ -40,7 +40,7 @@ it("combina FSD, consulta contextual, semáforo y favoritos con el acceso a plan
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
   expect(await screen.findByLabelText("Nombre de usuario")).toHaveValue("Perfil demo");
-  await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
+  await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   const table = await screen.findByRole("table");
   expect(within(table).getByRole("columnheader", { name: "Favoritos Pro" })).toBeInTheDocument();

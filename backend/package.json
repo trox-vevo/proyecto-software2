@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "market:demo": "tsx src/monitoring/infrastructure/changeDemoRate.ts",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "lint": "eslint .",

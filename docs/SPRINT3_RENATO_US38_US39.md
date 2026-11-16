@@ -1,5 +1,7 @@
 # Sprint 3 de Renato Almeyda
 
+> Informe histórico de la entrega original de TS-116 y TS-121. La ampliación posterior que conecta detector, cruce y actualización de pantalla se documenta en [Alertas automáticas](ALERTAS_AUTOMATICAS.md). Para el funcionamiento y configuración actuales debe consultarse ese documento.
+
 ## Alcance y base
 
 TS-116 implementa la programación periódica de US38. TS-121 implementa el encolado selectivo de US39. Base `origin/main` en `9a92378`, rama `feature/renato-us38-us39`, worktree `C:/Users/Renato/Documents/Codex/yupay-sprint3-us38-us39`.

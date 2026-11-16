@@ -15,6 +15,7 @@ export class MonitoringCycleService implements MonitoringCycle {
     if (events.length) {
       if (!this.publisher) throw new Error("Los eventos detectados requieren un receptor configurado.");
       await this.publisher.publish(events);
+      await this.detector?.acknowledge?.(events);
     }
     return { executedAt: this.now().toISOString(), reviewedProducts: batch.snapshots.length,
       detectedChanges: events.length, status: batch.errors.length ? "PARTIAL" : "OK", errors: batch.errors };
