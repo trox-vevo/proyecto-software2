@@ -136,7 +136,8 @@ export function createApp(
   app.use(cors());
   app.use(express.json());
   app.use("/api", optionalAuthMiddleware);
-  app.use("/api/ahorros", createAhorrosRouter(dependencies.savingsAccounts));
+  // US22/US23: el semáforo de ahorros sale de la misma calificación SBS que plazo fijo
+  app.use("/api/ahorros", createAhorrosRouter(dependencies.savingsAccounts, dependencies.sbsRiskRepository ?? new JsonSbsRiskRepository()));
   app.get("/api/plans", (_req, res) => res.json({ plans: PLANS, features: PLAN_FEATURES }));
   // US33: sin repositorio de usuarios (algunas pruebas), nadie puede pagar (401).
   const paymentHistoryRepository = userRepository && supportsCheckoutPaymentHistory(userRepository)

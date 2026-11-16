@@ -47,7 +47,7 @@ describe("US21: entidades y estado FSD en ahorros", () => {
   });
 
   it("la evidencia vencida o sin fuente se indica como no verificada sin cambiar la entidad", () => {
-    vi.setSystemTime(new Date("2026-11-23T00:00:00Z"));
+    vi.setSystemTime(new Date("2026-12-16T00:00:00Z"));
     const view = renderTable();
     expect(screen.getAllByLabelText("FSD: No verificado")).toHaveLength(6);
     view.unmount();

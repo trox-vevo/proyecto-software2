@@ -14,4 +14,5 @@ export const TERMINOS = [
 export const TERMINO_POR_COLUMNA: Record<string, string> = {
   capitalInicial: "Capital inicial", interesGenerado: "Interés", saldoFinal: "Saldo final",
   coberturaFSD: "FSD", riesgo: "Riesgo", monthlyMaintenanceFee: "Costo de mantenimiento",
+  tasaAnual: "TEA",
 };

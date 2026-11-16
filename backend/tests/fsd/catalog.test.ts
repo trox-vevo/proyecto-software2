@@ -63,8 +63,8 @@ describe("US21/US35: catálogo FSD local con identidades reales", () => {
     try {
       const raw = JSON.parse(String(db.prepare("SELECT fsd_coverage FROM financial_entities WHERE id = 1").get()!.fsd_coverage));
       expect(validarCoberturaFSD(raw, today).estado).toBe("CUBIERTO");
-      expect(validarCoberturaFSD(raw, new Date("2026-11-22T23:59:00Z")).estado).toBe("CUBIERTO");
-      expect(validarCoberturaFSD(raw, new Date("2026-11-23T00:00:00Z")).estado).toBe("NO_VERIFICADO");
+      expect(validarCoberturaFSD(raw, new Date("2026-12-15T23:59:00Z")).estado).toBe("CUBIERTO");
+      expect(validarCoberturaFSD(raw, new Date("2026-12-16T00:00:00Z")).estado).toBe("NO_VERIFICADO");
       expect(validarCoberturaFSD(raw, new Date("2026-11-14T00:00:00Z")).estado).toBe("NO_VERIFICADO");
       expect(validarCoberturaFSD({ ...raw, fuente: "https://fsd.org.pe.falso.test/" }, today).estado).toBe("NO_VERIFICADO");
     } finally { db.close(); }

@@ -38,7 +38,9 @@ function validate(database) {
     } : null;
     const sameObject = (a, b) => a !== null && b !== null &&
       Object.keys(a).length === Object.keys(b).length && Object.keys(a).every((key) => a[key] === b[key]);
-    if (evidence !== null && !sameObject(evidence, legacy) && !sameObject(evidence, expected)) {
+    // Revisión anterior de esta misma consulta (vencía el 22/11/2026): se reconoce para poder extenderla.
+    const previous = entry.verificadaFsd ? { ...expected, vigenteHasta: "2026-11-22" } : null;
+    if (evidence !== null && !sameObject(evidence, legacy) && !sameObject(evidence, expected) && !sameObject(evidence, previous)) {
       throw new Error(`ID ${entry.idExistente}: evidencia personalizada; no se sobrescribirá.`);
     }
     if (rows.some((other) => other.id !== row.id && other.name === entry.nombre)) {

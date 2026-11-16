@@ -18,6 +18,8 @@ export class CuentaAhorros {
   readonly coberturaFSD: CoberturaFSD;
   /** US19: banca digital y app móvil de la entidad. */
   readonly digitalChannels: DigitalChannels;
+  /** US08/US13: monto mínimo de apertura de la cuenta (0 si no exige mínimo). */
+  readonly montoMinimo: Decimal;
 
   constructor(
     id: string,
@@ -31,6 +33,9 @@ export class CuentaAhorros {
     digitalChannels: DigitalChannels = new DigitalChannels(false, false),
     readonly entityId: number | null = null,
     readonly entityName: string | null = null,
+    /** US08/US13: departamento donde se ofrece la cuenta; null si no se conoce. */
+    readonly departamento: string | null = null,
+    montoMinimo: Decimal.Value = 0,
   ) {
     this.id = id;
     this.titular = titular;
@@ -41,5 +46,6 @@ export class CuentaAhorros {
     this.channels = channels;
     this.coberturaFSD = validarCoberturaFSD(coberturaFSD);
     this.digitalChannels = digitalChannels;
+    this.montoMinimo = new Decimal(montoMinimo);
   }
 }

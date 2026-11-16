@@ -1,4 +1,6 @@
 .pagina {
+  /* width: 100% + padding no debe sumar más que la pantalla (desborde en móvil de 375px) */
+  box-sizing: border-box;
   width: 100%;
   max-width: 960px;
   margin: 0 auto;
@@ -49,4 +51,11 @@
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
   margin-top: 1.5rem;
+}
+
+/* US08: resumen de la búsqueda de ahorros encima de la tabla */
+.resumen-busqueda {
+  margin: 0 0 0.75rem;
+  color: var(--text, inherit);
+  font-size: 0.95rem;
 }

@@ -11,9 +11,11 @@ interface Props {
   plazoFijo?: ReactNode;
   tipoInstrumento: TipoInstrumento;
   onTipoInstrumentoChange: (tipo: TipoInstrumento) => void;
+  /** US08: si se pasa, el formulario de ahorros busca en el backend en vez de solo guardar. */
+  onBuscarAhorros?: (parametros: ParametrosAhorro) => void;
 }
 
-interface ParametrosAhorro {
+export interface ParametrosAhorro {
   monto: string;
   departamento: string;
 }
@@ -27,6 +29,7 @@ export function FormularioInversion({
   tipoInstrumento,
   onTipoInstrumentoChange,
   plazoFijo,
+  onBuscarAhorros,
 }: Props) {
   const [parametrosAhorro, setParametrosAhorro] = useState<ParametrosAhorro>({
     monto: "",
@@ -48,6 +51,10 @@ export function FormularioInversion({
 
   function guardarParametros(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
+    if (onBuscarAhorros && tipoInstrumento === "AHORROS") {
+      onBuscarAhorros(parametrosAhorro);
+      return;
+    }
     setConfirmacion("Parámetros guardados temporalmente para la simulación.");
   }
 
@@ -209,7 +216,7 @@ export function FormularioInversion({
         )}
 
         <button className="boton-inversion" type="submit">
-          Guardar parámetros
+          {onBuscarAhorros && tipoInstrumento === "AHORROS" ? "Buscar cuentas" : "Guardar parámetros"}
         </button>
         {confirmacion && (
           <p className="confirmacion-inversion" role="status">

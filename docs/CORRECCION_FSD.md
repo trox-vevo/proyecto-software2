@@ -34,7 +34,7 @@ El catálogo solo contiene seis entidades y seis productos relacionados. Se prio
 
 ## Fechas y datos de demostración
 
-`fechaVerificacion` registra la consulta del 15/11/2026. El validador exige una fecha final para aceptar evidencia: se utiliza una **política local de revisión de siete días**, hasta el 22/11/2026 inclusive. `vigenteHasta` es ese límite técnico de revisión, no una caducidad oficial del seguro. Las cooperativas conservan `vigenteHasta: null` y estado no verificado.
+`fechaVerificacion` registra la consulta del 15/11/2026. El validador exige una fecha final para aceptar evidencia: se utiliza una **política local de revisión hasta el 15/12/2026.** `vigenteHasta` es ese límite técnico de revisión, no una caducidad oficial del seguro. Las cooperativas conservan `vigenteHasta: null` y estado no verificado.
 
 No se modificó `validarCoberturaFSD`. La evidencia futura, vencida, mal formada o con fuente no admitida sigue degradándose a `NO_VERIFICADO`. A partir del 23/11/2026 los bancos también se mostrarán no verificados hasta realizar otra consulta y actualizar manualmente la evidencia; no se renuevan las fechas al arrancar.
 

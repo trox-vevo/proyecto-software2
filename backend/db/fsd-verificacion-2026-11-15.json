@@ -1,7 +1,7 @@
 {
   "consultadoEl": "2026-11-15",
-  "revisionLocalHasta": "2026-11-22",
-  "politica": "Revisión local de 7 días; no es una fecha de vigencia oficial del FSD. Después se exige una nueva consulta manual.",
+  "revisionLocalHasta": "2026-12-15",
+  "politica": "Revisión local hasta el 15/12/2026 (cierre del ciclo académico); no es una fecha de vigencia oficial del FSD. Después se exige una nueva consulta manual.",
   "fuenteMiembros": "https://fsd.org.pe/miembros/",
   "fuenteSbs": "https://www.sbs.gob.pe/app/pp/empresasweb/Paginas/EmpCaptarDep.aspx",
   "nota": "true significa participación verificada en el FSD tradicional; false significa NO_VERIFICADO, nunca NO_CUBIERTO. Las COOPAC tienen un régimen distinto (FSDC); aquí no se verifica la cobertura individual del FSDC. Solo se asocian seis nombres a filas existentes; los demás quedan como referencia sin crear entidades ni productos. Las tasas, canales, riesgos e informes asociados siguen siendo ficticios.",

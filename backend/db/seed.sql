@@ -1,14 +1,14 @@
 -- Yupay Finance: nombres reales, tasas/canales/riesgos/informes FICTICIOS de demostración.
 -- Solo la participación FSD procede de fuentes oficiales: db/fsd-verificacion-2026-11-15.json.
--- Consulta: 2026-11-15. vigenteHasta = revisión LOCAL hasta 2026-11-22, NO vigencia oficial.
+-- Consulta: 2026-11-15. vigenteHasta = revisión LOCAL hasta 2026-12-15, NO vigencia oficial.
 -- COOPAC: NO_VERIFICADO en FSD tradicional; régimen FSDC distinto, sin afirmar desprotección.
 -- INSERT OR IGNORE: no modifica filas existentes. Para actualizarlas manualmente, ver docs/CORRECCION_FSD.md.
 
 INSERT OR IGNORE INTO financial_entities (id, name, has_physical_branches, has_atms, has_digital_banking, has_mobile_app, fsd_coverage) VALUES
-  (1, 'Banco de Crédito del Perú (BCP)', 1, 1, 1, 1, '{"estado":"CUBIERTO","entidadFinanciera":"Banco de Crédito del Perú (BCP)","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-11-22","fuente":"https://fsd.org.pe/miembros/"}'),
-  (2, 'BBVA Perú', 1, 0, 1, 0, '{"estado":"CUBIERTO","entidadFinanciera":"BBVA Perú","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-11-22","fuente":"https://fsd.org.pe/miembros/"}'),
-  (3, 'Interbank', 0, 1, 0, 1, '{"estado":"CUBIERTO","entidadFinanciera":"Interbank","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-11-22","fuente":"https://fsd.org.pe/miembros/"}'),
-  (4, 'Scotiabank Perú', 0, 0, 0, 0, '{"estado":"CUBIERTO","entidadFinanciera":"Scotiabank Perú","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-11-22","fuente":"https://fsd.org.pe/miembros/"}'),
+  (1, 'Banco de Crédito del Perú (BCP)', 1, 1, 1, 1, '{"estado":"CUBIERTO","entidadFinanciera":"Banco de Crédito del Perú (BCP)","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-12-15","fuente":"https://fsd.org.pe/miembros/"}'),
+  (2, 'BBVA Perú', 1, 0, 1, 0, '{"estado":"CUBIERTO","entidadFinanciera":"BBVA Perú","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-12-15","fuente":"https://fsd.org.pe/miembros/"}'),
+  (3, 'Interbank', 0, 1, 0, 1, '{"estado":"CUBIERTO","entidadFinanciera":"Interbank","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-12-15","fuente":"https://fsd.org.pe/miembros/"}'),
+  (4, 'Scotiabank Perú', 0, 0, 0, 0, '{"estado":"CUBIERTO","entidadFinanciera":"Scotiabank Perú","fechaVerificacion":"2026-11-15","vigenteHasta":"2026-12-15","fuente":"https://fsd.org.pe/miembros/"}'),
   (5, 'Cooperativa Abaco', 1, 1, 1, 1, '{"estado":"NO_VERIFICADO","entidadFinanciera":"Cooperativa Abaco","fechaVerificacion":"2026-11-15","vigenteHasta":null,"fuente":"https://www.sbs.gob.pe/app/pp/empresasweb/Paginas/EmpCaptarDep.aspx"}'),
   (6, 'Cooperativa Pacífico', 1, 0, 0, 1, '{"estado":"NO_VERIFICADO","entidadFinanciera":"Cooperativa Pacífico","fechaVerificacion":"2026-11-15","vigenteHasta":null,"fuente":"https://www.sbs.gob.pe/app/pp/empresasweb/Paginas/EmpCaptarDep.aspx"}');
 
@@ -43,6 +43,15 @@ SELECT a.account_id, a.entity_id FROM associations a
 JOIN savings_accounts s ON s.id = a.account_id
 JOIN financial_entities e ON e.id = a.entity_id AND e.name = a.entity_name;
 
+-- US08/US13: departamento y monto mínimo de apertura de cada cuenta (datos FICTICIOS de demostración).
+INSERT OR IGNORE INTO savings_account_terms (account_id, department, minimum_amount) VALUES
+  ('AH-001', 'Lima', '0.00'),
+  ('AH-002', 'Lima', '0.00'),
+  ('AH-003', 'Lima', '100.00'),
+  ('AH-004', 'Lima', '0.00'),
+  ('AH-005', 'Lima', '500.00'),
+  ('AH-006', 'Cusco', '0.00');
+
 INSERT OR IGNORE INTO sbs_risk_profiles (entity_id, risk_rating, capital_adequacy_ratio, delinquency_rate, liquidity_ratio, report_date, source_url) VALUES
   (1, 'A+', '0.1620', '0.0210', '0.3150', '2026-09-30', 'https://www.sbs.gob.pe/'),
   (2, 'A', '0.1480', '0.0290', '0.2840', '2026-09-30', 'https://www.sbs.gob.pe/'),
@@ -58,3 +67,12 @@ INSERT OR IGNORE INTO economist_reports (entity_id, summary, strengths, risks, r
   (4, 'Entidad con debilidades financieras. Su capital está cerca del mínimo y la morosidad viene subiendo.', '["Mantiene el capital mínimo exigido"]', '["Morosidad alta y en aumento","Liquidez baja","Ofrece la tasa más baja del grupo"]', 'Riesgo alto: revisar con cuidado antes de depositar.', 'Área de Estudios Económicos (demostración)', '2026-10-15'),
   (5, 'Entidad con buena solidez. Sus indicadores son estables aunque algo menores que los de las entidades mejor calificadas.', '["Capital y liquidez estables","Morosidad moderada"]', '["Rentabilidad menor que la de otras entidades"]', 'Opción segura con riesgo bajo a medio.', 'Área de Estudios Económicos (demostración)', '2026-10-15'),
   (6, 'Entidad regional con indicadores aceptables y la tasa más alta de Cusco.', '["Tasa alta para depósitos","Capital adecuado"]', '["Morosidad algo elevada","Depende de una sola región"]', 'Riesgo moderado: buena tasa, pero conviene diversificar.', 'Área de Estudios Económicos (demostración)', '2026-10-15');
+
+-- Extensión de la revisión LOCAL de FSD hasta 2026-12-15 en bases ya creadas (INSERT OR IGNORE no las toca).
+-- Solo cambia evidencia CUBIERTO de la consulta 2026-11-15 que aún vence el 2026-11-22. Idempotente.
+UPDATE financial_entities
+SET fsd_coverage = json_set(fsd_coverage, '$.vigenteHasta', '2026-12-15')
+WHERE json_valid(fsd_coverage)
+  AND json_extract(fsd_coverage, '$.estado') = 'CUBIERTO'
+  AND json_extract(fsd_coverage, '$.fechaVerificacion') = '2026-11-15'
+  AND json_extract(fsd_coverage, '$.vigenteHasta') = '2026-11-22';
