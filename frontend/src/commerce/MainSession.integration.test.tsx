@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import App from "../App";
+import { navegar } from "../app/navegacion";
 
 afterEach(() => {
   localStorage.clear();
@@ -22,12 +23,13 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
       channels: { hasPhysicalBranches: true, hasAtms: true } }] });
     if (url.endsWith("/api/favorites")) return Response.json({ favorite: { id: 2 }, created: true }, { status: 201 });
     if (url.endsWith("/api/plans")) return Response.json({
-      plans: [{ id: "PRO", name: "Pro", price: null, features: { favorites: true } }],
+      plans: [{ id: "PRO", name: "Pro", price: "9.90", billingPeriod: "MONTHLY", features: { favorites: true } }],
       features: [{ id: "favorites", label: "Guardar simulaciones favoritas" }],
     });
     if (url.endsWith("/api/checkout/config")) return Response.json({ environment: "DEMO", provider: "LOCAL_MOCK",
       simulation: true, cardCaptureAvailable: true, processingAvailable: true,
-      realPaymentsAvailable: false, membershipActivationAvailable: true });
+      realPaymentsAvailable: false, membershipActivationAvailable: true,
+      price: "9.90", currency: "PEN", billingPeriod: "MONTHLY" });
     throw new Error(`Petición inesperada: ${url}`);
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -36,10 +38,13 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
   await userEvent.type(screen.getByLabelText("Correo electrónico"), "pro@example.com");
   await userEvent.type(screen.getByLabelText("Contraseña"), "Clave-segura-123");
   await userEvent.click(screen.getByRole("button", { name: "Ingresar" }));
+  await screen.findByRole("button", { name: "Simular ahorros" });
+  await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
   expect(await screen.findByLabelText("Nombre de usuario")).toHaveValue("Perfil demo");
   await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
+  await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("button", { name: "Guardar favorito de A" }));
   expect(await screen.findByText("Simulación guardada como favorita.")).toBeInTheDocument();
@@ -53,11 +58,12 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
   await userEvent.type(screen.getByLabelText("Nombre del titular"), "Titular ficticio");
   await userEvent.type(screen.getByLabelText("Número de tarjeta"), "0000111122223333");
   await userEvent.type(screen.getByLabelText("CVV"), "456");
-  await userEvent.click(screen.getByRole("link", { name: "Crear cuenta" }));
+  act(() => navegar("/registro")); // con sesión, la cabecera no muestra "Crear cuenta"
   expect(window.location.pathname).toBe("/registro");
   expect(screen.queryByLabelText("CVV")).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Crear cuenta" })).toBeInTheDocument();
   await userEvent.click(screen.getByRole("link", { name: "Volver al inicio" }));
+  await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   await screen.findByRole("table");
   expect(screen.getByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
   await userEvent.click(screen.getByRole("link", { name: "Planes" }));

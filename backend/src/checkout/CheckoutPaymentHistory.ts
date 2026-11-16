@@ -3,7 +3,7 @@ export interface CheckoutPayment {
   outcome: "APPROVED" | "DECLINED";
   occurredAt: string;
   planId: "PRO";
-  amount: number | null;
+  amount: string | null; // texto con 2 decimales; null en pagos anteriores al precio (US31)
   currency: "PEN";
   receiptStatus: "AVAILABLE" | "NOT_APPLICABLE";
 }

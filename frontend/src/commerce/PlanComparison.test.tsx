@@ -5,8 +5,8 @@ import { PlanComparison } from "./PlanComparison";
 
 const catalog = {
   plans: [
-    { id: "BASICO", name: "Básico", price: null, features: { favorites: false } },
-    { id: "PRO", name: "Pro", price: null, features: { favorites: true } },
+    { id: "BASICO", name: "Básico", price: "0.00", billingPeriod: "MONTHLY", features: { favorites: false } },
+    { id: "PRO", name: "Pro", price: "9.90", billingPeriod: "MONTHLY", features: { favorites: true } },
   ],
   features: [{ id: "favorites", label: "Guardar simulaciones favoritas" }],
 };
@@ -23,7 +23,8 @@ describe("US31, comparación de planes", () => {
     expect(screen.getByRole("columnheader", { name: "Pro" })).toBeInTheDocument();
     expect(screen.getByText("Requiere Pro")).toBeInTheDocument();
     expect(screen.getByText("Incluido")).toBeInTheDocument();
-    expect(screen.getAllByText("Precio pendiente de definición")).toHaveLength(2);
+    expect(screen.getByText("S/ 0.00")).toBeInTheDocument();
+    expect(screen.getByText("S/ 9.90 al mes")).toBeInTheDocument();
     expect(fetchMock.mock.calls[0][0]).toContain("/api/plans");
     await userEvent.click(screen.getByRole("button", { name: "Continuar al checkout Pro" }));
     expect(checkout).toHaveBeenCalledOnce();

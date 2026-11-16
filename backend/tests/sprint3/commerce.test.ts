@@ -16,12 +16,15 @@ const billing = { planId: "PRO", billing: { name: "Persona de prueba", email: "f
 const post = (body: unknown) => fetch(`${url}/api/checkout/validate-billing`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 describe("US31, catálogo de planes", () => {
-  it("devuelve Básico y Pro con precios pendientes y beneficios del backlog", async () => {
+  it("devuelve Básico (S/ 0.00) y Pro (S/ 9.90 al mes) con beneficios del backlog", async () => {
     const response = await fetch(`${url}/api/plans`);
     expect(response.status).toBe(200);
     const result = await response.json();
     expect(result.plans.map((plan: { id: string }) => plan.id)).toEqual(["BASICO", "PRO"]);
-    for (const plan of result.plans) expect(plan.price).toBeNull();
+    // US31: precio como texto con 2 decimales, definido una sola vez en el backend.
+    expect(result.plans[0]).toMatchObject({ id: "BASICO", price: "0.00", billingPeriod: "MONTHLY" });
+    expect(result.plans[1]).toMatchObject({ id: "PRO", price: "9.90", billingPeriod: "MONTHLY" });
+    for (const plan of result.plans) expect(plan.price).toMatch(/^\d+\.\d{2}$/);
     expect(result.plans[0].features.favorites).toBe(false);
     expect(result.plans[1].features.favorites).toBe(true);
     expect(result.features).toEqual(expect.arrayContaining([expect.objectContaining({ id: "favorites" })]));
@@ -36,6 +39,7 @@ describe("US32, límites de captura segura", () => {
       environment: "DEMO", provider: "LOCAL_MOCK", simulation: true,
       cardCaptureAvailable: true, processingAvailable: true,
       realPaymentsAvailable: false, membershipActivationAvailable: true,
+      price: "9.90", currency: "PEN", billingPeriod: "MONTHLY",
     });
   });
   it("valida facturación sin devolver datos personales ni confirmar pagos", async () => {

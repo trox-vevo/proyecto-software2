@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import "./LoginView.css";
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -6,9 +6,10 @@ const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 interface Props {
   token: string | null;
   onReset: () => void;
+  children?: ReactNode;
 }
 
-export function ResetPasswordView({ token, onReset }: Props) {
+export function ResetPasswordView({ token, onReset, children }: Props) {
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState("");
@@ -109,6 +110,7 @@ export function ResetPasswordView({ token, onReset }: Props) {
             {cargando ? "Actualizando…" : "Actualizar contraseña"}
           </button>
         </form>
+        {children}
       </section>
     </main>
   );

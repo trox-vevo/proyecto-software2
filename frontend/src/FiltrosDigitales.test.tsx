@@ -20,6 +20,7 @@ const FILAS = [fila("A", true, true), fila("B", true, false), fila("C", false, t
 function renderAppWith(filas: FilaAhorro[]) {
   const fetchMock = vi.fn<(input: RequestInfo | URL) => Promise<Response>>(async () => new Response(JSON.stringify({ resultados: filas })));
   vi.stubGlobal("fetch", fetchMock);
+  window.history.pushState(null, "", "/simular/ahorros");
   render(<App />);
   return fetchMock;
 }

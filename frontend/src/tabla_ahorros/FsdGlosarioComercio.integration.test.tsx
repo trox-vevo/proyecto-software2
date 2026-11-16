@@ -25,20 +25,23 @@ it("combina FSD, consulta contextual, semáforo y favoritos con el acceso a plan
       history: [],
     });
     if (url.endsWith("/api/plans")) return Response.json({
-      plans: [{ id: "PRO", name: "Pro", price: null, features: { favorites: true } }],
+      plans: [{ id: "PRO", name: "Pro", price: "9.90", billingPeriod: "MONTHLY", features: { favorites: true } }],
       features: [{ id: "favorites", label: "Guardar simulaciones favoritas" }],
     });
     if (url.endsWith("/api/checkout/config")) return Response.json({ environment: "DEMO", provider: "LOCAL_MOCK",
       simulation: true, cardCaptureAvailable: true, processingAvailable: true,
-      realPaymentsAvailable: false, membershipActivationAvailable: true });
+      realPaymentsAvailable: false, membershipActivationAvailable: true,
+      price: "9.90", currency: "PEN", billingPeriod: "MONTHLY" });
     throw new Error(`Petición inesperada: ${url}`);
   });
   vi.stubGlobal("fetch", fetchMock);
+  window.history.pushState(null, "", "/simular/ahorros");
   render(<App />);
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
   expect(await screen.findByLabelText("Nombre de usuario")).toHaveValue("Perfil demo");
   await userEvent.click(screen.getByRole("button", { name: "Volver al inicio" }));
+  await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   const table = await screen.findByRole("table");
   expect(within(table).getByRole("columnheader", { name: "Favoritos Pro" })).toBeInTheDocument();
   expect(within(table).getByText("Cobertura FSD no verificada")).toBeInTheDocument();
@@ -60,6 +63,7 @@ it("combina FSD, consulta contextual, semáforo y favoritos con el acceso a plan
   expect(await screen.findByLabelText("Nombre o razón social")).toBeInTheDocument();
   expect(window.location.pathname).toBe("/checkout");
   await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
+  await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
   await screen.findByRole("table");
   expect(screen.getByRole("button", { name: "Consultar FSD" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Guardar favorito de A" })).toBeInTheDocument();

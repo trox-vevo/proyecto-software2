@@ -1,9 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import "./LoginView.css";
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
-export function ForgotPasswordView() {
+export function ForgotPasswordView({ children }: { children?: ReactNode } = {}) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [enviado, setEnviado] = useState(false);
@@ -84,6 +84,7 @@ export function ForgotPasswordView() {
             </form>
           </>
         )}
+        {children}
       </section>
     </main>
   );

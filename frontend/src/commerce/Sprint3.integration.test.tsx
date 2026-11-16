@@ -74,6 +74,7 @@ async function fillDemoCheckout(cardNumber = "0000111122223333", decline = false
 describe("Sprint 3, frontend con Express y SQLite reales", () => {
   it("guarda desde la tabla, visita planes y aprueba una transacción DEMO mediante HTTP", async () => {
     const requests = connectAs(tokens.pro);
+    window.history.pushState(null, "", "/simular/ahorros");
     render(<App />);
     const buttons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(buttons[0]);
@@ -81,6 +82,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     await userEvent.click(screen.getByRole("link", { name: "Planes" }));
     await screen.findByRole("columnheader", { name: "Pro" });
     await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
+    await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
     const repeatedButtons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(repeatedButtons[0]);
     expect(await screen.findByText("Esta simulación ya estaba guardada.")).toBeInTheDocument();
@@ -101,6 +103,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
 
   it("aplica por HTTP la restricción Básica y ofrece acceder a planes", async () => {
     connectAs(tokens.basic);
+    window.history.pushState(null, "", "/simular/ahorros");
     render(<App />);
     const buttons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(buttons[0]);
@@ -126,6 +129,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     expect(screen.queryByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Volver a planes" }));
     await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
+    await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
     const favoriteButtons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(favoriteButtons[0]);
     expect(await screen.findByRole("alert")).toHaveTextContent("Inicia sesión");
@@ -156,6 +160,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     expect(await screen.findByRole("heading", { name: "¡Bienvenido al Plan Pro!" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Volver a la aplicación" }));
     expect(window.location.pathname).toBe("/");
+    await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
     const favoriteButtons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(favoriteButtons[0]);
     expect(await screen.findByText("Simulación guardada como favorita.")).toBeInTheDocument();

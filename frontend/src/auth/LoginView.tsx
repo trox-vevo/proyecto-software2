@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { alHacerClic } from "../app/navegacion";
 import { type AuthSession } from "./session";
 import "./LoginView.css";
 
@@ -9,9 +10,12 @@ export type { AuthSession } from "./session";
 interface Props {
   onLogin: (session: AuthSession) => void;
   onForgotPassword: () => void;
+  /** Aviso de otra pantalla (cuenta creada, contraseña actualizada). */
+  aviso?: string;
+  children?: ReactNode;
 }
 
-export function LoginView({ onLogin, onForgotPassword }: Props) {
+export function LoginView({ onLogin, onForgotPassword, aviso, children }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -84,7 +88,8 @@ export function LoginView({ onLogin, onForgotPassword }: Props) {
   return (
     <main className="login-pagina">
       <section className="login-tarjeta" aria-labelledby="login-titulo">
-        <p className="login-etiqueta">Cuentas de ahorro</p>
+        {aviso && <p className="login-aviso" role="status">{aviso}</p>}
+        <p className="login-etiqueta">Yupay Finance</p>
         <h1 id="login-titulo">Iniciar sesión</h1>
         <p className="login-descripcion">Ingresa tus credenciales para continuar.</p>
 
@@ -131,6 +136,10 @@ export function LoginView({ onLogin, onForgotPassword }: Props) {
         >
           ¿Olvidaste tu contraseña?
         </a>
+        <a className="login-enlace-recuperacion" href="/registro" onClick={alHacerClic("/registro")}>
+          ¿No tienes cuenta? Crear cuenta
+        </a>
+        {children}
       </section>
     </main>
   );

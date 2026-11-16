@@ -1,0 +1,38 @@
+.cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.cabecera-logo { color: var(--text-h); font-size: 1.1rem; font-weight: 700; text-decoration: none; }
+
+.cabecera nav { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; }
+
+.cabecera nav a,
+.cabecera nav button {
+  padding: 0.45rem 0.7rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-h);
+  font: inherit;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cabecera nav a:hover, .cabecera nav button:hover { background: var(--accent-bg); }
+.cabecera nav a[aria-current="page"] { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.cabecera-plan { padding: 0.2rem 0.6rem; border: 1px solid var(--accent-border); border-radius: 999px; color: var(--accent); font-size: 0.8rem; font-weight: 600; }
+
+/* Pantallas de acceso: solo el logo. */
+.cabecera-acceso { padding: 0.75rem 1.25rem; text-align: left; }
+
+@media (max-width: 640px) {
+  .cabecera { flex-direction: column; align-items: flex-start; }
+}

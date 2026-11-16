@@ -8,7 +8,7 @@ interface BillingTransaction {
   outcome: "APPROVED" | "DECLINED";
   occurredAt: string;
   planId: "PRO";
-  amount: number | null;
+  amount: string | null; // US31: texto con 2 decimales; null en pagos anteriores al precio
   currency: "PEN";
   receiptStatus: "AVAILABLE" | "NOT_APPLICABLE";
 }
@@ -22,7 +22,7 @@ function isBillingTransaction(value: unknown): value is BillingTransaction {
     typeof transaction.occurredAt === "string" &&
     Number.isFinite(Date.parse(transaction.occurredAt)) &&
     transaction.planId === "PRO" &&
-    (transaction.amount === null || (typeof transaction.amount === "number" && Number.isFinite(transaction.amount))) &&
+    (transaction.amount === null || (typeof transaction.amount === "string" && /^\d+\.\d{2}$/.test(transaction.amount))) &&
     transaction.currency === "PEN" &&
     (transaction.receiptStatus === "AVAILABLE" || transaction.receiptStatus === "NOT_APPLICABLE");
 }
@@ -94,7 +94,7 @@ export function BillingHistory({ onReturn }: { onReturn?: () => void }) {
         {onReturn && <button type="button" onClick={onReturn}>Volver a mi cuenta</button>}
       </div>
       <p className="historial-facturacion-aviso">
-        El checkout actual es una demostración académica: no se realizan cobros y el precio de Pro aún no está definido.
+        El checkout es una demostración académica: no se realizan cobros reales.
       </p>
       {transactions === null && !error && <p role="status">Cargando historial…</p>}
       {error && <p role="alert">{error}</p>}
@@ -121,10 +121,7 @@ export function BillingHistory({ onReturn }: { onReturn?: () => void }) {
                       .format(new Date(transaction.occurredAt))}
                   </time></td>
                   <td>Suscripción Plan Pro</td>
-                  <td>{transaction.amount === null
-                    ? "Sin cobro (DEMO)"
-                    : new Intl.NumberFormat("es-PE", { style: "currency", currency: transaction.currency })
-                      .format(transaction.amount)}</td>
+                  <td>{transaction.amount ?? "No disponible"}</td>
                   <td>{transaction.outcome === "APPROVED" ? "Aprobado" : "Rechazado"}</td>
                   <td>
                     {transaction.receiptStatus === "AVAILABLE" ? (

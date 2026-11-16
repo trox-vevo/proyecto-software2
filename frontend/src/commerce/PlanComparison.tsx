@@ -32,13 +32,14 @@ export function PlanComparison({ onCheckout }: { onCheckout: () => void }) {
               <caption>Beneficios de los planes Básico y Pro</caption>
               <thead><tr><th scope="col">Beneficio</th>{catalog.plans.map((plan) => <th scope="col" key={plan.id}>{plan.name}</th>)}</tr></thead>
               <tbody>
-                <tr><th scope="row">Precio</th>{catalog.plans.map((plan) => <td key={plan.id}>Precio pendiente de definición</td>)}</tr>
+                <tr><th scope="row">Precio</th>{catalog.plans.map((plan) => <td key={plan.id}>{Number(plan.price) === 0 ? "S/ 0.00" : `S/ ${plan.price} al mes`}</td>)}</tr>
                 {catalog.features.map((feature) => <tr key={feature.id}>
                   <th scope="row">{feature.label}</th>
                   {catalog.plans.map((plan) => <td key={plan.id}>{plan.features[feature.id] ? "Incluido" : "Requiere Pro"}</td>)}
                 </tr>)}
               </tbody>
             </table>
+            <p className="comercio-ayuda">Simulación académica: no se realiza ningún cobro real.</p>
             <p className="comercio-ayuda">El informe avanzado y el reporte PDF estarán disponibles al completarse su integración.</p>
             {catalog.plans.some((plan) => plan.id === "PRO") && <button type="button" onClick={onCheckout}>Continuar al checkout Pro</button>}
           </div>}
