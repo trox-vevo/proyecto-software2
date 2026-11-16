@@ -129,7 +129,7 @@ describe("Alertas en la plataforma (US35, US36, TS-110)", () => {
 
     expect(alerta).toMatchObject({
       entidadId: 1,
-      entidad: "Entidad A",
+      entidad: "Banco de Crédito del Perú (BCP)",
       tipo: "TASA",
       tasaAnterior: "5.00%",
       tasaNueva: "6.00%",
@@ -148,7 +148,7 @@ describe("Alertas en la plataforma (US35, US36, TS-110)", () => {
 
     expect(alerta).toMatchObject({
       tipo: "RIESGO",
-      entidad: "Entidad D",
+      entidad: "Scotiabank Perú",
       tasaAnterior: null,
       tasaNueva: null,
       variacionPct: null,

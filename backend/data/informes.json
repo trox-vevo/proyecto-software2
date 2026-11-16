@@ -1,7 +1,7 @@
 [
   {
     "entityId": 1,
-    "entityName": "Entidad A",
+    "entityName": "Banco de Crédito del Perú (BCP)",
     "summary": "Entidad con una posición financiera muy sólida. Su capital supera con holgura el mínimo exigido y su cartera presenta baja morosidad.",
     "strengths": ["Ratio de capital global por encima del promedio del sistema", "Morosidad baja y estable en los últimos trimestres", "Buena liquidez para atender retiros"],
     "risks": ["Alta competencia en tasas puede reducir su margen"],
@@ -11,7 +11,7 @@
   },
   {
     "entityId": 2,
-    "entityName": "Entidad B",
+    "entityName": "BBVA Perú",
     "summary": "Entidad sólida, con indicadores saludables y una tasa atractiva. Exige un monto mínimo de apertura mayor que el resto.",
     "strengths": ["Capital suficiente para crecer", "Morosidad controlada", "Ofrece la tasa más alta de Lima"],
     "risks": ["Su crecimiento rápido de colocaciones requiere seguimiento"],
@@ -21,7 +21,7 @@
   },
   {
     "entityId": 3,
-    "entityName": "Entidad C",
+    "entityName": "Interbank",
     "summary": "Entidad con indicadores aceptables. Su morosidad está algo por encima del promedio, aunque mantiene capital y liquidez adecuados.",
     "strengths": ["Capital dentro de lo recomendado", "Tasa competitiva"],
     "risks": ["Morosidad por encima del promedio del sistema", "Liquidez más ajustada que la de entidades similares"],
@@ -31,7 +31,7 @@
   },
   {
     "entityId": 4,
-    "entityName": "Entidad D",
+    "entityName": "Scotiabank Perú",
     "summary": "Entidad con debilidades financieras. Su capital está cerca del mínimo y la morosidad viene subiendo.",
     "strengths": ["Mantiene el capital mínimo exigido"],
     "risks": ["Morosidad alta y en aumento", "Liquidez baja", "Ofrece la tasa más baja del grupo"],
@@ -41,7 +41,7 @@
   },
   {
     "entityId": 5,
-    "entityName": "Entidad E",
+    "entityName": "Cooperativa Abaco",
     "summary": "Entidad con buena solidez. Sus indicadores son estables aunque algo menores que los de las entidades mejor calificadas.",
     "strengths": ["Capital y liquidez estables", "Morosidad moderada"],
     "risks": ["Rentabilidad menor que la de otras entidades"],
@@ -51,7 +51,7 @@
   },
   {
     "entityId": 6,
-    "entityName": "Entidad F",
+    "entityName": "Cooperativa Pacífico",
     "summary": "Entidad regional con indicadores aceptables y la tasa más alta de Cusco.",
     "strengths": ["Tasa alta para depósitos", "Capital adecuado"],
     "risks": ["Morosidad algo elevada", "Depende de una sola región"],

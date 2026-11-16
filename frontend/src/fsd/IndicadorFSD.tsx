@@ -27,7 +27,7 @@ export function IndicadorFSD({ cobertura, variante = "completo" }: { cobertura?:
     if (variante === "compacto") {
     const detalle = estado === "NO_VERIFICADO"
       ? "No se dispone de evidencia vigente. No implica ausencia de cobertura."
-      : `${cobertura!.entidadFinanciera} · Verificado: ${cobertura!.fechaVerificacion} · Vigente hasta: ${cobertura!.vigenteHasta}.${estado === "CUBIERTO" ? " Sujeto a los límites y condiciones vigentes del FSD." : ""}`;
+      : `${cobertura!.entidadFinanciera} · Verificado: ${cobertura!.fechaVerificacion} · Revisión de evidencia hasta: ${cobertura!.vigenteHasta}.${estado === "CUBIERTO" ? " Sujeto a los límites y condiciones vigentes del FSD." : ""}`;
     return <span className={`fsd-compacto fsd-compacto-${estado.toLowerCase()}`} tabIndex={0} aria-describedby={idTooltip}>
       <span aria-hidden="true">{estado === "CUBIERTO" ? "🛡" : estado === "NO_CUBIERTO" ? "⊘" : "?"}</span>
       <span>{labels[estado]}</span>
@@ -38,7 +38,7 @@ export function IndicadorFSD({ cobertura, variante = "completo" }: { cobertura?:
     <span aria-hidden="true">{estado === "CUBIERTO" ? "🛡" : estado === "NO_CUBIERTO" ? "⊘" : "?"}</span>{" "}
     <span>{labels[estado]}</span>
     {estado === "NO_VERIFICADO" ? <small>No se dispone de evidencia vigente. No implica ausencia de cobertura.</small> : <>
-      <small>{cobertura!.entidadFinanciera} · Verificado: {cobertura!.fechaVerificacion} · Vigente hasta: {cobertura!.vigenteHasta}</small>
+      <small>{cobertura!.entidadFinanciera} · Verificado: {cobertura!.fechaVerificacion} · Revisión de evidencia hasta: {cobertura!.vigenteHasta}</small>
       <a href={cobertura!.fuente!} target="_blank" rel="noreferrer">Consultar fuente oficial FSD</a>
       {estado === "CUBIERTO" && <small>Sujeto a los límites y condiciones vigentes del FSD.</small>}
     </>}

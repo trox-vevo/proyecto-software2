@@ -5,7 +5,7 @@ import type { AlertEvent, QueuedNotification } from "../../src/notifications/que
 import { openDatabase } from "../../src/shared/infrastructure/openDatabase";
 
 // Usa el catálogo real de demostración (db/schema.sql y db/seed.sql) en una base en memoria:
-// la entidad 1 se llama "Entidad A".
+// la entidad 1 conserva su ID y utiliza el nombre real BCP (tasas ficticias).
 
 function notificacion(event: Partial<AlertEvent>): QueuedNotification {
   return {
@@ -47,7 +47,7 @@ describe("Datos del correo a partir de un evento de la cola (US40)", () => {
   it("una subida de tasa muestra porcentajes y variación positiva", () => {
     expect(resolvedor.resolver(notificacion({}))).toEqual({
       id: 21,
-      entidad: "Entidad A",
+      entidad: "Banco de Crédito del Perú (BCP)",
       tipo: "CAMBIO_TASA",
       valorAnterior: "5.00%",
       valorNuevo: "6.00%",
@@ -78,7 +78,7 @@ describe("Datos del correo a partir de un evento de la cola (US40)", () => {
 
     expect(datos).toEqual({
       id: 21,
-      entidad: "Entidad A",
+      entidad: "Banco de Crédito del Perú (BCP)",
       tipo: "CAMBIO_RIESGO",
       valorAnterior: "A-",
       valorNuevo: "C",

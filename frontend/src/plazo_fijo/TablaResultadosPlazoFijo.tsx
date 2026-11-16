@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { IndicadorFSD } from "../fsd/IndicadorFSD";
 import { obtenerColumnas } from "./columnas";
 import type { ModalidadPago, ResultadoPlazoFijo } from "./tipos";
 import { EmptyStateComponent } from "../tabla_ahorros/EmptyStateComponent";
@@ -40,7 +41,7 @@ export function TablaResultadosPlazoFijo({ resultados, modalidad, onViewPlans = 
               <th key={columna.clave} scope="col" className={columna.numerica ? "num" : undefined}>
                 {columna.titulo}
               </th>
-            ))}<th scope="col">Calificación</th></tr>
+            ))}<th scope="col">FSD</th><th scope="col">Calificación</th></tr>
           </thead>
           <tbody>{resultados.map((fila) => (
             <tr key={fila.productId}>{columnas.map((columna) => (
@@ -48,6 +49,7 @@ export function TablaResultadosPlazoFijo({ resultados, modalidad, onViewPlans = 
                 {columna.presentar(fila)}
               </td>
             ))}
+              <td><IndicadorFSD cobertura={fila.coberturaFSD} /></td>
               {/* US27: el productId es también el id de la entidad (US25). US26: al cargar el informe se abre la ventana */}
               <td>
                 <RiskBadge

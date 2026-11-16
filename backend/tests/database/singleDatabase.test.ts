@@ -16,7 +16,6 @@ import { SqliteSbsRiskRepository } from "../../src/risk/infrastructure/SqliteSbs
 import { openDatabase } from "../../src/shared/infrastructure/openDatabase";
 import { InMemoryProductRepository } from "../../src/simulation/infrastructure/InMemoryProductRepository";
 import { SqliteProductRepository } from "../../src/simulation/infrastructure/SqliteProductRepository";
-import { crearCoberturaNoVerificada } from "../../src/fsd/CoberturaFSD";
 
 // Paridad: la base única debe devolver EXACTAMENTE lo mismo que las fuentes anteriores (JSON / memoria).
 // Si alguien cambia db/seed.sql o los JSON de data/, estas pruebas avisan que se desalinearon.
@@ -52,23 +51,13 @@ describe("openDatabase", () => {
 });
 
 describe("paridad con las fuentes anteriores", () => {
-  it("productos de plazo fijo conservan la fuente anterior e incorporan la evidencia FSD del seed", async () => {
+  it("productos de plazo fijo conservan parámetros y comparten la evidencia FSD revisada", async () => {
     const database = openDatabase(":memory:");
     const sqlite = new SqliteProductRepository(database);
     const memory = new InMemoryProductRepository();
     for (const department of ["Lima", "Cusco", "Arequipa", "constructor"]) {
       expect(plain(await sqlite.findFixedDepositsByDepartment(department)))
-        .toEqual(plain((await memory.findFixedDepositsByDepartment(department)).map((product) => ({
-          ...product,
-          // El seed actual incorporó evidencia de demo; la fuente histórica carece de ella.
-          coberturaFSD: [1, 2, 3, 5].includes(product.id) ? {
-            estado: product.id === 3 ? "NO_CUBIERTO" : "CUBIERTO",
-            entidadFinanciera: product.entityName,
-            fechaVerificacion: "2026-10-15",
-            fuente: "https://www.fsd.org.pe/",
-            vigenteHasta: "2027-12-31",
-          } : crearCoberturaNoVerificada(),
-        }))));
+        .toEqual(plain(await memory.findFixedDepositsByDepartment(department)));
     }
     database.close();
   });

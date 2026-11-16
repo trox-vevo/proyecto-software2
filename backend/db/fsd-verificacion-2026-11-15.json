@@ -1,0 +1,22 @@
+{
+  "consultadoEl": "2026-11-15",
+  "revisionLocalHasta": "2026-11-22",
+  "politica": "Revisión local de 7 días; no es una fecha de vigencia oficial del FSD. Después se exige una nueva consulta manual.",
+  "fuenteMiembros": "https://fsd.org.pe/miembros/",
+  "fuenteSbs": "https://www.sbs.gob.pe/app/pp/empresasweb/Paginas/EmpCaptarDep.aspx",
+  "nota": "true significa participación verificada en el FSD tradicional; false significa NO_VERIFICADO, nunca NO_CUBIERTO. Las COOPAC tienen un régimen distinto (FSDC); aquí no se verifica la cobertura individual del FSDC. Solo se asocian seis nombres a filas existentes; los demás quedan como referencia sin crear entidades ni productos. Las tasas, canales, riesgos e informes asociados siguen siendo ficticios.",
+  "entidades": [
+    { "idExistente": 1, "nombreAnterior": "Entidad A", "nombre": "Banco de Crédito del Perú (BCP)", "verificadaFsd": true, "nombreEnFuente": "Banco de Crédito del Perú" },
+    { "idExistente": 2, "nombreAnterior": "Entidad B", "nombre": "BBVA Perú", "verificadaFsd": true, "nombreEnFuente": "BBVA" },
+    { "idExistente": 3, "nombreAnterior": "Entidad C", "nombre": "Interbank", "verificadaFsd": true, "nombreEnFuente": "Interbank" },
+    { "idExistente": 4, "nombreAnterior": "Entidad D", "nombre": "Scotiabank Perú", "verificadaFsd": true, "nombreEnFuente": "Scotiabank Perú" },
+    { "idExistente": null, "nombre": "Banco Pichincha", "verificadaFsd": true, "nombreEnFuente": "Banco Pichincha" },
+    { "idExistente": null, "nombre": "Banco Falabella", "verificadaFsd": true, "nombreEnFuente": "Banco Falabella" },
+    { "idExistente": null, "nombre": "Mibanco", "verificadaFsd": true, "nombreEnFuente": "Mibanco" },
+    { "idExistente": null, "nombre": "Caja Arequipa", "verificadaFsd": true, "nombreEnFuente": "CMAC Arequipa" },
+    { "idExistente": 5, "nombreAnterior": "Entidad E", "nombre": "Cooperativa Abaco", "verificadaFsd": false, "nombreEnFuente": "COOPERATIVA DE AHORRO Y CREDITO ABACO" },
+    { "idExistente": 6, "nombreAnterior": "Entidad F", "nombre": "Cooperativa Pacífico", "verificadaFsd": false, "nombreEnFuente": "COOPERATIVA DE AHORRO Y CREDITO PACIFICO" },
+    { "idExistente": null, "nombre": "Cooperativa Santa María Magdalena", "verificadaFsd": false, "nombreEnFuente": "COOPERATIVA DE AHORRO Y CREDITO SANTA MARIA MAGDALENA LTDA. N° 219 DEL PERU" },
+    { "idExistente": null, "nombre": "Cooperativa San Martín de Porres", "verificadaFsd": false, "nombreEnFuente": "COOPERATIVA DE AHORRO Y CRÉDITO SAN MARTIN DE PORRES LTDA." }
+  ]
+}
