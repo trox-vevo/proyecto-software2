@@ -7,6 +7,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import App from "../App";
+import { buscarAhorros } from "../test/buscarAhorros";
 
 let server: ChildProcess;
 let endpoint: string;
@@ -76,6 +77,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     const requests = connectAs(tokens.pro);
     window.history.pushState(null, "", "/simular/ahorros");
     render(<App />);
+    await buscarAhorros();
     const buttons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(buttons[0]);
     expect(await screen.findByText("Simulación guardada como favorita.")).toBeInTheDocument();
@@ -83,6 +85,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     await screen.findByRole("columnheader", { name: "Pro" });
     await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
     await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+    await buscarAhorros();
     const repeatedButtons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(repeatedButtons[0]);
     expect(await screen.findByText("Esta simulación ya estaba guardada.")).toBeInTheDocument();
@@ -105,6 +108,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     connectAs(tokens.basic);
     window.history.pushState(null, "", "/simular/ahorros");
     render(<App />);
+    await buscarAhorros();
     const buttons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(buttons[0]);
     expect(await screen.findByRole("alert")).toHaveTextContent("requiere el Plan Pro");
@@ -130,6 +134,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     await userEvent.click(screen.getByRole("button", { name: "Volver a planes" }));
     await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
     await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+    await buscarAhorros();
     const favoriteButtons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(favoriteButtons[0]);
     expect(await screen.findByRole("alert")).toHaveTextContent("Inicia sesión");
@@ -161,6 +166,7 @@ describe("Sprint 3, frontend con Express y SQLite reales", () => {
     await userEvent.click(screen.getByRole("button", { name: "Volver a la aplicación" }));
     expect(window.location.pathname).toBe("/");
     await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+    await buscarAhorros();
     const favoriteButtons = await screen.findAllByRole("button", { name: /Guardar favorito de/ });
     await userEvent.click(favoriteButtons[0]);
     expect(await screen.findByText("Simulación guardada como favorita.")).toBeInTheDocument();

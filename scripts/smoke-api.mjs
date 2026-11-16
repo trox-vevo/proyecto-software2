@@ -129,6 +129,11 @@ async function run(outDir) {
     await call("ahorros-default", "GET", "/api/ahorros/rentabilidad");
     await call("ahorros-saldo-compuesta", "GET", "/api/ahorros/rentabilidad?dias=180&criterio=SALDO&algoritmo=compuesta");
     await call("ahorros-filtro-saldo", "GET", "/api/ahorros/rentabilidad?saldoMinimo=900&saldoMaximo=6000");
+    // US05/US08/US09: búsqueda por monto y departamento (van juntos; solo uno -> 400)
+    const busqueda = await call("ahorros-busqueda-lima", "GET", "/api/ahorros/rentabilidad?monto=1000&departamento=Lima");
+    expect("ahorros-busqueda-lima", busqueda.status === 200 && busqueda.body.resultados.length === 5, "esperaba 5 productos de Lima");
+    const incompleta = await call("ahorros-busqueda-incompleta", "GET", "/api/ahorros/rentabilidad?monto=1000");
+    expect("ahorros-busqueda-incompleta", incompleta.status === 400, `esperaba 400 y llegó ${incompleta.status}`);
 
     // Plazo fijo anónimo (US10/US12/US13), todos los departamentos y modalidades
     for (const department of ["Lima", "Cusco", "Arequipa", "Tacna"]) {

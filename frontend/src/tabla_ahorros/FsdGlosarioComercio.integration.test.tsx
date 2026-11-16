@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import App from "../App";
+import { buscarAhorros } from "../test/buscarAhorros";
 
 afterEach(() => {
   localStorage.clear();
@@ -14,7 +15,7 @@ it("combina FSD, consulta contextual, semáforo y favoritos con el acceso a plan
   const fetchMock = vi.fn<typeof fetch>(async input => {
     const url = String(input);
     if (url.endsWith("/api/perfil")) return Response.json({ id: "usuario-demo", nombre: "Perfil demo", correo: "demo@example.com" });
-    if (url.includes("/api/ahorros/")) return Response.json({ resultados: [{ cuentaId: "A",
+    if (url.includes("/api/ahorros/")) return Response.json({ resultados: [{ cuentaId: "A", entidad: "A", tasaAnual: "0.05", montoMinimo: "0.00",
       capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024",
       monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true } }] });
     if (url.endsWith("/api/favorites")) return Response.json({ code: "PRO_REQUIRED" }, { status: 403 });
@@ -37,11 +38,13 @@ it("combina FSD, consulta contextual, semáforo y favoritos con el acceso a plan
   vi.stubGlobal("fetch", fetchMock);
   window.history.pushState(null, "", "/simular/ahorros");
   render(<App />);
+  await buscarAhorros();
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
   expect(await screen.findByLabelText("Nombre de usuario")).toHaveValue("Perfil demo");
   await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+  await buscarAhorros();
   const table = await screen.findByRole("table");
   expect(within(table).getByRole("columnheader", { name: "Favoritos Pro" })).toBeInTheDocument();
   expect(within(table).getByText("Cobertura FSD no verificada")).toBeInTheDocument();
@@ -64,6 +67,7 @@ it("combina FSD, consulta contextual, semáforo y favoritos con el acceso a plan
   expect(window.location.pathname).toBe("/checkout");
   await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+  await buscarAhorros();
   await screen.findByRole("table");
   expect(screen.getByRole("button", { name: "Consultar FSD" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Guardar favorito de A" })).toBeInTheDocument();

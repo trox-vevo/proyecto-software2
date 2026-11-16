@@ -36,6 +36,14 @@ export function TablaAhorrosView({
   favoritos,
 }: Props) {
   const { filaAbiertaId, alternar } = useSemaforoPanel();
+  if (estado === "SIN_BUSQUEDA") {
+    return (
+      <p className="tabla-mensaje" role="status">
+        Ingresa el monto y tu departamento, y presiona Buscar para ver las opciones.
+      </p>
+    );
+  }
+
   if (estado === "CARGANDO") {
     return (
       <p className="tabla-mensaje" role="status">

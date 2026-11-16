@@ -36,7 +36,11 @@ CREATE TABLE IF NOT EXISTS savings_accounts (
   has_atms INTEGER NOT NULL CHECK (has_atms IN (0, 1)),
   has_digital_banking INTEGER NOT NULL CHECK (has_digital_banking IN (0, 1)),
   has_mobile_app INTEGER NOT NULL CHECK (has_mobile_app IN (0, 1)),
-  fsd_coverage TEXT
+  fsd_coverage TEXT,
+  -- US09/US11: producto de ahorro de una entidad (nullable: bases anteriores se migran con ALTER TABLE)
+  entity_id INTEGER REFERENCES financial_entities(id),
+  department TEXT,
+  minimum_amount TEXT
 );
 
 -- US25: indicadores de riesgo de la SBS por entidad

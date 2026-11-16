@@ -14,6 +14,11 @@ const revision = JSON.parse(readFileSync(path.join(dbDir, "fsd-verificacion-2026
 const baseline = JSON.parse(readFileSync(path.join(__dirname, "catalog-baseline.json"), "utf8"));
 const today = new Date("2026-11-15T12:00:00Z");
 const keys: Record<string, string> = { financial_entities: "id", fixed_deposit_products: "id", savings_accounts: "id", sbs_risk_profiles: "entity_id", economist_reports: "entity_id" };
+// Campos agregados después de fijar la línea base: se excluyen de la huella y se comprueban aparte.
+const excluidos: Record<string, string[]> = {
+  financial_entities: ["name", "fsd_coverage"],
+  savings_accounts: ["entity_id", "department", "minimum_amount"],
+};
 const directories: string[] = [];
 afterEach(() => directories.splice(0).forEach((directory) => rmSync(directory, { recursive: true, force: true })));
 
@@ -23,11 +28,25 @@ describe("US21/US35: catálogo FSD local con identidades reales", () => {
     try {
       for (const [table, key] of Object.entries(keys)) {
         const rows = db.prepare(`SELECT * FROM ${table} ORDER BY ${key}`).all().map((row) =>
-          table === "financial_entities" ? Object.fromEntries(Object.entries(row).filter(([field]) => field !== "name" && field !== "fsd_coverage")) : row);
+          Object.fromEntries(Object.entries(row).filter(([field]) => !(excluidos[table] ?? []).includes(field))));
         // Hashes fijados con el seed original de f823cf1; no se regeneran desde los nuevos datos.
         expect(createHash("sha256").update(JSON.stringify(rows)).digest("hex"), table).toBe(baseline[table]);
       }
       expect(db.prepare("PRAGMA foreign_key_check").all()).toEqual([]);
+    } finally { db.close(); }
+  });
+
+  it("US09/US11: asocia cada cuenta de ahorro a su entidad, departamento y monto mínimo", () => {
+    const db = openDatabase(":memory:");
+    try {
+      expect(db.prepare("SELECT id, entity_id, department, minimum_amount FROM savings_accounts ORDER BY id").all()).toEqual([
+        { id: "AH-001", entity_id: 1, department: "Lima", minimum_amount: "0.00" },
+        { id: "AH-002", entity_id: 2, department: "Lima", minimum_amount: "0.00" },
+        { id: "AH-003", entity_id: 3, department: "Lima", minimum_amount: "1000.00" },
+        { id: "AH-004", entity_id: 4, department: "Lima", minimum_amount: "0.00" },
+        { id: "AH-005", entity_id: 5, department: "Lima", minimum_amount: "500.00" },
+        { id: "AH-006", entity_id: 6, department: "Cusco", minimum_amount: "0.00" },
+      ]);
     } finally { db.close(); }
   });
 

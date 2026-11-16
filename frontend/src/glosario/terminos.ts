@@ -12,6 +12,6 @@ export const TERMINOS = [
 ].sort((a, b) => a.termino.localeCompare(b.termino, "es"));
 
 export const TERMINO_POR_COLUMNA: Record<string, string> = {
-  capitalInicial: "Capital inicial", interesGenerado: "Interés", saldoFinal: "Saldo final",
+  capitalInicial: "Capital inicial", interesGenerado: "Interés", tasaAnual: "TEA", saldoFinal: "Saldo final",
   coberturaFSD: "FSD", riesgo: "Riesgo", monthlyMaintenanceFee: "Costo de mantenimiento",
 };

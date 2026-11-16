@@ -1,3 +1,4 @@
+import { Decimal } from "decimal.js";
 import type { DatabaseSync } from "node:sqlite";
 import { CuentaAhorros } from "../rentabilidad/CuentaAhorros";
 import { DigitalChannels } from "../simulation/domain/DigitalChannels";
@@ -14,7 +15,11 @@ interface CuentaRow {
   has_atms: number;
   has_digital_banking: number;
   has_mobile_app: number;
-  fsd_coverage: string | null;
+  /** Cobertura de la cuenta o, si no tiene, la de su entidad. */
+  fsd: string | null;
+  entity_name: string | null;
+  department: string | null;
+  minimum_amount: string | null;
 }
 
 /** US09/US11: mismas cuentas y mismo contrato que RepositorioCuentas, pero leídas de la base única. */
@@ -23,7 +28,9 @@ export class RepositorioCuentasSqlite {
 
   obtenerTodas(): CuentaAhorros[] {
     const rows = this.database
-      .prepare("SELECT * FROM savings_accounts ORDER BY id")
+      .prepare(`SELECT s.*, e.name AS entity_name, COALESCE(s.fsd_coverage, e.fsd_coverage) AS fsd
+        FROM savings_accounts s LEFT JOIN financial_entities e ON e.id = s.entity_id
+        ORDER BY s.id`)
       .all() as unknown as CuentaRow[];
     return rows.map((c) => new CuentaAhorros(
       c.id,
@@ -33,8 +40,11 @@ export class RepositorioCuentasSqlite {
       new Date(c.opened_at),
       c.monthly_maintenance_fee,
       new ServiceChannels(c.has_physical_branches === 1, c.has_atms === 1),
-      c.fsd_coverage === null ? undefined : JSON.parse(c.fsd_coverage),
+      c.fsd === null ? undefined : JSON.parse(c.fsd),
       new DigitalChannels(c.has_digital_banking === 1, c.has_mobile_app === 1),
+      c.entity_name === null || c.department === null || c.minimum_amount === null
+        ? null
+        : { entidad: c.entity_name, departamento: c.department, montoMinimo: new Decimal(c.minimum_amount) },
     ));
   }
 }

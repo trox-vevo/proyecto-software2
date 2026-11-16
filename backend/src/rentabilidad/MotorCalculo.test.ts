@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CriterioOrden } from "./CriterioOrden";
+import { Decimal } from "decimal.js";
 import { CuentaAhorros } from "./CuentaAhorros";
 import { FiltroAhorros } from "./FiltroAhorros";
 import { FormateadorResultados } from "./FormateadorResultados";
@@ -83,6 +84,9 @@ describe("MotorCalculoTest", () => {
      expect(salida).toEqual([
       {
         cuentaId: "B",
+        entidad: "Beto",
+        tasaAnual: "0.02",
+        montoMinimo: null,
         coberturaFSD: { entidadFinanciera: null, estado: "NO_VERIFICADO", fechaVerificacion: null, vigenteHasta: null, fuente: null },
         capitalInicial: "5,000.00",
         interesGenerado: "100.00",
@@ -120,5 +124,88 @@ describe("MotorCalculoTest", () => {
     const [resultado] = crearMotor().calcular([cuentaC], 365, CriterioOrden.SALDO);
     expect(resultado.monthlyMaintenanceFee).toBe("8.50");
     expect(resultado.channels).toEqual({ hasPhysicalBranches: false, hasAtms: true });
+  });
+});
+
+// US09/US11: búsqueda por monto y departamento. Cada prueba arma sus propios productos (no usa el seed).
+function producto(id: string, entidad: string, tasa: string, departamento: string, montoMinimo: string, saldo = "300") {
+  return new CuentaAhorros(id, `Titular ${id}`, saldo, tasa, new Date("2024-01-01"), "0", new ServiceChannels(true, true),
+    undefined, new DigitalChannels(true, true), { entidad, departamento, montoMinimo: new Decimal(montoMinimo) });
+}
+const productos = [
+  producto("AH-001", "BCP", "0.05", "Lima", "0.00"),
+  producto("AH-002", "BBVA", "0.02", "Lima", "0.00"),
+  producto("AH-003", "Interbank", "0.1", "Lima", "1000.00"),
+  producto("AH-004", "Scotiabank", "0.035", "Lima", "0.00"),
+  producto("AH-005", "Abaco", "0.045", "Lima", "500.00"),
+  producto("AH-006", "Pacífico", "0.03", "Cusco", "0.00"),
+];
+
+function buscar(monto: string, departamento: string, cuentasEntrada = productos) {
+  const motor = crearMotor(new FiltroAhorros({ departamento, montoInvertido: monto }));
+  return motor.calcular(cuentasEntrada, 365, CriterioOrden.RENTABILIDAD, new Decimal(monto));
+}
+const interes = (salida: ResultadoFormateado[]) => salida.map((r) => [r.cuentaId, r.interesGenerado]);
+
+describe("US09: búsqueda por monto y departamento", () => {
+  it("Lima, monto 1000: calcula sobre el monto y ordena de mayor a menor ganancia", () => {
+    expect(interes(buscar("1000", "Lima"))).toEqual([
+      ["AH-003", "100.00"], ["AH-001", "50.00"], ["AH-005", "45.00"], ["AH-004", "35.00"], ["AH-002", "20.00"],
+    ]);
+  });
+
+  it("Lima, monto 800: excluye el producto con monto mínimo 1000", () => {
+    expect(interes(buscar("800", "Lima"))).toEqual([
+      ["AH-001", "40.00"], ["AH-005", "36.00"], ["AH-004", "28.00"], ["AH-002", "16.00"],
+    ]);
+  });
+
+  it("Lima, monto 500: incluye el producto cuyo mínimo es igual al monto", () => {
+    const salida = buscar("500", "Lima");
+    expect(salida.find((r) => r.cuentaId === "AH-005")?.interesGenerado).toBe("22.50");
+    expect(ids(salida)).not.toContain("AH-003");
+  });
+
+  it("Cusco, monto 1000: solo el producto de Cusco", () => {
+    expect(interes(buscar("1000", "Cusco"))).toEqual([["AH-006", "30.00"]]);
+  });
+
+  it("Arequipa: ninguna entidad coincide -> []", () => {
+    expect(buscar("1000", "Arequipa")).toEqual([]);
+  });
+
+  it("compara el departamento sin mayúsculas ni espacios exteriores", () => {
+    expect(buscar("1000", "  lima  ")).toEqual(buscar("1000", "Lima"));
+  });
+
+  it("capitalInicial es el monto ingresado y trae entidad, tasa y monto mínimo", () => {
+    const salida = buscar("1000", "Lima");
+    for (const resultado of salida) expect(resultado.capitalInicial).toBe("1,000.00");
+    expect(salida[0]).toMatchObject({ entidad: "Interbank", tasaAnual: "0.1", montoMinimo: "1,000.00", saldoFinal: "1,100.00" });
+  });
+
+  it("no modifica el saldo de las cuentas originales", () => {
+    buscar("1000", "Lima");
+    expect(productos[0].saldo.toString()).toBe("300");
+  });
+
+  it("una cuenta sin producto queda excluida al filtrar por departamento o monto", () => {
+    expect(new FiltroAhorros({ departamento: "Lima" }).aplicar([cuentaA])).toEqual([]);
+    expect(new FiltroAhorros({ montoInvertido: 1000 }).aplicar([cuentaA])).toEqual([]);
+  });
+
+  it("sin monto ni departamento: mismo resultado que antes (calcula sobre el saldo)", () => {
+    const salida = crearMotor().calcular(cuentas, 365, CriterioOrden.RENTABILIDAD);
+    expect(interes(salida)).toEqual([["B", "100.00"], ["A", "50.00"], ["C", "30.00"]]);
+    expect(salida.map((r) => r.capitalInicial)).toEqual(["5,000.00", "1,000.00", "300.00"]);
+    expect(salida.map((r) => [r.entidad, r.montoMinimo])).toEqual([["Beto", null], ["Ana", null], ["Carla", null]]);
+  });
+
+  it("conCapital devuelve una cuenta nueva con el resto de datos iguales", () => {
+    const copia = productos[2].conCapital(new Decimal("2500"));
+    expect(copia).not.toBe(productos[2]);
+    expect(copia.saldo.toString()).toBe("2500");
+    expect(copia.producto).toBe(productos[2].producto);
+    expect(copia.tasaAnual.toString()).toBe("0.1");
   });
 });

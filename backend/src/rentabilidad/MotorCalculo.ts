@@ -1,3 +1,4 @@
+import type { Decimal } from "decimal.js";
 import type { AlgoritmoRentabilidad } from "./AlgoritmoRentabilidad";
 import type { CriterioOrden } from "./CriterioOrden";
 import type { CuentaAhorros } from "./CuentaAhorros";
@@ -26,7 +27,8 @@ export class MotorCalculo {
     this.algoritmo = algoritmo;
   }
 
-  calcular(cuentas: CuentaAhorros[], dias: number, criterio: CriterioOrden): ResultadoFormateado[] {
+  /** US09: con `montoInvertido`, el interés se calcula sobre ese monto y no sobre el saldo de cada cuenta. */
+  calcular(cuentas: CuentaAhorros[], dias: number, criterio: CriterioOrden, montoInvertido?: Decimal): ResultadoFormateado[] {
     if (!Number.isInteger(dias) || dias <= 0) {
       throw new RangeError("dias debe ser un entero positivo");
     }
@@ -34,7 +36,8 @@ export class MotorCalculo {
     const cuentasFiltradas = this.filtro.aplicar(cuentas);
 
     const resultados: ResultadoRentabilidad[] = [];
-    for (const cuenta of cuentasFiltradas) {
+    for (const filtrada of cuentasFiltradas) {
+      const cuenta = montoInvertido === undefined ? filtrada : filtrada.conCapital(montoInvertido);
       const interesGenerado = this.algoritmo.calcular(cuenta, dias);
       resultados.push(
         new ResultadoRentabilidad(
@@ -47,6 +50,9 @@ export class MotorCalculo {
           cuenta.channels,
           cuenta.coberturaFSD,
           cuenta.digitalChannels,
+          cuenta.producto?.entidad ?? cuenta.titular,
+          cuenta.tasaAnual,
+          cuenta.producto?.montoMinimo ?? null,
         ),
       );
     }

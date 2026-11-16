@@ -29,6 +29,14 @@ INSERT OR IGNORE INTO savings_accounts (id, holder, balance, annual_rate, opened
   ('AH-005', 'Elena Vargas', '850.75', '0.045', '2024-08-05', '8.50', 1, 1, 1, 1, NULL),
   ('AH-006', 'Fabio Medina', '2200.00', '0.03', '2023-09-30', '3.00', 1, 0, 0, 1, NULL);
 
+-- US09/US11: cada cuenta de demostración representa el producto de ahorro de una entidad.
+UPDATE savings_accounts SET entity_id = 1, department = 'Lima', minimum_amount = '0.00' WHERE id = 'AH-001' AND entity_id IS NULL;
+UPDATE savings_accounts SET entity_id = 2, department = 'Lima', minimum_amount = '0.00' WHERE id = 'AH-002' AND entity_id IS NULL;
+UPDATE savings_accounts SET entity_id = 3, department = 'Lima', minimum_amount = '1000.00' WHERE id = 'AH-003' AND entity_id IS NULL;
+UPDATE savings_accounts SET entity_id = 4, department = 'Lima', minimum_amount = '0.00' WHERE id = 'AH-004' AND entity_id IS NULL;
+UPDATE savings_accounts SET entity_id = 5, department = 'Lima', minimum_amount = '500.00' WHERE id = 'AH-005' AND entity_id IS NULL;
+UPDATE savings_accounts SET entity_id = 6, department = 'Cusco', minimum_amount = '0.00' WHERE id = 'AH-006' AND entity_id IS NULL;
+
 INSERT OR IGNORE INTO sbs_risk_profiles (entity_id, risk_rating, capital_adequacy_ratio, delinquency_rate, liquidity_ratio, report_date, source_url) VALUES
   (1, 'A+', '0.1620', '0.0210', '0.3150', '2026-09-30', 'https://www.sbs.gob.pe/'),
   (2, 'A', '0.1480', '0.0290', '0.2840', '2026-09-30', 'https://www.sbs.gob.pe/'),

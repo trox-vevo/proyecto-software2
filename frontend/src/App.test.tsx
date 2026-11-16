@@ -3,10 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import App from "./App";
 import type { FilaAhorro } from "./tabla_ahorros/tipos";
+import { buscarAhorros } from "./test/buscarAhorros";
 
 // Datos propios de la prueba (entidades A–E de CLAUDE.md §7), no los de data/cuentas.json
 const fila = (cuentaId: string, monthlyMaintenanceFee: string, hasPhysicalBranches: boolean, hasAtms: boolean): FilaAhorro => ({
   cuentaId,
+  entidad: cuentaId,
+  tasaAnual: "0.05", montoMinimo: "0.00",
   capitalInicial: "1,000.00",
   interesGenerado: "50.00",
   saldoFinal: "1,050.00",
@@ -23,7 +26,7 @@ const LIMA = [
   fila("E", "8.50", true, true),
 ];
 
-function renderAppWith(filas: FilaAhorro[]) {
+async function renderAppWith(filas: FilaAhorro[]) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     if (String(input).includes("/api/perfil")) {
       return new Response(JSON.stringify({
@@ -37,6 +40,7 @@ function renderAppWith(filas: FilaAhorro[]) {
   vi.stubGlobal("fetch", fetchMock);
   window.history.pushState(null, "", "/simular/ahorros");
   render(<App />);
+  await buscarAhorros();
   return fetchMock;
 }
 
@@ -48,7 +52,7 @@ const visibleIds = () =>
 
 describe("Filtros de resultados en la tabla de ahorros (US17/US18)", () => {
   it("marcar 'Sin costo de mantenimiento' pasa el contador de 5 de 5 a 3 de 5", async () => {
-    renderAppWith(LIMA);
+    await renderAppWith(LIMA);
     expect(await screen.findByText("Mostrando 5 de 5 opciones")).toBeInTheDocument();
 
     await userEvent.click(screen.getByLabelText("Sin costo de mantenimiento"));
@@ -58,7 +62,7 @@ describe("Filtros de resultados en la tabla de ahorros (US17/US18)", () => {
   });
 
   it("agencias + cajeros combina con AND; desmarcar vuelve atrás SIN nueva petición HTTP", async () => {
-    const fetchMock = renderAppWith(LIMA);
+    const fetchMock = await renderAppWith(LIMA);
     await screen.findByText("Mostrando 5 de 5 opciones");
 
     await userEvent.click(screen.getByLabelText("Con agencias físicas"));
@@ -73,7 +77,7 @@ describe("Filtros de resultados en la tabla de ahorros (US17/US18)", () => {
   });
 
   it("si el filtro deja 0 resultados, muestra el zero-state de la tabla", async () => {
-    renderAppWith([fila("F", "3.00", true, false)]);
+    await renderAppWith([fila("F", "3.00", true, false)]);
     await screen.findByText("Mostrando 1 de 1 opciones");
 
     await userEvent.click(screen.getByLabelText("Sin costo de mantenimiento"));
@@ -84,7 +88,7 @@ describe("Filtros de resultados en la tabla de ahorros (US17/US18)", () => {
   });
 
   it("columna 'Costo de mantenimiento': 'Sin costo' si es 0 y 'S/ x.xx' en otro caso", async () => {
-    renderAppWith(LIMA);
+    await renderAppWith(LIMA);
     await screen.findByText("Mostrando 5 de 5 opciones");
 
     expect(screen.getByRole("columnheader", { name: "Costo de mantenimiento" })).toBeInTheDocument();

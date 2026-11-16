@@ -52,6 +52,7 @@ export function SimuladorPage({
         plazoFijo={<PlazoFijoView onViewPlans={verPlanes} replay={fixedReplay} />}
         tipoInstrumento={instrumento}
         onTipoInstrumentoChange={(tipo) => navegar(RUTA_SIMULADOR[tipo])}
+        onBuscarAhorros={tabla.buscar}
       />
       {instrumento === "AHORROS" && (
         <section aria-labelledby="titulo-resultados-ahorros">

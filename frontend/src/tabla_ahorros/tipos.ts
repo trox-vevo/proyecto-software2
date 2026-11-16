@@ -2,6 +2,12 @@ import type { CoberturaFSD } from "../fsd/IndicadorFSD";
 /** Una fila de la tabla: coincide con lo que devuelve el backend, todo en texto ya formateado. */
 export interface FilaAhorro {
   cuentaId: string;
+  /** US11: nombre de la entidad. */
+  entidad: string;
+  /** US11: tasa anual como fracción en texto (0.1 = 10 %). */
+  tasaAnual: string;
+  /** US11: monto mínimo de apertura ("1,000.00"); null si la cuenta no tiene producto. */
+  montoMinimo: string | null;
   coberturaFSD?: CoberturaFSD;
   capitalInicial: string;
   interesGenerado: string;
@@ -22,7 +28,7 @@ export type CriterioOrden = "RENTABILIDAD" | "SALDO" | "FECHA";
 export interface ColumnaTabla {
   /** Nombre del campo de FilaAhorro que muestra esta columna (solo campos de texto). */
   clave: Exclude<keyof FilaAhorro, "channels" | "digitalChannels" | "coberturaFSD"> | "riesgo" | "coberturaFSD";
-  mostrar?: (valor: string) => string;
+  mostrar?: (valor: string | null) => string;
   titulo: string;
   ordenable: boolean;
   /** Criterio que se envía al backend al ordenar por esta columna (solo si es ordenable). */
@@ -31,4 +37,5 @@ export interface ColumnaTabla {
   numerica?: boolean;
 }
 
-export type EstadoTabla = "CARGANDO" | "CON_DATOS" | "VACIO" | "ERROR";
+/** SIN_BUSQUEDA (US08): todavía no se presionó "Buscar". */
+export type EstadoTabla = "SIN_BUSQUEDA" | "CARGANDO" | "CON_DATOS" | "VACIO" | "ERROR";

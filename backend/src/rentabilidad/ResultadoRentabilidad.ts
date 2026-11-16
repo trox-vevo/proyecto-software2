@@ -13,6 +13,9 @@ export interface DatosResultado {
   channels: ServiceChannels;
   coberturaFSD: CoberturaFSD;
   digitalChannels: DigitalChannels;
+  entidad: string;
+  tasaAnual: Decimal;
+  montoMinimo: Decimal | null;
 }
 
 /** Resultado del cálculo de rentabilidad de una cuenta. */
@@ -25,6 +28,9 @@ export class ResultadoRentabilidad {
   private readonly monthlyMaintenanceFee: Decimal;
   private readonly channels: ServiceChannels;
   private readonly digitalChannels: DigitalChannels;
+  private readonly entidad: string;
+  private readonly tasaAnual: Decimal;
+  private readonly montoMinimo: Decimal | null;
 
   constructor(
     cuentaId: string,
@@ -36,6 +42,9 @@ export class ResultadoRentabilidad {
     channels: ServiceChannels,
     readonly coberturaFSD: CoberturaFSD = crearCoberturaNoVerificada(),
     digitalChannels: DigitalChannels = new DigitalChannels(false, false),
+    entidad = cuentaId,
+    tasaAnual: Decimal = new Decimal(0),
+    montoMinimo: Decimal | null = null,
   ) {
     this.cuentaId = cuentaId;
     this.capitalInicial = capitalInicial;
@@ -45,6 +54,9 @@ export class ResultadoRentabilidad {
     this.monthlyMaintenanceFee = monthlyMaintenanceFee;
     this.channels = channels;
     this.digitalChannels = digitalChannels;
+    this.entidad = entidad;
+    this.tasaAnual = tasaAnual;
+    this.montoMinimo = montoMinimo;
   }
 
   getCuentaId(): string {
@@ -75,6 +87,9 @@ export class ResultadoRentabilidad {
       channels: this.channels,
       coberturaFSD: this.coberturaFSD,
       digitalChannels: this.digitalChannels,
+      entidad: this.entidad,
+      tasaAnual: this.tasaAnual,
+      montoMinimo: this.montoMinimo,
     };
   }
 }

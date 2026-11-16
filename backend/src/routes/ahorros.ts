@@ -1,3 +1,4 @@
+import { Decimal } from "decimal.js";
 import { Router } from "express";
 import { CriterioOrden } from "../rentabilidad/CriterioOrden";
 import { FiltroAhorros } from "../rentabilidad/FiltroAhorros";
@@ -39,6 +40,23 @@ function leerMonto(valor: string | undefined, nombre: string): string | undefine
   return valor;
 }
 
+/** US09: monto a invertir, mayor que 0. */
+function leerMontoInvertido(valor: string | undefined): string | undefined {
+  const monto = leerMonto(valor, "monto");
+  if (monto !== undefined && new Decimal(monto).lte(0)) throw new RangeError("monto debe ser mayor que 0");
+  return monto;
+}
+
+/** US09: departamento de residencia, sin espacios exteriores (máximo 50 caracteres). */
+function leerDepartamento(valor: string | undefined): string | undefined {
+  if (valor === undefined) return undefined;
+  const departamento = valor.trim();
+  if (departamento === "" || departamento.length > 50) {
+    throw new RangeError("departamento debe ser un texto de 1 a 50 caracteres");
+  }
+  return departamento;
+}
+
 function leerFecha(valor: string | undefined, nombre: string): Date | undefined {
   if (valor === undefined) return undefined;
   const fecha = new Date(valor);
@@ -51,6 +69,9 @@ function leerFecha(valor: string | undefined, nombre: string): Date | undefined 
  * Parámetros (todos opcionales):
  *   dias=365  criterio=RENTABILIDAD|SALDO|FECHA  algoritmo=simple|compuesta
  *   saldoMinimo=500  saldoMaximo=5000  desde=2023-01-01  hasta=2024-12-31
+ *   monto=1000  departamento=Lima   (US09: van juntos o ninguno)
+ * Con monto y departamento: solo productos de ese departamento cuyo monto mínimo no supere el monto,
+ * y el interés se calcula sobre el monto. Sin ellos: se calcula sobre el saldo de cada cuenta.
  */
 export function createAhorrosRouter(repositorio: FuenteCuentas = new RepositorioCuentas()): Router {
   const ahorrosRouter = Router();
@@ -61,11 +82,18 @@ export function createAhorrosRouter(repositorio: FuenteCuentas = new Repositorio
       if (accountId !== undefined && !accountId.trim()) throw new RangeError("accountId debe identificar una cuenta");
       const criterio = leerCriterio(texto(req.query.criterio));
       const algoritmo = leerAlgoritmo(texto(req.query.algoritmo));
+      const monto = leerMontoInvertido(texto(req.query.monto));
+      const departamento = leerDepartamento(texto(req.query.departamento));
+      if ((monto === undefined) !== (departamento === undefined)) {
+        throw new RangeError("Para buscar, envía monto y departamento.");
+      }
       const filtro = new FiltroAhorros({
         saldoMinimo: leerMonto(texto(req.query.saldoMinimo), "saldoMinimo"),
         saldoMaximo: leerMonto(texto(req.query.saldoMaximo), "saldoMaximo"),
         desde: leerFecha(texto(req.query.desde), "desde"),
         hasta: leerFecha(texto(req.query.hasta), "hasta"),
+        departamento,
+        montoInvertido: monto,
       });
   
       const motor = new MotorCalculo(algoritmo, filtro, new FormateadorResultados());
@@ -73,7 +101,7 @@ export function createAhorrosRouter(repositorio: FuenteCuentas = new Repositorio
       const seleccionadas = accountId === undefined
         ? cuentas
         : cuentas.filter((cuenta) => cuenta.id === accountId);
-      const resultados = motor.calcular(seleccionadas, dias, criterio);
+      const resultados = motor.calcular(seleccionadas, dias, criterio, monto === undefined ? undefined : new Decimal(monto));
   
       res.json({ resultados });
     } catch (error) {

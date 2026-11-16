@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
 import { navegar } from "../app/navegacion";
+import { buscarAhorros } from "../test/buscarAhorros";
 
 afterEach(() => window.history.replaceState(null, "", "/"));
 const catalog = {
@@ -17,7 +18,7 @@ function setup() {
     if (url.endsWith("/api/checkout/config")) return new Response(JSON.stringify({ environment: "DEMO", provider: "LOCAL_MOCK", simulation: true, cardCaptureAvailable: true, processingAvailable: true, realPaymentsAvailable: false, membershipActivationAvailable: true, price: "9.90", currency: "PEN", billingPeriod: "MONTHLY" }));
     if (url.endsWith("/api/checkout/history")) return Response.json({ transactions: [] });
     if (url.endsWith("/api/favorites")) return new Response("{}", { status: 403 });
-    return new Response(JSON.stringify({ resultados: [{ cuentaId: "A", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024", monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true } }] }));
+    return new Response(JSON.stringify({ resultados: [{ cuentaId: "A", entidad: "A", tasaAnual: "0.05", montoMinimo: "0.00", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024", monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true } }] }));
   });
   vi.stubGlobal("fetch", fetchMock);
   window.history.pushState(null, "", "/simular/ahorros");
@@ -28,6 +29,7 @@ function setup() {
 describe("Sprint 3 desde la navegación normal", () => {
   it("abre planes desde el inicio, llega al checkout y vuelve al simulador", async () => {
     setup();
+    await buscarAhorros();
     await screen.findByRole("table");
     await userEvent.click(screen.getByRole("link", { name: "Planes" }));
     await screen.findByRole("table");
@@ -44,6 +46,7 @@ describe("Sprint 3 desde la navegación normal", () => {
 
   it("ofrece guardar desde la fila y conduce al paywall ante una cuenta Básica", async () => {
     const fetchMock = setup();
+    await buscarAhorros();
     const table = await screen.findByRole("table");
     await userEvent.click(within(table).getByRole("button", { name: "Guardar favorito de A" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Plan Pro");
@@ -54,6 +57,7 @@ describe("Sprint 3 desde la navegación normal", () => {
 
   it("atiende la navegación del historial del navegador", async () => {
     setup();
+    await buscarAhorros();
     await screen.findByRole("table");
     act(() => { window.history.replaceState(null, "", "/planes"); window.dispatchEvent(new PopStateEvent("popstate")); });
     expect(await screen.findByRole("heading", { name: "Compara los planes" })).toBeInTheDocument();
@@ -61,6 +65,7 @@ describe("Sprint 3 desde la navegación normal", () => {
 
   it("abre el historial de facturación desde los ajustes de la cuenta", async () => {
     const fetchMock = setup();
+    await buscarAhorros();
     await screen.findByRole("table");
     act(() => navegar("/perfil")); // sin sesión, la cabecera no muestra "Mi perfil"
     await screen.findByRole("heading", { name: "Mi perfil" });

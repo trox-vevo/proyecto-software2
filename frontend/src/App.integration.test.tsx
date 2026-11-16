@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import App from "./App";
 import { navegar } from "./app/navegacion";
+import { buscarAhorros } from "./test/buscarAhorros";
 
 afterEach(() => {
   localStorage.clear();
@@ -18,7 +19,7 @@ function mockApi() {
       return Response.json(perfil);
     }
     if (url.includes("/api/ahorros/")) return Response.json({ resultados: [{
-      cuentaId: "A", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00",
+      cuentaId: "A", entidad: "A", tasaAnual: "0.05", montoMinimo: "0.00", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00",
       fechaApertura: "01/01/2024", monthlyMaintenanceFee: "5.00",
       channels: { hasPhysicalBranches: true, hasAtms: true },
     }] });
@@ -37,6 +38,7 @@ it("mantiene edición de perfil, FSD, glosario contextual y zero-state al filtra
   const fetchMock = mockApi();
   window.history.pushState(null, "", "/simular/ahorros");
   render(<App />);
+  await buscarAhorros();
   await screen.findByRole("table");
   expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
   act(() => navegar("/perfil")); // sin sesión, la cabecera no muestra "Mi perfil"
@@ -49,6 +51,7 @@ it("mantiene edición de perfil, FSD, glosario contextual y zero-state al filtra
   expect(await screen.findByText("Tu perfil ha sido actualizado correctamente.")).toBeInTheDocument();
   await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+  await buscarAhorros();
   await screen.findByRole("table");
   const savingsRequestsBeforeFiltering = fetchMock.mock.calls
     .filter(([url]) => String(url).includes("/api/ahorros/")).length;
@@ -94,6 +97,7 @@ it("navega registro → login → finanzas y conserva perfil, glosario y bearer 
   await screen.findByRole("heading", { name: "Compara dónde guardar tu dinero" });
   expect(window.location.pathname).toBe("/");
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+  await buscarAhorros();
   await screen.findByRole("table");
   expect(screen.queryByLabelText("Nombre de usuario")).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
@@ -106,6 +110,7 @@ it("navega registro → login → finanzas y conserva perfil, glosario y bearer 
   }
   await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+  await buscarAhorros();
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("button", { name: "Glosario financiero" }));
   expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -116,6 +121,7 @@ it("navega registro → login → finanzas y conserva perfil, glosario y bearer 
   expect(screen.getByRole("heading", { name: "Iniciar sesión" })).toBeInTheDocument();
   await userEvent.click(screen.getByRole("link", { name: "Volver al inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+  await buscarAhorros();
   await screen.findByRole("table");
   // Requisito nuevo (cabecera, 2.3): sin sesión la cabecera ofrece "Iniciar sesión" y ya no "Mi perfil".
   expect(screen.getByRole("link", { name: "Iniciar sesión" })).toBeInTheDocument();

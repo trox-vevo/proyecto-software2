@@ -1,3 +1,4 @@
+import { Decimal } from "decimal.js";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { CuentaAhorros } from "../rentabilidad/CuentaAhorros";
@@ -14,6 +15,10 @@ interface CuentaJson {
   channels: { hasPhysicalBranches: boolean; hasAtms: boolean };
   coberturaFSD?: unknown;
   digitalChannels?: { hasDigitalBanking: boolean; hasMobileApp: boolean };
+  /** US09/US11: producto de la entidad; solo se usa si vienen los tres. */
+  entidad?: string;
+  departamento?: string;
+  montoMinimo?: string;
 }
 
 /**
@@ -48,6 +53,9 @@ export class RepositorioCuentas {
         new ServiceChannels(c.channels.hasPhysicalBranches, c.channels.hasAtms),
         c.coberturaFSD,
         new DigitalChannels(c.digitalChannels?.hasDigitalBanking ?? false, c.digitalChannels?.hasMobileApp ?? false),
+        c.entidad === undefined || c.departamento === undefined || c.montoMinimo === undefined
+          ? null
+          : { entidad: c.entidad, departamento: c.departamento, montoMinimo: new Decimal(c.montoMinimo) },
       );
     });
   }

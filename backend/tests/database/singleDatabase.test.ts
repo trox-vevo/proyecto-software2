@@ -14,6 +14,8 @@ import { JsonSbsRiskRepository } from "../../src/risk/infrastructure/JsonSbsRisk
 import { SqliteEconomistReportRepository } from "../../src/risk/infrastructure/SqliteEconomistReportRepository";
 import { SqliteSbsRiskRepository } from "../../src/risk/infrastructure/SqliteSbsRiskRepository";
 import { openDatabase } from "../../src/shared/infrastructure/openDatabase";
+import { validarCoberturaFSD } from "../../src/fsd/CoberturaFSD";
+import type { CuentaAhorros } from "../../src/rentabilidad/CuentaAhorros";
 import { InMemoryProductRepository } from "../../src/simulation/infrastructure/InMemoryProductRepository";
 import { SqliteProductRepository } from "../../src/simulation/infrastructure/SqliteProductRepository";
 
@@ -62,10 +64,15 @@ describe("paridad con las fuentes anteriores", () => {
     database.close();
   });
 
-  it("cuentas de ahorro = data/cuentas.json", () => {
+  it("cuentas de ahorro = data/cuentas.json (salvo la cobertura FSD, que en SQLite viene de la entidad)", () => {
     const database = openDatabase(":memory:");
-    expect(plain(new RepositorioCuentasSqlite(database).obtenerTodas()))
-      .toEqual(plain(new RepositorioCuentas().obtenerTodas()));
+    const sinFsd = (cuentas: CuentaAhorros[]) => plain(cuentas.map(({ coberturaFSD: _fsd, ...resto }) => resto));
+    const sqlite = new RepositorioCuentasSqlite(database).obtenerTodas();
+    expect(sinFsd(sqlite)).toEqual(sinFsd(new RepositorioCuentas().obtenerTodas()));
+    // US09/US11: savings_accounts.entity_id -> financial_entities.fsd_coverage
+    const fsdEntidad = database.prepare("SELECT s.id, e.fsd_coverage FROM savings_accounts s JOIN financial_entities e ON e.id = s.entity_id ORDER BY s.id")
+      .all().map((fila) => validarCoberturaFSD(JSON.parse(String(fila.fsd_coverage))));
+    expect(sqlite.map((cuenta) => cuenta.coberturaFSD)).toEqual(fsdEntidad);
     database.close();
   });
 

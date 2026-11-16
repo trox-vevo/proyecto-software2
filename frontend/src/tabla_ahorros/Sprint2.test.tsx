@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "../App";
 import { navegar } from "../app/navegacion";
 import type { CoberturaFSD } from "../fsd/IndicadorFSD";
+import { buscarAhorros } from "../test/buscarAhorros";
 
 afterEach(() => { localStorage.clear(); window.history.replaceState(null, "", "/"); });
 
@@ -16,8 +17,9 @@ function savingsResponse(filas: unknown[]) {
 
 describe("Integración de FSD y glosario en resultados", () => {
   it("muestra el estado seguro de datos anteriores y abre la definición desde la cabecera", async () => {
-    const fetchMock = savingsResponse([{ cuentaId: "A", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024", monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true } }]);
+    const fetchMock = savingsResponse([{ cuentaId: "A", entidad: "A", tasaAnual: "0.05", montoMinimo: "0.00", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024", monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true } }]);
     vi.stubGlobal("fetch", fetchMock); window.history.pushState(null, "", "/simular/ahorros"); render(<App />);
+    await buscarAhorros();
     await screen.findByRole("table");
     expect(screen.getByText("Cobertura FSD no verificada")).toBeInTheDocument();
     const button = screen.getByRole("button", { name: "Consultar FSD" });
@@ -40,7 +42,9 @@ describe("Integración de FSD y glosario en resultados", () => {
       fuente: "https://www.fsd.org.pe/",
     };
     const fila = (cuentaId: string, coberturaFSD?: CoberturaFSD) => ({
-      cuentaId, capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00",
+      cuentaId,
+      entidad: cuentaId,
+      tasaAnual: "0.05", montoMinimo: "0.00", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00",
       fechaApertura: "01/01/2024", monthlyMaintenanceFee: cuentaId === "C" ? "5.00" : "0.00",
       channels: { hasPhysicalBranches: true, hasAtms: true }, coberturaFSD,
     });
@@ -49,6 +53,7 @@ describe("Integración de FSD y glosario en resultados", () => {
     ]));
     window.history.pushState(null, "", "/simular/ahorros");
     render(<App />);
+    await buscarAhorros();
     await screen.findByRole("table");
     expect(screen.getByText("Con cobertura FSD")).toBeInTheDocument();
     expect(screen.getByText("Sin cobertura FSD")).toBeInTheDocument();
@@ -63,6 +68,7 @@ describe("Integración de FSD y glosario en resultados", () => {
     vi.stubGlobal("fetch", savingsResponse([]));
     window.history.pushState(null, "", "/simular/ahorros");
     render(<App />);
+    await buscarAhorros();
     await screen.findByRole("heading", { name: "Sin resultados" });
     await userEvent.click(screen.getByRole("button", { name: "Glosario financiero" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import App from "../App";
 import { navegar } from "../app/navegacion";
+import { buscarAhorros } from "../test/buscarAhorros";
 
 afterEach(() => {
   localStorage.clear();
@@ -18,7 +19,7 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
     } });
     if (url.endsWith("/api/perfil")) return Response.json({ id: "usuario-demo", nombre: "Perfil demo", correo: "demo@example.com" });
-    if (url.includes("/api/ahorros/")) return Response.json({ resultados: [{ cuentaId: "A", capitalInicial: "1,000.00",
+    if (url.includes("/api/ahorros/")) return Response.json({ resultados: [{ cuentaId: "A", entidad: "A", tasaAnual: "0.05", montoMinimo: "0.00", capitalInicial: "1,000.00",
       interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024", monthlyMaintenanceFee: "0.00",
       channels: { hasPhysicalBranches: true, hasAtms: true } }] });
     if (url.endsWith("/api/favorites")) return Response.json({ favorite: { id: 2 }, created: true }, { status: 201 });
@@ -40,11 +41,13 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
   await userEvent.click(screen.getByRole("button", { name: "Ingresar" }));
   await screen.findByRole("button", { name: "Simular ahorros" });
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+  await buscarAhorros();
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("link", { name: "Mi perfil" }));
   expect(await screen.findByLabelText("Nombre de usuario")).toHaveValue("Perfil demo");
   await userEvent.click(screen.getByRole("link", { name: "Inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+  await buscarAhorros();
   await screen.findByRole("table");
   await userEvent.click(screen.getByRole("button", { name: "Guardar favorito de A" }));
   expect(await screen.findByText("Simulación guardada como favorita.")).toBeInTheDocument();
@@ -64,6 +67,7 @@ it("usa la sesión de main para favoritos y desmonta checkout al navegar a regis
   expect(screen.getByRole("button", { name: "Crear cuenta" })).toBeInTheDocument();
   await userEvent.click(screen.getByRole("link", { name: "Volver al inicio" }));
   await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
+  await buscarAhorros();
   await screen.findByRole("table");
   expect(screen.getByRole("button", { name: "Cerrar sesión" })).toBeInTheDocument();
   await userEvent.click(screen.getByRole("link", { name: "Planes" }));

@@ -3,10 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import App from "./App";
 import type { FilaAhorro } from "./tabla_ahorros/tipos";
+import { buscarAhorros } from "./test/buscarAhorros";
 
 // Datos propios de la prueba, no los de data/cuentas.json
 const fila = (cuentaId: string, hasDigitalBanking: boolean, hasMobileApp: boolean): FilaAhorro => ({
   cuentaId,
+  entidad: cuentaId,
+  tasaAnual: "0.05", montoMinimo: "0.00",
   capitalInicial: "1,000.00",
   interesGenerado: "50.00",
   saldoFinal: "1,050.00",
@@ -17,11 +20,12 @@ const fila = (cuentaId: string, hasDigitalBanking: boolean, hasMobileApp: boolea
 });
 const FILAS = [fila("A", true, true), fila("B", true, false), fila("C", false, true), fila("D", false, false)];
 
-function renderAppWith(filas: FilaAhorro[]) {
+async function renderAppWith(filas: FilaAhorro[]) {
   const fetchMock = vi.fn<(input: RequestInfo | URL) => Promise<Response>>(async () => new Response(JSON.stringify({ resultados: filas })));
   vi.stubGlobal("fetch", fetchMock);
   window.history.pushState(null, "", "/simular/ahorros");
   render(<App />);
+  await buscarAhorros();
   return fetchMock;
 }
 
@@ -33,7 +37,7 @@ const visibleIds = () =>
 
 describe("Filtros de accesibilidad digital en la tabla de ahorros (US19)", () => {
   it("'Solo con banca digital' refiltra al instante, sin nueva petición HTTP", async () => {
-    const fetchMock = renderAppWith(FILAS);
+    const fetchMock = await renderAppWith(FILAS);
     await screen.findByText("Mostrando 4 de 4 opciones");
 
     await userEvent.click(screen.getByLabelText("Solo con banca digital"));
@@ -45,7 +49,7 @@ describe("Filtros de accesibilidad digital en la tabla de ahorros (US19)", () =>
   });
 
   it("'Con app móvil' + 'Solo con banca digital' combina con AND", async () => {
-    renderAppWith(FILAS);
+    await renderAppWith(FILAS);
     await screen.findByText("Mostrando 4 de 4 opciones");
 
     await userEvent.click(screen.getByLabelText("Con app móvil"));
@@ -56,7 +60,7 @@ describe("Filtros de accesibilidad digital en la tabla de ahorros (US19)", () =>
   });
 
   it("cada fila muestra los íconos de sus canales digitales", async () => {
-    renderAppWith(FILAS);
+    await renderAppWith(FILAS);
     await screen.findByText("Mostrando 4 de 4 opciones");
 
     expect(screen.getByRole("columnheader", { name: "Canales digitales" })).toBeInTheDocument();
@@ -65,7 +69,7 @@ describe("Filtros de accesibilidad digital en la tabla de ahorros (US19)", () =>
   });
 
   it("si ninguna entidad tiene el canal, muestra el zero-state", async () => {
-    renderAppWith([fila("D", false, false)]);
+    await renderAppWith([fila("D", false, false)]);
     await screen.findByText("Mostrando 1 de 1 opciones");
 
     await userEvent.click(screen.getByLabelText("Con app móvil"));

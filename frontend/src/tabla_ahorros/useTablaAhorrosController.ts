@@ -12,6 +12,9 @@ interface Consulta {
   criterio: CriterioOrden;
   days: number;
   accountId?: string;
+  /** US08/US09: monto y departamento de la búsqueda (van juntos). */
+  monto?: string;
+  departamento?: string;
 }
 
 interface Carga {
@@ -29,20 +32,25 @@ interface Marcas {
 
 /** Controlador de la tabla: pide los datos al backend y decide en qué estado está la vista. */
 export function useTablaAhorrosController(initialReplay?: { accountId: string; days: number }) {
-  const [consulta, setConsulta] = useState<Consulta>(() => ({
-    criterio: "RENTABILIDAD",
-    days: initialReplay?.days ?? DIAS,
-    ...(initialReplay ? { accountId: initialReplay.accountId } : {}),
-  }));
+  // US08: sin favorito que repetir, no se consulta nada hasta que el usuario presiona "Buscar"
+  const [consulta, setConsulta] = useState<Consulta | null>(() => initialReplay
+    ? { criterio: "RENTABILIDAD", days: initialReplay.days, accountId: initialReplay.accountId }
+    : null);
   const [carga, setCarga] = useState<Carga | null>(null);
-  const marcas = useRef<Marcas>({ inicioCargaMs: 0, finCargaMs: null, renderListoMs: null });
-  const estadoRef = useRef<EstadoTabla>("CARGANDO");
+  // Sin búsqueda no hay carga pendiente: finCargaMs no queda en null para que el monitor no la tome como bloqueo
+  const marcas = useRef<Marcas>({ inicioCargaMs: 0, finCargaMs: initialReplay ? null : 0, renderListoMs: null });
+  const estadoRef = useRef<EstadoTabla>(initialReplay ? "CARGANDO" : "SIN_BUSQUEDA");
 
-  // cargarResultados(): se ejecuta al abrir la tabla y cada vez que cambia la consulta
+  // cargarResultados(): se ejecuta cada vez que cambia la consulta (al buscar, ordenar o reintentar)
   useEffect(() => {
+    if (consulta === null) return;
     const controlador = new AbortController();
     const parametros = new URLSearchParams({ dias: String(consulta.days), criterio: consulta.criterio });
     if (consulta.accountId) parametros.set("accountId", consulta.accountId);
+    if (consulta.monto !== undefined && consulta.departamento !== undefined) {
+      parametros.set("monto", consulta.monto);
+      parametros.set("departamento", consulta.departamento);
+    }
     marcas.current = { inicioCargaMs: performance.now(), finCargaMs: null, renderListoMs: null };
 
     fetchWithAuth(`${API_URL}/api/ahorros/rentabilidad?${parametros}`, { signal: controlador.signal })
@@ -75,7 +83,8 @@ export function useTablaAhorrosController(initialReplay?: { accountId: string; d
 
   // El estado se deduce: si la carga no corresponde a la consulta actual, todavía está cargando
   let estado: EstadoTabla;
-  if (carga === null || carga.consulta !== consulta) estado = "CARGANDO";
+  if (consulta === null) estado = "SIN_BUSQUEDA";
+  else if (carga === null || carga.consulta !== consulta) estado = "CARGANDO";
   else if (carga.error !== undefined) estado = "ERROR";
   else if (carga.filas.length === 0) estado = "VACIO";
   else estado = "CON_DATOS";
@@ -86,7 +95,7 @@ export function useTablaAhorrosController(initialReplay?: { accountId: string; d
 
   // Cuando los datos de la consulta actual ya están dibujados, se anota la hora
   useEffect(() => {
-    if (carga !== null && carga.consulta === consulta) {
+    if (consulta !== null && carga !== null && carga.consulta === consulta) {
       marcas.current.renderListoMs = performance.now();
     }
   }, [carga, consulta]);
@@ -99,27 +108,33 @@ export function useTablaAhorrosController(initialReplay?: { accountId: string; d
   function onOrdenar(columna: ColumnaTabla) {
     const criterio = columna.criterio;
     if (criterio === undefined) return;
-    setConsulta((actual) => (actual.criterio === criterio ? actual : { ...actual, criterio }));
+    setConsulta((actual) => (actual === null || actual.criterio === criterio ? actual : { ...actual, criterio }));
   }
 
   function reintentar() {
-    setConsulta((actual) => ({ ...actual }));
+    setConsulta((actual) => (actual === null ? null : { ...actual }));
   }
 
   const volverASimular = useCallback((accountId: string, days: number) => {
     if (!Number.isSafeInteger(days) || days <= 0 || !accountId.trim()) return;
-    setConsulta((actual) => ({ ...actual, accountId, days }));
+    setConsulta((actual) => (actual === null ? null : { ...actual, accountId, days }));
+  }, []);
+
+  /** US08: nueva búsqueda (objeto nuevo aunque se repitan los valores, para volver a pedir). */
+  const buscar = useCallback((monto: string, departamento: string) => {
+    setConsulta({ criterio: "RENTABILIDAD", days: DIAS, monto, departamento });
   }, []);
 
   return {
     estado,
     filas: carga?.filas ?? [],
     mensajeError: carga?.error,
-    criterioActivo: consulta.criterio,
-    dias: consulta.days,
+    criterioActivo: consulta?.criterio ?? "RENTABILIDAD",
+    dias: consulta?.days ?? DIAS,
     vista,
     onOrdenar,
     reintentar,
     volverASimular,
+    buscar,
   };
 }

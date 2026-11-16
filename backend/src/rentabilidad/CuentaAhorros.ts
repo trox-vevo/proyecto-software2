@@ -3,6 +3,13 @@ import { DigitalChannels } from "../simulation/domain/DigitalChannels";
 import { ServiceChannels } from "../simulation/domain/ServiceChannels";
 import { validarCoberturaFSD, type CoberturaFSD } from "../fsd/CoberturaFSD";
 
+/** US09/US11: datos del producto de ahorro de la entidad. null en cuentas sin producto. */
+export interface DatosProducto {
+  entidad: string;
+  departamento: string;
+  montoMinimo: Decimal;
+}
+
 /** Cuenta de ahorros del cliente. Solo guarda datos, sin lógica. */
 export class CuentaAhorros {
   readonly id: string;
@@ -18,6 +25,8 @@ export class CuentaAhorros {
   readonly coberturaFSD: CoberturaFSD;
   /** US19: banca digital y app móvil de la entidad. */
   readonly digitalChannels: DigitalChannels;
+  /** US09/US11: producto de la entidad (departamento y monto mínimo). */
+  readonly producto: DatosProducto | null;
 
   constructor(
     id: string,
@@ -29,6 +38,7 @@ export class CuentaAhorros {
     channels: ServiceChannels,
     coberturaFSD?: unknown,
     digitalChannels: DigitalChannels = new DigitalChannels(false, false),
+    producto: DatosProducto | null = null,
   ) {
     this.id = id;
     this.titular = titular;
@@ -39,5 +49,22 @@ export class CuentaAhorros {
     this.channels = channels;
     this.coberturaFSD = validarCoberturaFSD(coberturaFSD);
     this.digitalChannels = digitalChannels;
+    this.producto = producto;
+  }
+
+  /** US09: la misma cuenta con otro capital (el monto que ingresa el usuario). No modifica la original. */
+  conCapital(monto: Decimal): CuentaAhorros {
+    return new CuentaAhorros(
+      this.id,
+      this.titular,
+      monto,
+      this.tasaAnual,
+      this.fechaApertura,
+      this.monthlyMaintenanceFee,
+      this.channels,
+      this.coberturaFSD,
+      this.digitalChannels,
+      this.producto,
+    );
   }
 }

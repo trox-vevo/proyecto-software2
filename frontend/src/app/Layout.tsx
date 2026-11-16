@@ -3,7 +3,6 @@ import { SubscriptionStatusBanner } from "../commerce/SubscriptionStatusBanner";
 import { GlosarioFinanciero } from "../glosario/GlosarioFinanciero";
 import { Cabecera } from "./Cabecera";
 import { GlosarioContext } from "./glosario";
-import { AvisoCatalogoDemo } from "../fsd/AvisoCatalogoDemo";
 
 /** Cabecera común, aviso de la US42, pantalla actual y glosario (US24: disponible desde cualquier vista). */
 export function Layout({ children }: { children: ReactNode }) {
@@ -15,7 +14,6 @@ export function Layout({ children }: { children: ReactNode }) {
     <GlosarioContext.Provider value={abrirGlosario}>
       <Cabecera onAbrirGlosario={() => abrirGlosario()} />
       <SubscriptionStatusBanner />
-      <AvisoCatalogoDemo />
       {children}
       <GlosarioFinanciero abierto={glosario !== null} terminoSeleccionado={glosario?.termino ?? null} onCerrar={cerrarGlosario} />
     </GlosarioContext.Provider>

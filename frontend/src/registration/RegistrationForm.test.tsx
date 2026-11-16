@@ -5,6 +5,7 @@ import { RegistrationForm } from "./RegistrationForm";
 import { RutasAcceso } from "../pages/AccesoPages";
 import { Layout } from "../app/Layout";
 import App from "../App";
+import { buscarAhorros } from "../test/buscarAhorros";
 
 afterEach(() => { vi.unstubAllGlobals(); localStorage.clear(); window.history.replaceState(null, "", "/"); });
 async function complete(email = "estudiante@example.com") {
@@ -90,6 +91,7 @@ describe("Formulario de registro", () => {
     vi.stubGlobal("fetch", fetchMock);
     window.history.pushState(null, "", "/simular/ahorros");
     render(<App />);
+    await buscarAhorros();
     await screen.findByText("Sin resultados");
     await userEvent.click(screen.getByRole("link", { name: "Crear cuenta" }));
     await complete();

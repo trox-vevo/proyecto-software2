@@ -6,6 +6,7 @@ import { getStoredSession, saveAuthSession, type UserPlan } from "../auth/sessio
 import { PlanComparison } from "../commerce/PlanComparison";
 import { PRO_MONTHLY_PRICE } from "../commerce/types";
 import { PaywallModal } from "../pro_access/PaywallModal";
+import { buscarAhorros } from "../test/buscarAhorros";
 
 afterEach(() => {
   localStorage.clear();
@@ -39,7 +40,7 @@ function api() {
     if (url.endsWith("/api/favorites") && !init?.method) return Response.json({ favorites: [favoritoPlazoFijo] });
     if (url.endsWith("/api/simulations/fixed-deposits")) return Response.json([]);
     return Response.json({ resultados: [{
-      cuentaId: "A", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024",
+      cuentaId: "A", entidad: "A", tasaAnual: "0.05", montoMinimo: "0.00", capitalInicial: "1,000.00", interesGenerado: "50.00", saldoFinal: "1,050.00", fechaApertura: "01/01/2024",
       monthlyMaintenanceFee: "0.00", channels: { hasPhysicalBranches: true, hasAtms: true },
     }] });
   });
@@ -80,6 +81,7 @@ describe("Pantallas y cabecera común", () => {
     abrir("/");
     await userEvent.click(screen.getByRole("button", { name: "Simular ahorros" }));
     expect(window.location.pathname).toBe("/simular/ahorros");
+    await buscarAhorros();
     expect(await screen.findByRole("table")).toBeInTheDocument();
     await userEvent.click(within(navPrincipal()).getByRole("link", { name: "Inicio" }));
     await userEvent.click(screen.getByRole("button", { name: "Simular plazo fijo" }));
@@ -91,6 +93,7 @@ describe("Pantallas y cabecera común", () => {
   it("no muestra el panel técnico de bloqueos en los simuladores", async () => {
     api();
     const ahorros = abrir("/simular/ahorros");
+    await buscarAhorros();
     await screen.findByRole("table");
     expect(screen.queryByText(/Bloqueos detectados/)).not.toBeInTheDocument();
     ahorros.unmount();
@@ -103,6 +106,7 @@ describe("Pantallas y cabecera común", () => {
   it("3. US04: el selector de instrumento cambia de pantalla en ambos sentidos", async () => {
     api();
     abrir("/simular/ahorros");
+    await buscarAhorros();
     await screen.findByRole("table");
     await userEvent.click(screen.getByRole("radio", { name: "Depósito a Plazo Fijo" }));
     expect(window.location.pathname).toBe("/simular/plazo-fijo");

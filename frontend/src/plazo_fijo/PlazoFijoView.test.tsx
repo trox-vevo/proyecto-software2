@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { PlazoFijoView } from "./PlazoFijoView";
 import App from "../App";
+import { buscarAhorros } from "../test/buscarAhorros";
 
 const fila = {
   productId: 2, entityName: "Entidad de prueba", tea: "0.0575",
@@ -118,13 +119,14 @@ describe("Integración US06 + US12 | Flujo de simulación", () => {
   it("mantiene el módulo de ahorros y conserva los parámetros al alternar las secciones", async () => {
     const user = userEvent.setup();
     vi.stubGlobal("fetch", vi.fn().mockImplementation(() => Promise.resolve(json({ resultados: [{
-      cuentaId: "AH-001", capitalInicial: "1,000.00", interesGenerado: "50.00",
+      cuentaId: "AH-001", entidad: "AH-001", tasaAnual: "0.05", montoMinimo: "0.00", capitalInicial: "1,000.00", interesGenerado: "50.00",
       saldoFinal: "1,050.00", fechaApertura: "10/01/2023", monthlyMaintenanceFee: "0.00",
       channels: { hasPhysicalBranches: true, hasAtms: true },
     }] }))));
     window.history.replaceState(null, "", "/simular/ahorros");
     localStorage.clear();
     render(<App />);
+    await buscarAhorros();
     expect(await screen.findByText("AH-001")).toBeVisible();
     await user.click(screen.getByRole("radio", { name: /Plazo Fijo/ }));
     await user.type(screen.getByLabelText(/Monto de inversión/), "1234.50");
