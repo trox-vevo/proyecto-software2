@@ -79,4 +79,21 @@ describe("TS-132, banner de cancelación de suscripción", () => {
     fireEvent.click(screen.getByText(/Consultar historial/));
     expect(screen.getByText(/pago de renovación rechazado/)).toBeInTheDocument();
   });
+
+  it("no muestra una alerta cuando falla la consulta del historial", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 500 })));
+    saveAuthSession({ ...session, planCancellationRequested: false });
+    render(<SubscriptionStatusBanner />);
+
+    await waitFor(() => {
+      expect(console.error).toHaveBeenCalledWith(
+        "No se pudo consultar el historial de la suscripción.",
+        expect.any(Error),
+      );
+    });
+    expect(screen.queryByText("No se pudo consultar el historial de tu suscripción.")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByRole("status", { name: "Estado de suscripción" })).not.toBeInTheDocument();
+  });
 });

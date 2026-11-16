@@ -37,7 +37,7 @@ export class ServicioPerfiles {
     const perfilActual = this.repositorio.buscarPorId(id);
     if (perfilActual === undefined) throw new PerfilNoEncontradoError("No se encontró el perfil.");
     if (this.repositorio.correoEnUso(correoNormalizado, id)) {
-      throw new CorreoDuplicadoError("Ese correo ya está asociado a otro usuario.");
+      throw new CorreoDuplicadoError("El correo ingresado ya está en uso por otra cuenta.");
     }
 
     const perfilActualizado = new PerfilUsuario(id, nombreNormalizado, correoNormalizado);

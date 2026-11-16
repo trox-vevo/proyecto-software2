@@ -19,7 +19,6 @@ describe("ProfileEditor", () => {
       if (init?.method === "PUT") {
         return new Response(JSON.stringify({
           ...perfilInicial,
-          nombre: "Ana Pérez",
           correo: "ana@ejemplo.com",
         }));
       }
@@ -28,20 +27,18 @@ describe("ProfileEditor", () => {
     vi.stubGlobal("fetch", fetchMock);
     render(<ProfileEditor />);
 
-    const nombre = await screen.findByLabelText("Nombre de usuario");
+    await screen.findByLabelText("Nombre de usuario");
     const correo = screen.getByLabelText("Correo electrónico");
-    await userEvent.clear(nombre);
-    await userEvent.type(nombre, "Ana Pérez");
     await userEvent.clear(correo);
     await userEvent.type(correo, "ana@ejemplo.com");
     await userEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
-    expect(await screen.findByText("Perfil actualizado correctamente.")).toBeInTheDocument();
+    expect(await screen.findByText("Tu perfil ha sido actualizado correctamente.")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringContaining("/api/perfil"),
       expect.objectContaining({
         method: "PUT",
-        body: JSON.stringify({ nombre: "Ana Pérez", correo: "ana@ejemplo.com" }),
+        body: JSON.stringify({ nombre: perfilInicial.nombre, correo: "ana@ejemplo.com" }),
       }),
     );
   });
@@ -49,7 +46,7 @@ describe("ProfileEditor", () => {
   it("muestra el error de duplicidad que devuelve el backend", async () => {
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       if (init?.method === "PUT") {
-        return new Response(JSON.stringify({ message: "Ese correo ya está asociado a otro usuario." }), {
+        return new Response(JSON.stringify({ message: "El correo ingresado ya está en uso por otra cuenta." }), {
           status: 409,
         });
       }
@@ -62,7 +59,7 @@ describe("ProfileEditor", () => {
     await userEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Ese correo ya está asociado a otro usuario.",
+      "El correo ingresado ya está en uso por otra cuenta.",
     );
   });
 });

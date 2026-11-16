@@ -33,7 +33,7 @@ function isBillingHistory(value: unknown): value is { transactions: BillingTrans
   return Array.isArray(history.transactions) && history.transactions.every(isBillingTransaction);
 }
 
-export function BillingHistory({ onReturn }: { onReturn?: () => void }) {
+export function BillingHistory() {
   const [transactions, setTransactions] = useState<BillingTransaction[] | null>(null);
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState<string | null>(null);
@@ -91,7 +91,6 @@ export function BillingHistory({ onReturn }: { onReturn?: () => void }) {
           <h1 id="titulo-historial-facturacion">Historial de facturación</h1>
           <p>Consulta tus operaciones del Plan Pro y descarga sus comprobantes.</p>
         </div>
-        {onReturn && <button type="button" onClick={onReturn}>Volver a mi cuenta</button>}
       </div>
       <p className="historial-facturacion-aviso">
         El checkout es una demostración académica: no se realizan cobros reales.

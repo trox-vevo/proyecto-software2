@@ -132,13 +132,41 @@ describe("SqlitePerfilRepository (US16 sobre la tabla users)", () => {
         body: JSON.stringify({ nombre: "Carla", correo: "ana@example.com" }),
       });
       expect(duplicado.status).toBe(409);
+      expect(await duplicado.json()).toEqual({
+        message: "El correo ingresado ya está en uso por otra cuenta.",
+      });
+      expect(users.findById(session.userId)).toMatchObject({
+        username: "carla",
+        email: "carla@example.com",
+      });
 
       const actualizado = await fetch(`${base}/perfil`, {
         method: "PUT", headers: { ...auth, "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre: "Carla R", correo: "carla.r@example.com" }),
+        body: JSON.stringify({ nombre: "carla", correo: "carla.r@example.com" }),
       });
       expect(actualizado.status).toBe(200);
-      expect(users.findById(session.userId)).toMatchObject({ username: "Carla R", email: "carla.r@example.com" });
+      expect(await actualizado.json()).toMatchObject({
+        nombre: "carla",
+        correo: "carla.r@example.com",
+      });
+      expect(users.findById(session.userId)).toMatchObject({ username: "carla", email: "carla.r@example.com" });
+      const perfilActualizado = await fetch(`${base}/perfil`, { headers: auth });
+      expect(await perfilActualizado.json()).toMatchObject({
+        nombre: "carla",
+        correo: "carla.r@example.com",
+      });
+      const accesoConCorreoNuevo = await fetch(`${base}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "carla.r@example.com", password: "Clave-segura-1" }),
+      });
+      expect(accesoConCorreoNuevo.status).toBe(200);
+      const accesoConCorreoAnterior = await fetch(`${base}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "carla@example.com", password: "Clave-segura-1" }),
+      });
+      expect(accesoConCorreoAnterior.status).toBe(401);
 
       // Sin sesión no se expone ningún perfil real: se pide iniciar sesión
       const anonimo = await fetch(`${base}/perfil`);

@@ -48,7 +48,6 @@ export default function App() {
     navegar(siguiente.ruta);
   }
 
-  const volverAlInicio = <button type="button" onClick={() => navegar("/")}>Volver al inicio</button>;
   let pantalla: ReactNode;
   switch (ruta) {
     case "/": pantalla = <InicioPage />; break;
@@ -66,7 +65,6 @@ export default function App() {
       break;
     case "/perfil":
       pantalla = <main className="pagina">
-        {volverAlInicio}
         <ProfileEditor
           onViewBillingHistory={() => navegar("/facturacion")}
           onViewSubscription={() => navegar("/suscripcion")}
@@ -76,11 +74,10 @@ export default function App() {
       break;
     case "/suscripcion": pantalla = <SuscripcionPage />; break;
     case "/facturacion":
-      pantalla = <main className="pagina"><BillingHistory onReturn={() => navegar("/")} /></main>;
+      pantalla = <main className="pagina"><BillingHistory /></main>;
       break;
     case "/favoritos":
       pantalla = <main className="pagina">
-        {volverAlInicio}
         <SavedSimulations onReplay={volverASimular} onViewPlans={() => navegar("/planes")} />
       </main>;
       break;
